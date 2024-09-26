@@ -1,0 +1,90 @@
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+.atbf {
+  position: relative; 
+  overflow: hidden; 
+}
+
+.atbf div {
+  position: relative; 
+}
+
+.atbf div:before,
+.atbf div:after {
+  content: "";
+  position: absolute; 
+  background: rgba(255, 255, 255, 0.8);
+  transition: transform 0.3s ease, opacity 0.3s ease; 
+}
+
+.atbf div:before {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px; 
+  transform: scale(0, 1);
+}
+
+.atbf div:after {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px; 
+  transform: scale(1, 0);
+}
+
+.atbf div.left-border,
+.atbf div.right-border {
+  width: 1px; 
+  background: rgba(255, 255, 255, 0.8);
+  transition: transform 0.3s ease; 
+}
+
+.atbf div.left-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%; 
+  transform: scale(0, 1);
+}
+
+.atbf div.right-border {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%; 
+  transform: scale(1, 0);
+}
+
+.atbf:hover div:before {
+  transform: scale(1, 1); 
+}
+
+.atbf:hover div:after {
+  transform: scale(1, 1); 
+}
+
+.atbf:hover div.left-border {
+  transform: scale(1, 1);
+}
+
+.atbf:hover div.right-border {
+  transform: scale(1, 1); 
+}
+
+*, *:after, *:before {
+  box-sizing: border-box;
+}
+
+.slider-container {
+  width: 100%;
+  overflow: hidden; 
+}
+
+.box-product {
+  margin: 0 10px; 
+}
+
