@@ -16,7 +16,7 @@ const footer = () => {
                 <h2 className="text-2xl font-bold text-white">QA&FR</h2>
 
                 <p className="mt-4 text-gray-400">
-                Công ty cổ phần EGO Sport là một công ty cổ đông thuộc sở hữu của EGO Creative với vai trò là nhà cung cấp các phụ kiện thời trang thể thao đến với khách hàng khắp mọi miền tổ quốc.
+                Công ty cổ phần QA&FR là một công ty cổ đông thuộc sở hữu của EGO Creative với vai trò là nhà cung cấp các phụ kiện thời trang thể thao đến với khách hàng khắp mọi miền tổ quốc.
                 </p>
             </div>
             </div>

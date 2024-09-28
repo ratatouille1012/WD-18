@@ -10,7 +10,19 @@ const menuNewsText = [
         img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2019/10/D%C3%A9p-Puma-Fenty-m%E1%BA%ABu-m%E1%BB%9Bi-nh%E1%BA%A5t-c%E1%BB%A7a-Rihanna-768x576.jpg",
         title: "Dép Puma Fenty mẫu mới nhất của Rihanna",
         date: "22 Tháng Mười, 2019",
-        text: "Riri đã chính thức bước chân vào làng thời trang thế giới, khi trở thành giám đốc sáng tạo của thương [...]"
+        text:(`Trào lưu của giới trẻ thường bất ngờ xuất hiện mà chẳng cần lý do. Một bài hát, một câu nói, thậm chí một chiếc áo… cũng có thể trở thành xu hướng.
+
+            Mới đây, ảnh chụp đôi dép nhựa màu xanh, có hình con cá rô phi xuất hiện trên nhiều diễn đàn. Theo đó, đôi dép này đang được nhiều bạn trẻ tìm mua, chụp check-in trên bãi biển. Bởi nó sở hữu vẻ ngoài độc đáo, ấn tượng, thích hợp đi vào mùa hè.
+            
+            Trào lưu này được cho là xuất phát từ một bức ảnh của cô gái bán hàng online trên mạng vào ngày 15/6. Khoảnh khắc check-in với đôi dép cá chép ở bãi biển nhanh chóng thu hút hơn 100.000 like (thích), được đăng tải kèm dòng chú thích: “Truyền thuyết kể rằng đôi tình nhân nào mà mang đôi dép cá rô phi này sẽ hạnh phúc cả đời”. 
+            
+            Nguyễn Diễm Hương (25 tuổi, Nha Trang) – người chia sẻ hình dép cá rô phi xanh – tỏ ra bất ngờ khi ảnh của mình trở thành tâm điểm chú ý trên mạng.
+            
+            “Đôi dép này có từ năm ngoái, mình từng bán được một số lượng dép khá lớn. Năm nay do mùa hè tới nên nhiều người có nhu cầu mua và được nhiều bạn trẻ ưa chuộng bởi thiết kế độc và lạ”, Hương nói.
+            
+            Diễm Hương cho hay một ngày, cô bán qua mạng được 10 – 20 đôi, hầu hết là các bạn trẻ đặt hàng dùng đi thường ngày hay ra biển. Mẫu này cũng có thiết kế dành cho trẻ em.
+            
+            Ban đầu, mọi người thường bất ngờ vì giá dép cá rô phi xanh khá đắt, song cũng có bạn mua về khen nó đi rất êm và mềm. Nhiều bạn trẻ tâm sự diện dép cá ra đường khiến họ được chú ý hơn.`)
     },
     {
         id: "2",

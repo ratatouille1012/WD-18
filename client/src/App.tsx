@@ -13,6 +13,7 @@ import FilterSlect from './theme/filterSlect';
 import SaleNews from './pages/user/saleNews';
 import Contact from './pages/user/contact';
 import ProductDetail from './pages/user/productDetail';
+import DetailNews from './pages/user/detailNews';
 
 const routeConfig = [
   {
@@ -46,6 +47,10 @@ const routeConfig = [
   {
     path: 'product/:id',
     element: <ProductDetail />,
+  },
+  {
+    path: 'newSale/:id',
+    element: <DetailNews />,
   },
 ];
 

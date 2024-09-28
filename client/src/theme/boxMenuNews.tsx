@@ -1,10 +1,11 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 
-const boxMenuNews = ({title,style}) => {
+const boxMenuNews = ({title,style,id}) => {
   return (
     <>
-        <a href='' className={`${style}`}>{title}</a>
+        <Link to={`/newSale/${id}?label=Chi%20tiết`} className={`${style}`}>{title}</Link>
     </>
   )
 }

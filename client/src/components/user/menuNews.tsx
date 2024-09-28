@@ -57,7 +57,7 @@ const MenuNews = () => {
     <div className="py-6"><h2 className='uppercase font-semibold text-[18px] border-b-4 border-[#B29191] inline'>bài viết mới</h2></div>
     <div className="pr-6">
         {menuNewsText.slice(0,10).map((menu,index)=>(
-            <div key={index} className=""><BoxMenuNews style={`border-b-2 py-1 line-clamp-2`} title={menu.title}/></div>
+            <div key={index} className=""><BoxMenuNews id={menu.id} style={`border-b-2 py-1 line-clamp-2`} title={menu.title}/></div>
         ))}
     </div>
     </>
