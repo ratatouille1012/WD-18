@@ -1,7 +1,6 @@
 import React from 'react';
-import TitleMainCenter from '../../theme/titleMainCenter';
 import BoxNewsText from '../../theme/boxNewsText';
-import Slider from "react-slick"; 
+import { useLocation } from 'react-router-dom'; // Import useLocation từ react-router-dom
 
 const menuNewsText = [
     {
@@ -38,56 +37,29 @@ const menuNewsText = [
     },
 ];
 
+const SaleNews = () => {
+  const location = useLocation(); 
 
-const NewsText = () => {
-    const settings = {
-        className: "center",
-        centerMode: false, 
-        infinite: true,
-        slidesToShow: 2,
-        slidesToScroll: 2,
-        speed: 500,
-        responsive: [
-            {
-                breakpoint: 1024,
-                settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1,
-                }
-            },
-            {
-                breakpoint: 768,
-                settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1,
-                    dots: true
-                }
-            },
-            {
-                breakpoint: 480,
-                settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1,
-                    dots: true
-                }
-            }
-        ]
-      };
-      
+  const filteredProducts = location.pathname === '/sale' 
+  ? menuNewsText.filter(product => product.categoryNews === 'sale') 
+  : location.pathname === '/new'
+  ? menuNewsText.filter(product => product.categoryNews === 'news') 
+  : [];
   return (
-    <>
-      <TitleMainCenter text={`Tin mới nhất`} sub={undefined}/>
-      <div className=" slider-container">
-      <Slider {...settings}>
-      {menuNewsText.map((product) => (
-        <div key={product.id} >
-            <div className="mx-3"><BoxNewsText categoryNews={product.categoryNews} imgstyle={`w-full h-auto`} h3={`text-lg font-semibold  line-clamp-1`} style={`border bg-[#EAEAEA] border-gray-300  h-[200px] flex`} product={product} /></div>
-        </div>
-      ))}
-      </Slider>
-      </div>
-    </>
-  )
+    <div className='gap-y-9 flex flex-col'>
+        {filteredProducts.map((product) => (
+            <div key={product.id}>
+                <BoxNewsText 
+                    categoryNews={product.categoryNews} 
+                    imgstyle={`w-auto h-full`} 
+                    h3={`text-lg font-semibold line-1`} 
+                    style={`h-[200px] flex`} 
+                    product={product} 
+                />
+            </div>
+        ))}
+    </div>
+  );
 }
 
-export default NewsText;
+export default SaleNews;

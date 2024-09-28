@@ -15,7 +15,7 @@ function homePage() {
       <ProductNew/>
       <div className="mt-4"><ContentProduct/></div>
       <div className="mt-4"><Content2Product/></div>
-      <div className="mt-4"><NewsText/></div>
+      <div className="mt-11"><NewsText/></div>
       <div className="mt-20"><Brand/></div>
     </>
   )

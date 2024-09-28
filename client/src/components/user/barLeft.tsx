@@ -8,13 +8,14 @@ type Props = {
     toggleOBL: () => void;
 };
 
-const BarLeft: FC<Props> = ({toggleOBL}) => {
-    const [isMenuVisible, setMenuVisible] = useState(false);
-    const [isOprnBarLeft,setOprnBarLeft] = useState(true);
-    const closeOPL = ()=>{
+const BarLeft: FC<Props> = ({ toggleOBL }) => {
+    const [isOprnBarLeft, setOprnBarLeft] = useState(true);
+    const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+
+    const closeOPL = () => {
         setOprnBarLeft(!isOprnBarLeft);
-        toggleOBL(); 
-    }
+        toggleOBL();
+    };
 
     const menuCategory = [
         { label: "Cao gót", link: "#" },
@@ -28,24 +29,11 @@ const BarLeft: FC<Props> = ({toggleOBL}) => {
     const menuBarLeft = [
         { label: "Trang chủ", link: "/" },
         {
-            label: (
-                <div className="flex items-center justify-between">
-                    <span>Sản phẩm</span>
-                    <div
-                        onClick={(e) => {
-                            e.stopPropagation(); 
-                            e.preventDefault(); 
-                            setMenuVisible(prev => !prev); 
-                        }} 
-                    >
-                        <AngleDownSVG />
-                    </div>
-                </div>
-            ),
+            label: "Sản phẩm",
             link: "/product"
         },
         { label: "Khuyến mãi", link: "/sale" },
-        { label: "Tin tức", link: "/New" },
+        { label: "Tin tức", link: "/new" },
         { label: "Liên hệ", link: "/contact" },
         { label: "Đăng nhập", link: "/login" },
     ];
@@ -62,19 +50,44 @@ const BarLeft: FC<Props> = ({toggleOBL}) => {
                 <div>
                     {menuBarLeft.map((menu, index) => (
                         <div key={index} className="flex flex-col">
-                            <Link to={menu.link} className="w-full" onClick={(e) => {
-                                if (menu.link === "/product" && isMenuVisible) {
-                                    setMenuVisible(false);
-                                }
-                            }}>
-                                <MenuHeader style={`w-full border-t py-[15px] px-[20px] text-[rgba(102,102,102,.85)]`} font={`font-[700]`} size={`text-[1em]`} menu={menu.label} menuCT={undefined} />
-                            </Link>
-                            {menu.link === "/product" && isMenuVisible && (
+                            <div className="flex items-center justify-between w-full border-t last:border-b-0">
+                                <Link to={`${menu.link}?label=${encodeURIComponent(menu.label)}`} className="flex-1" onClick={() => {
+                                    if (menu.link === "/product") {
+                                        setActiveSubmenu(null); 
+                                    }
+                                }}>
+                                    <MenuHeader
+                                        style={`w-full py-[15px] px-[20px] text-[rgba(102,102,102,.85)]`}
+                                        font={`font-[700]`}
+                                        size={`text-[1em]`}
+                                        menu={menu.label}
+                                        menuCT={undefined}
+                                    />
+                                </Link>
+                                {menu.link === "/product" && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation(); 
+                                            e.preventDefault(); 
+                                            setActiveSubmenu(prev => (prev === "products" ? null : "products"));
+                                        }}
+                                    >
+                                        <AngleDownSVG />
+                                    </button>
+                                )}
+                            </div>
+                            {menu.link === "/product" && activeSubmenu === "products" && (
                                 <div className="mt-3 mb-7 block px-4">
                                     {menuCategory.map((menuCT, index) => (
                                         <div key={index} className="flex items-center">
                                             <Link to={menuCT.link} className="w-full">
-                                                <MenuHeader style={`my-1 text-black px-4`} font={`font-[400]`} size={`text-[1.1em]`} menu={menuCT.label} menuCT={undefined} />
+                                                <MenuHeader
+                                                    style={`my-1 text-black px-4`}
+                                                    font={`font-[400]`}
+                                                    size={`text-[1.1em]`}
+                                                    menu={menuCT.label}
+                                                    menuCT={undefined}
+                                                />
                                             </Link>
                                         </div>
                                     ))}
@@ -84,7 +97,7 @@ const BarLeft: FC<Props> = ({toggleOBL}) => {
                     ))}
                 </div>
             </div>
-            <button onClick={closeOPL} className=" absolute top-2 right-3 text-[24px] text-white">X</button>
+            <button onClick={closeOPL} className="absolute top-2 right-3 text-[24px] text-white">X</button>
         </div>
     );
 };

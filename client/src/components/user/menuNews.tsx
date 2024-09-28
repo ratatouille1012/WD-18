@@ -1,7 +1,7 @@
 import React from 'react';
-import TitleMainCenter from '../../theme/titleMainCenter';
-import BoxNewsText from '../../theme/boxNewsText';
-import Slider from "react-slick"; 
+import InputSearch from '../../theme/inputSearch';
+import SearchSVG from '../../svg/searchSVG';
+import BoxMenuNews from '../../theme/boxMenuNews';
 
 const menuNewsText = [
     {
@@ -38,56 +38,30 @@ const menuNewsText = [
     },
 ];
 
-
-const NewsText = () => {
-    const settings = {
-        className: "center",
-        centerMode: false, 
-        infinite: true,
-        slidesToShow: 2,
-        slidesToScroll: 2,
-        speed: 500,
-        responsive: [
-            {
-                breakpoint: 1024,
-                settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1,
-                }
-            },
-            {
-                breakpoint: 768,
-                settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1,
-                    dots: true
-                }
-            },
-            {
-                breakpoint: 480,
-                settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1,
-                    dots: true
-                }
-            }
-        ]
-      };
-      
+const MenuNews = () => {
   return (
     <>
-      <TitleMainCenter text={`Tin mới nhất`} sub={undefined}/>
-      <div className=" slider-container">
-      <Slider {...settings}>
-      {menuNewsText.map((product) => (
-        <div key={product.id} >
-            <div className="mx-3"><BoxNewsText categoryNews={product.categoryNews} imgstyle={`w-full h-auto`} h3={`text-lg font-semibold  line-clamp-1`} style={`border bg-[#EAEAEA] border-gray-300  h-[200px] flex`} product={product} /></div>
-        </div>
-      ))}
-      </Slider>
+    <div className='flex h-auto relative items-center'>
+      <InputSearch 
+        ml={undefined} 
+        width={`xs:w-[520px] sm:w-[640px] md:w-[900px] lg:w-[230px] 2xl:w-[270px] py-2 px-2 text-[16px]`}  
+        padding={`p-1`} 
+        border={`border shadow border-shadow`} 
+      />
+      <div className="flex absolute right-0 bg-[#FF6633] p-1  w-auto items-center justify-center h-full">
+        <SearchSVG width={`30px`} height={`30px`} color={`White`} setSearchVisible={function (): void {
+          throw new Error('Khong dung den chuc nang nay.');
+        }} />
       </div>
+    </div>
+    <div className="py-6"><h2 className='uppercase font-semibold text-[18px] border-b-4 border-[#B29191] inline'>bài viết mới</h2></div>
+    <div className="pr-6">
+        {menuNewsText.slice(0,10).map((menu,index)=>(
+            <div key={index} className=""><BoxMenuNews style={`border-b-2 py-1 line-clamp-2`} title={menu.title}/></div>
+        ))}
+    </div>
     </>
-  )
+  );
 }
 
-export default NewsText;
+export default MenuNews;
