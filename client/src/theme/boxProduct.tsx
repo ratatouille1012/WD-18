@@ -15,7 +15,13 @@ const BoxProduct: React.FC<Props> = ({ product,className }) => {
     <>
     <div className={`border border-300 p-2 pb-5 text-center ${className}`}>
       <a  href={`/product/${product.id}?label=Sản%20phẩm`} className="text-gray-900 no-underline ">
-        <img src={product.img} alt={product.name} className="w-full h-auto" />
+      <div className="overflow-hidden">
+        <img 
+          src={product.img} 
+          alt={product.name} 
+          className="transition-transform duration-300 ease-in-out transform hover:scale-125 w-full h-auto" 
+        />
+      </div>
         <h3 className="mt-2 text-sm line-clamp-2">{product.name}</h3>
         <p className="mt-1 text-red-700 font-medium">
           {product.price.toLocaleString()} VND

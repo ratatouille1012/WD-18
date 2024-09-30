@@ -81,6 +81,15 @@ const DetailP = () => {
     const [selectedSize, setSelectedSize] = useState('');
     const [count, setCount] = useState(0);
     const [activeButton, setActiveButton] = useState(0);
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleImageClick = () => {
+        setIsOpen(true);
+    };
+
+    const handleClose = () => {
+        setIsOpen(false);
+    };
 
     const handleClick = (index) => {
         setActiveButton(index);
@@ -129,7 +138,16 @@ const DetailP = () => {
                             )}
                         </div>
                         <div className="px-4 py-10 w-full h- rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative">
-                            <img src={currentImage} alt="Product" className="w-3/4 rounded object-cover mx-auto" />
+                            <img src={currentImage} alt="Product" className="w-3/4 rounded object-cover mx-auto" onClick={handleImageClick} />
+                            {isOpen && (
+                                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={handleClose}>
+                                <img 
+                                    src={currentImage} 
+                                    alt="Product" 
+                                    className="max-h-screen max-w-full object-contain" 
+                                />
+                                </div>
+                            )}
                             <button type="button" className="absolute top-4 right-4">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20px" fill="#ccc" className="mr-1 hover:fill-[#333]" viewBox="0 0 64 64">
                                     <path d="M45.5 4A18.53 18.53 0 0 0 32 9.86 18.5 18.5 0 0 0 0 22.5C0 40.92 29.71 59 31 59.71a2 2 0 0 0 2.06 0C34.29 59 64 40.92 64 22.5A18.52 18.52 0 0 0 45.5 4ZM32 55.64C26.83 52.34 4 36.92 4 22.5a14.5 14.5 0 0 1 26.36-8.33 2 2 0 0 0 3.27 0A14.5 14.5 0 0 1 60 22.5c0 14.41-22.83 29.83-28 33.14Z" />
