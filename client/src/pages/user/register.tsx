@@ -29,7 +29,7 @@ const Register = () => {
 
           <div className="space-y-6">
             <div>
-              <label className="text-gray-800 text-sm mb-2 block">tên tài khoản</label>
+              <label className="text-gray-800 text-sm mb-2 block">Tên tài khoản</label>
               <div className="relative flex items-center">
                 <input
                   type="text"

@@ -64,12 +64,23 @@ const menuFilter = [
         title: "Size",
         subMenu: [
             { id: "2-1", title: "39" },
-            { id: "2-2", title: "40" },
-            { id: "2-3", title: "41" },
-            { id: "2-4", title: "42" },
+            { id: "2-2", title: "40"  },
+            { id: "2-3", title: "41"  },
+            { id: "2-4", title: "42"  },
             { id: "2-5", title: "43" },
             { id: "2-6", title: "44" },
             { id: "2-7", title: "45" }
+        ]
+    },
+    {
+        id: "3",
+        title: "Màu",
+        subMenu: [
+            { id: "3-1", title: "Xanh",style:"blue" },
+            { id: "3-2", title: "Đỏ",style:"red" },
+            { id: "3-3", title: "Trắng",style:"white" },
+            { id: "3-4", title: "Đen",style:"black" },
+            { id: "3-5", title: "Vàng",style:"yellow" }
         ]
     }
 ];
@@ -79,7 +90,8 @@ const DetailP = () => {
     const product = menuProduct.find(item => item.id === id);
     const [currentImage, setCurrentImage] = useState(product.img);
     const [selectedSize, setSelectedSize] = useState('');
-    const [count, setCount] = useState(0);
+    const [selectedColor, setSelectedColor] = useState('');
+    const [count, setCount] = useState(1);
     const [activeButton, setActiveButton] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
 
@@ -100,7 +112,7 @@ const DetailP = () => {
     };
 
     const handleDecrement = () => {
-        if (count > 0) {
+        if (count > 1) {
             setCount(count - 1);
         }
     };
@@ -108,6 +120,35 @@ const DetailP = () => {
     const handleChange = (event) => {
         setSelectedSize(event.target.value);
     };
+    
+    const handleChangeColor = (event) => {
+        setSelectedColor(event.target.value);
+    };
+
+    const generateRandomId = () => {
+        return 'cart-' + Math.random().toString(36).substr(2, 9);
+    };
+    const handleAddToCart = () => {
+        const cartItem = {
+            idcart: generateRandomId(),
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: currentImage,
+            size: selectedSize,
+            color: selectedColor,
+            quantity: count,
+        };
+
+        const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
+        existingCart.push(cartItem);
+        localStorage.setItem('cart', JSON.stringify(existingCart));
+        setCount(1);
+        setSelectedSize('');
+        setSelectedColor('');
+        alert('Sản phẩm đã được thêm vào giỏ hàng!');
+
+    }
     
     if (!product) {
         return <div>Không tìm thấy sản phẩm.</div>;
@@ -169,7 +210,7 @@ const DetailP = () => {
                                 <div key={item.id} className="relative w-9 h-9">
                                     <input
                                         type="radio"
-                                        className="w-9 h-9 absolute appearance-none border border-gray-300 checked:border-black checked:border-[3px] checked:border-transparent rounded-sm cursor-pointer z-10"
+                                        className="w-9 h-9 absolute appearance-none border  checked:border-gray-300 border-black checked:border-[3px] checked:border-transparent rounded-sm cursor-pointer z-10"
                                         value={item.title}
                                         name="size"
                                         onChange={handleChange}
@@ -177,6 +218,21 @@ const DetailP = () => {
                                     <label className="w-9 h-9 flex justify-center items-center relative">
                                         {item.title}
                                     </label>
+                                </div>
+                            ))}
+                            </div>
+                            <div className="flex"><span className='mr-2 font-semibold'>Màu:</span>{selectedColor && <h2 className=""> {selectedColor}</h2>}</div>
+                            <div className="flex gap-x-2 my-2">
+                            {menuFilter[1].subMenu.map((item) => (
+                                <div key={item.id} className="relative w-9 h-9">
+                                    <input
+                                        type="radio"
+                                        style={{ backgroundColor: item.style }}
+                                        className={`w-6 h-6 absolute appearance-none border rounded-full border-gray-300 checked:border-black checked:border-[3px] checked:border-transparent cursor-pointer z-10`}
+                                        value={item.title}
+                                        name="color"
+                                        onChange={handleChangeColor}
+                                    />
                                 </div>
                             ))}
                             </div>
@@ -196,7 +252,7 @@ const DetailP = () => {
                                         +
                                     </button>
                                 </div>
-                                <button className='uppercase bg-[#FF6633] text-white font-bold text-[18px] px-4 py-2'>thêm vào giỏ hàng</button>
+                                <button  onClick={handleAddToCart} className='uppercase bg-[#FF6633] text-white font-bold text-[18px] px-4 py-2'>thêm vào giỏ hàng</button>
                             </div>
                             <div className="border-dashed border-t py-2"><span>Mã:</span> N/A</div>
                             <div className="border-dashed border-t py-2"><span>Danh mục:</span> N/A</div>
@@ -239,16 +295,6 @@ const DetailP = () => {
                                 <Rating value={5} unratedColor="amber" ratedColor="amber" placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
                                 <h2 className='mt-4 font-medium'>Nhận xét của bạn <span className='text-red-600 font-bold'>*</span></h2>
                                 <textarea name="" className='w-full mt-1 p-2 h-[200px] border shadow-lg' id=""></textarea>
-                                <div className="xs:flex-none sm:flex gap-x-12 w-full">
-                                    <div className="w-full">
-                                        <label className='font-medium' htmlFor="">Tên<span className='text-red-600 font-bold'>*</span></label>
-                                        <input type="text" className='w-full p-2 border shadow-lg' id="" />
-                                    </div>
-                                    <div className="w-full">
-                                        <label className='font-medium' htmlFor="">Email<span className='text-red-600 font-bold'>*</span></label>
-                                        <input type="text" className='w-full p-2 border shadow-lg' id="" />
-                                    </div>
-                                </div>
                                 <p className='mt-4 font-medium text-red-600'>Lưu Ý: * là những ô bắt buộc phải nhập.</p>
                                 <button className='uppercase mt-4 mb-12 py-2 px-4 border bg-[#FF6633] font-bold text-white'>Gửi đi</button>
                             </div>

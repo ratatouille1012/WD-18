@@ -4,22 +4,22 @@ import Loading from "../theme/loading";
 import { useLoading } from "../contexts/loading";
 import Sidebar from "../components/admin/sidebar";
 import Header from "../components/admin/header";
+import { useTheme } from "../contexts/theme";
 
 function AdminLayout() {
   const { loading } = useLoading();
+  const { darkMode } = useTheme();
 
   return (
     <>
       <Loading isShow={loading} />
-      <Stack direction={"row"} gap={2}>
-        <div className="flex h-screen w-screen overflow-y-auto ">
+      <div className="flex">
         <Sidebar/>
-        <div className="w-full  h-screen overflow-y-auto">
-            <Header/>
-            <Outlet />
+        <div className="w-full gird grid-cols-1">
+          <Header/>
+          <div className={`fixed top-10 right-0 p-10 w-[1246px] h-screen overflow-y-auto ${darkMode ? 'bg-[#1A222C] ' : 'bg-[#F1F5F9]'}`}><Outlet /></div>    
         </div>
-        </div>
-      </Stack>
+      </div>
     </>
   );
 }

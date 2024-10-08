@@ -10,8 +10,17 @@ import ProductDetail from './pages/user/productDetail';
 import DetailNews from './pages/user/detailNews';
 import ClientLayout from './layouts/clientlayout';
 import AdminLayout from './layouts/adminlayout';
-import Dashboard from './pages/admin/dashboard';
-import AddProduct from './pages/admin/addProduct';
+import Dashboard from './pages/admin/Dashboard/dashboard';
+import CheckOut from './pages/user/checkOut';
+import Cart from './pages/user/cart';
+import List from './pages/admin/Product/list';
+import Detail from './pages/admin/Product/detail';
+import Add from './pages/admin/Product/add';
+import ListCT from './pages/admin/Category/ListCT';
+import ListSize from './pages/admin/size/listSize';
+import ListCL from './pages/admin/color/listCL';
+import ListBill from './pages/admin/bill/listBill';
+import DetailBill from './pages/admin/bill/detailBill';
 
 const routeConfig = [
   {
@@ -23,9 +32,37 @@ const routeConfig = [
         element:<Dashboard/>,
       },
       {
-        path: "product",
-        element:<AddProduct/>,
-      }
+        path: "product/list",
+        element:<List/>,
+      },
+      {
+        path: "product/detail/:id",
+        element:<Detail/>,
+      },
+      {
+        path: "product/add",
+        element:<Add/>,
+      },
+      {
+        path: "category/list",
+        element: <ListCT/>,
+      },
+      {
+        path: "size/list",
+        element: <ListSize/>,
+      },
+      {
+        path: "color/list",
+        element: <ListCL/>,
+      },
+      {
+        path: "bill/list",
+        element: <ListBill/>,
+      },
+      {
+        path: "bill/detail/:billId",
+        element:<DetailBill/>,
+      },
     ],
   },
   {
@@ -67,6 +104,14 @@ const routeConfig = [
       {
         path: 'newSale/:id',
         element: <DetailNews />,
+      },
+      {
+        path: '/cart',
+        element: <Cart />,
+      },
+      {
+        path: '/checkout',
+        element: <CheckOut />,
       },
     ]
   }
