@@ -27,7 +27,8 @@ const variantSchema = new mongoose.Schema({
         type : Number,
     },
     isShow : {
-        type : boolean,
+        type : Boolean,
+        default : false
     }
 });
 
