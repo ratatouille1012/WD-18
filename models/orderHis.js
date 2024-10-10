@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const orderHisSchema = new mongoose.Schema({
@@ -6,18 +7,18 @@ const orderHisSchema = new mongoose.Schema({
         required : true,
         ref : 'order'
     },
-    variant : {
+    status : {
+        type : String,
+    },
+    user : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : 'variant'
+        ref : 'user'
     },
-    quantity : {
-        type : Number
-    },
-    variantPrice : {
-        type : mongoose.Schema.Types.Number,
-        required : true,
-        ref : 'variant'
+    time : {
+        type : Date
     }
+
+
 });
 
 export default mongoose.model("orderHis", orderHisSchema);

@@ -4,7 +4,7 @@ import Product from "../models/Product.js";
 
 export const getProducts = async (req, res, next) => {
   try {
-    const data = await Product.find().populate("category");
+    const data = await Product.find().populate("category").populate('brand');
     if (data && data.length > 0) {
       return res.status(200).json({
         message: "Lay danh sach san pham thanh cong!",

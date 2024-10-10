@@ -7,6 +7,9 @@ import sizeRouter from "./size.js";
 import variantRouter from "./variant.js";
 import brandRouter from "./brand.js";
 import voucherRouter from "./voucher.js";
+import orderRouter from "./order.js";
+import shipRouter from "./ship.js";
+import orderItemRouter from "./orderItem.js";
 
 const router = Router();
 
@@ -16,7 +19,10 @@ router.use("/auth", authRouter);
 router.use("/color", colorRouter);
 router.use("/size", sizeRouter);
 router.use("/variant", variantRouter);
-router.use("/brand", brandRouter)
-router.use("/voucher", voucherRouter)
+router.use("/brand", brandRouter);
+router.use("/voucher", voucherRouter);
+router.use("/order", orderRouter);
+router.use("/ship", shipRouter);
+router.use("/orderItem", orderItemRouter)
 
 export default router;

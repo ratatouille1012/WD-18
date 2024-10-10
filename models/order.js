@@ -6,11 +6,11 @@ const orderSchema = new mongoose.Schema({
         required : true,
         ref : "user"
     },
-    billCode : {
+    orderCode : {
         type : String,
         required : true
     },
-    billStatus : {
+    orderStatus : {
         type : String,
 
     },
