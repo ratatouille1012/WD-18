@@ -4,7 +4,7 @@ import { errorMessages, successMessages } from "../constants/message.js";
 
 export const getVariant = async (req, res, next) => {
     try {
-        const data = await variant.find({});
+        const data = await variant.find({}).populate('color').populate('size');
         if (data && data.length > 0) {
             return res.status(200).json({
               message: "Lay danh sach biến thể thanh cong!",

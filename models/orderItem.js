@@ -21,4 +21,4 @@ const orderItemSchema = new mongoose.Schema({
 
 });
 
-export default mongoose.model("orderItem", billHisrSchema);
+export default mongoose.model("orderItem", orderItemSchema);

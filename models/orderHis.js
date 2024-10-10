@@ -20,4 +20,4 @@ const orderHisSchema = new mongoose.Schema({
     }
 });
 
-export default mongoose.model("orderHis", billItemSchema);
+export default mongoose.model("orderHis", orderHisSchema);
