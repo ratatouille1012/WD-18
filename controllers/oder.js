@@ -2,7 +2,7 @@ import { errorMessages, successMessages } from "../constants/message.js";
 import order from "../models/order.js";
 export const getOrder = async (req, res, next) => {
   try {
-    const data = await order.find({}).populate('user').populate('ship').populate('voucher');
+    const data = await order.find({}).populate('ship').populate('voucher');
     if (data && data.length > 0) {
       return res.status(200).json({
         message: "Lay danh sach màu sắc thanh cong!",
