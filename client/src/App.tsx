@@ -8,6 +8,7 @@ import SaleNews from './pages/user/saleNews';
 import Contact from './pages/user/contact';
 import ProductDetail from './pages/user/productDetail';
 import DetailNews from './pages/user/detailNews';
+import MyAccount from './pages/user/myaccount';
 import ClientLayout from './layouts/clientlayout';
 import AdminLayout from './layouts/adminlayout';
 import Dashboard from './pages/admin/Dashboard/dashboard';
@@ -112,6 +113,10 @@ const routeConfig = [
       {
         path: '/checkout',
         element: <CheckOut />,
+      },
+      {
+        path: '/account',
+        element: <MyAccount />,
       },
     ]
   }

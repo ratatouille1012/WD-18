@@ -144,9 +144,9 @@ const Cart = () => {
                                         <td className='border p-4 text-center'>{formatPrice(item.price)}</td>
                                         <td className='border p-4'>
                                             <div className="flex items-center justify-between">
-                                                <button onClick={() => changeQuantity(item.idcart, true)}>+</button>
-                                                <span>{item.quantity}</span>
                                                 <button onClick={() => changeQuantity(item.idcart, false)}>-</button>
+                                                <span>{item.quantity}</span>
+                                                <button onClick={() => changeQuantity(item.idcart, true)}>+</button>
                                             </div>
                                         </td>
                                         <td className='border p-4 text-center'>{formatPrice(item.price * item.quantity)}</td>
