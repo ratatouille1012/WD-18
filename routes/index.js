@@ -10,6 +10,7 @@ import voucherRouter from "./voucher.js";
 import orderRouter from "./order.js";
 import shipRouter from "./ship.js";
 import orderItemRouter from "./orderItem.js";
+import imageRouter from "./image.js";
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use("/brand", brandRouter);
 router.use("/voucher", voucherRouter);
 router.use("/order", orderRouter);
 router.use("/ship", shipRouter);
-router.use("/orderItem", orderItemRouter)
+router.use("/orderItem", orderItemRouter);
+router.use("/image", imageRouter);
 
 export default router;

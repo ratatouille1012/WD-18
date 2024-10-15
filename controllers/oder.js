@@ -5,11 +5,11 @@ export const getOrder = async (req, res, next) => {
     const data = await order.find({}).populate('ship').populate('voucher');
     if (data && data.length > 0) {
       return res.status(200).json({
-        message: "Lay danh sach màu sắc thanh cong!",
+        message: "Lay danh sach order thanh cong!",
         data,
       });
     }
-    return res.status(404).json({ message: "Khong co màu sắc nao!" });
+    return res.status(404).json({ message: "Khong co order nao!" });
   } catch (error) {
     next(error);
   }
@@ -18,10 +18,10 @@ export const createOrder = async (req, res, next) => {
   try {
     const data = await order.create(req.body);
     if (!data) {
-      return res.status(400).json({ message: "Them màu sắc that bai!" });
+      return res.status(400).json({ message: "Them order that bai!" });
     }
     return res.status(201).json({
-      message: "Them màu sắc thanh cong!",
+      message: "Them order thanh cong!",
       data,
     });
   } catch (error) {
@@ -33,10 +33,10 @@ export const getOrderById = async (req, res, next) => {
   try {
     const data = await order.findById(req.params.id);
     if (!data) {
-      return res.status(400).json({ message: "Lay màu sắc that bai!" });
+      return res.status(400).json({ message: "Lay order that bai!" });
     }
     return res.status(201).json({
-      message: "Lay màu sắc thanh cong!",
+      message: "Lay order thanh cong!",
       data,
     });
   } catch (error) {

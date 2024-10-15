@@ -5,11 +5,11 @@ export const getShip = async (req, res, next) => {
     const data = await ship.find({});
     if (data && data.length > 0) {
       return res.status(200).json({
-        message: "Lay danh sach thương hiệu thanh cong!",
+        message: "Lay danh sach phương thức vận chuyển thanh cong!",
         data,
       });
     }
-    return res.status(404).json({ message: "Khong co thương hiệu nao!" });
+    return res.status(404).json({ message: "Khong co phương thức vận chuyển nao!" });
   } catch (error) {
     next(error);
   }
@@ -18,10 +18,10 @@ export const createShip = async (req, res, next) => {
   try {
     const data = await ship.create(req.body);
     if (!data) {
-      return res.status(400).json({ message: "Them thương hiệu that bai!" });
+      return res.status(400).json({ message: "Them phương thức vận chuyển that bai!" });
     }
     return res.status(201).json({
-      message: "Them thương hiệu thanh cong!",
+      message: "Them phương thức vận chuyển thanh cong!",
       data,
     });
   } catch (error) {
@@ -33,10 +33,10 @@ export const getShipById = async (req, res, next) => {
   try {
     const data = await ship.findById(req.params.id);
     if (!data) {
-      return res.status(400).json({ message: "Lay thương hiệu that bai!" });
+      return res.status(400).json({ message: "Lay phương thức vận chuyển that bai!" });
     }
     return res.status(201).json({
-      message: "Lay thương hiệu thanh cong!",
+      message: "Lay phương thức vận chuyển thanh cong!",
       data,
     });
   } catch (error) {

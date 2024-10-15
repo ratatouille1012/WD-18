@@ -5,11 +5,11 @@ export const getOrderItem = async (req, res, next) => {
     const data = await orderItem.find({}).populate('order').populate('variant');
     if (data && data.length > 0) {
       return res.status(200).json({
-        message: "Lay danh sach thương hiệu thanh cong!",
+        message: "Lay danh sach order Item thanh cong!",
         data,
       });
     }
-    return res.status(404).json({ message: "Khong co thương hiệu nao!" });
+    return res.status(404).json({ message: "Khong co order Item nao!" });
   } catch (error) {
     next(error);
   }
@@ -18,10 +18,10 @@ export const createOrderItem = async (req, res, next) => {
   try {
     const data = await orderItem.create(req.body);
     if (!data) {
-      return res.status(400).json({ message: "Them thương hiệu that bai!" });
+      return res.status(400).json({ message: "Them order Item that bai!" });
     }
     return res.status(201).json({
-      message: "Them thương hiệu thanh cong!",
+      message: "Them order Item thanh cong!",
       data,
     });
   } catch (error) {
@@ -33,10 +33,10 @@ export const getOrderItemById = async (req, res, next) => {
   try {
     const data = await orderItem.findById(req.params.id);
     if (!data) {
-      return res.status(400).json({ message: "Lay thương hiệu that bai!" });
+      return res.status(400).json({ message: "Lay order Item that bai!" });
     }
     return res.status(201).json({
-      message: "Lay thương hiệu thanh cong!",
+      message: "Lay order Item thanh cong!",
       data,
     });
   } catch (error) {

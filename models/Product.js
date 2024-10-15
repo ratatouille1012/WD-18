@@ -44,8 +44,8 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
     images: {
-      type: [String],
-      default: [],
+      type : mongoose.Schema.Types.ObjectId,
+      ref : "images",
     },
   },
   {
