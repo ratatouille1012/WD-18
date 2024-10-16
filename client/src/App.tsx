@@ -22,6 +22,8 @@ import ListSize from './pages/admin/size/listSize';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
+import BillHis from './components/user/billhis';
+import OrderDetail from './components/user/orderDetail';
 
 const routeConfig = [
   {
@@ -117,6 +119,10 @@ const routeConfig = [
       {
         path: '/account',
         element: <MyAccount />,
+      },
+      {
+        path: '/detail/:id',
+        element: <OrderDetail />,
       },
     ]
   }

@@ -1,29 +1,50 @@
+import { Button } from 'antd';
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link từ react-router-dom
 
-// Định nghĩa interface cho đơn hàng
-interface Order {
-  billhis_id: number; // ID của bảng billHis
-  bill_id: number;    // ID của hóa đơn
-  status: string;     // Trạng thái
-  user_id: number;    // ID của người dùng
-  time: string;       // Thời gian
+// Định nghĩa interface cho sản phẩm
+interface Product {
+  product_id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+// Định nghĩa interface cho hóa đơn (BillHis)
+interface Bill {
+  billhis_id: number;
+  bill_id: number;
+  time: string;
+  status: string;
+  products: Product[]; // Danh sách sản phẩm trong hóa đơn
 }
 
 const BillHis = () => {
-  // Dữ liệu giả lập cho các đơn hàng
-  const [orders, setOrders] = useState<Order[]>([
-    { billhis_id: 1, bill_id: 1001, status: 'Đã hoàn thành', user_id: 1, time: '2024-10-01' },
-    { billhis_id: 2, bill_id: 1002, status: 'Đang xử lý', user_id: 2, time: '2024-10-10' },
+  // Danh sách hóa đơn ban đầu
+  const [bills, setBills] = useState<Bill[]>([
+    {
+      billhis_id: 1,
+      bill_id: 101,
+      time: '2024-10-15',
+      status: 'Đã hoàn thành',
+      products: [
+        { product_id: 1, name: 'Sản phẩm A', price: 2000000, quantity: 2 },
+      ],
+    },
+    {
+      billhis_id: 2,
+      bill_id: 102,
+      time: '2024-10-16',
+      status: 'Đang xử lý',
+      products: [
+        { product_id: 2, name: 'Sản phẩm B', price: 4000000, quantity: 1 },
+      ],
+    },
   ]);
 
-  // Hàm để cập nhật trạng thái đơn hàng
-  
   return (
     <div>
-      {/* Tiêu đề bảng */}
-      <h2 className="text-lg font-semibold mb-4">Trạng thái đơn hàng</h2>
-
-      {/* Bảng trạng thái đơn hàng */}
+      {/* Bảng danh sách hóa đơn */}
       <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
         <thead className="bg-gray-200">
           <tr>
@@ -31,18 +52,29 @@ const BillHis = () => {
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Bill ID</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Thời gian</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Trạng thái</th>
-            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">User ID</th>
+            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Sản phẩm</th>
+            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {orders.map(order => (
-            <tr key={order.billhis_id}>
-              <td className="border-b border-gray-300 p-4">{order.billhis_id}</td>
-              <td className="border-b border-gray-300 p-4">{order.bill_id}</td>
-              <td className="border-b border-gray-300 p-4">{order.time}</td>
-              <td className="border-b border-gray-300 p-4">{order.status}</td>
-              <td className="border-b border-gray-300 p-4">{order.user_id}</td>
-              
+          {bills.map(bill => (
+            <tr key={bill.billhis_id}>
+              <td className="border-b border-gray-300 p-4">{bill.billhis_id}</td>
+              <td className="border-b border-gray-300 p-4">{bill.bill_id}</td>
+              <td className="border-b border-gray-300 p-4">{bill.time}</td>
+              <td className="border-b border-gray-300 p-4">{bill.status}</td>
+              <td className="border-b border-gray-300 p-4">
+                {bill.products.map(product => (
+                  <div key={product.product_id}>
+                    {product.name} - Số lượng: {product.quantity} - Giá: {product.price.toLocaleString()} đ
+                  </div>
+                ))}
+              </td>
+              <td className="border-b border-gray-300 p-4">
+                <Link to={`/detail/${bill.billhis_id}`}>
+                  <Button type="primary">Chi tiết</Button>
+                </Link>
+              </td>
             </tr>
           ))}
         </tbody>
