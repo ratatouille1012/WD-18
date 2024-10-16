@@ -5,6 +5,10 @@ import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 import { LoadingProvider } from './contexts/loading.tsx'
 import { ThemeProvider } from './contexts/theme.tsx'
+import axios from 'axios'
+
+
+axios.defaults.baseURL = "http://localhost:8000";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

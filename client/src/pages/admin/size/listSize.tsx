@@ -1,79 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../contexts/theme';
-import { Link } from 'react-router-dom';
+import EditPopup from './editSize';
+import AddPopup from './addSize';
+import { TPsize } from '../../../types/size';
+import { useLoading } from '../../../contexts/loading';
+import axios from 'axios';
 
-const sizes = [
-    { id: 1, size: '39' },
-    { id: 2, size: '40' },
-    { id: 3, size: '41' },
-    { id: 4, size: '42' },
-    { id: 5, size: '43' },
-    { id: 6, size: '44' },
-    { id: 7, size: '45' },
-];
-
-const AddPopup = ({ onClose, onAdd, darkMode }) => {
-    const [newSize, setNewSize] = useState('');
-
-    const handleAdd = () => {
-        if (newSize) {
-            onAdd(newSize);
-            setNewSize('');
-            onClose();
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className={`${darkMode ? 'bg-[#24303F] text-white' : 'bg-white text-black'} p-5 rounded`}>
-                <h2 className="text-xl">Thêm kích thước</h2>
-                <input 
-                    type="text" 
-                    value={newSize} 
-                    onChange={(e) => setNewSize(e.target.value)} 
-                    className={`${darkMode ? 'bg-[#3E4A58] text-white p-2' : 'border p-2'} mt-2 w-full`} 
-                    placeholder="Nhập kích thước"
-                />
-                <div className="mt-4">
-                    <button onClick={onClose} className="bg-gray-500 text-white px-3 py-1 mr-2">Cancel</button>
-                    <button 
-                        className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white px-3 py-1`}
-                        onClick={handleAdd}
-                    >
-                        Add
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const EditPopup = ({ size, onClose, darkMode }) => (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div className={`${darkMode ? 'bg-[#24303F] text-white' : 'bg-white text-black'} p-5 rounded`}>
-            <h2 className="text-xl">Sửa kích thước</h2>
-            <input 
-                type="text" 
-                defaultValue={size.size} 
-                className={`${darkMode ? 'bg-[#3E4A58] text-white p-2' : 'border p-2'} mt-2 w-full`} 
-            />
-            <div className="mt-4">
-                <button onClick={onClose} className="bg-gray-500 text-white px-3 py-1 mr-2">Cancel</button>
-                <button className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white px-3 py-1`}>Save</button>
-            </div>
-        </div>
-    </div>
-);
-
-const List = () => {
+const SizeList = () => {
     const { darkMode } = useTheme();
+    const { setLoading } = useLoading();
     const [isEditPopupOpen, setEditPopupOpen] = useState(false);
     const [isAddPopupOpen, setAddPopupOpen] = useState(false);
     const [selectedSize, setSelectedSize] = useState(null);
+    const [sizes, setSizes] = useState<TPsize[]>([]);
 
-    const handleEditClick = (size) => {
+    const getAllSize = async () => {
+        try {
+          setLoading(true);
+          const { data } = await axios.get("/api/size");
+          setSizes(data.data);
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        getAllSize();
+      },[]);
+
+      const handleDeleteSize = async (sizeId: string) => {
+        try {
+            setLoading(true);
+            const token = window.localStorage.getItem('token');
+             await axios.delete(`/api/size/delete/${sizeId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            window.location.reload(); 
+        } catch (error) {
+            if (error.response?.data?.message === "Token invalid") {
+                console.error("Token is invalid. Please log in again.");
+            } else {
+                console.error("Error adding category:", error.response?.data || error.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+      }
+
+    const handleEditClick = (size: TPsize) => { 
         setSelectedSize(size);
+        console.log(size);
         setEditPopupOpen(true);
     };
 
@@ -82,17 +62,18 @@ const List = () => {
         setSelectedSize(null);
     };
 
-    const handleAddSize = (newSize) => {
-        sizes.push({ id: sizes.length + 1, size: newSize }); // Update your state logic appropriately
+    const handleAddSize = (newSize: string) => {
+        sizes.push({ id: sizes.length + 1, size: newSize });
     };
 
+    
     return (
         <div className="pb-10">
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6`}>
+            <div className={`p-4 rounded-lg shadow-md mt-6 ${darkMode ? 'bg-[#24303F]' : 'bg-white'}`}>
                 <div className="flex justify-between">
-                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Danh sách kích thước</h2>
-                    <button 
-                        className={`${darkMode ? 'bg-gray-500 text-white' : 'bg-gray-500 text-white'} px-3 py-1 rounded-md hover:bg-gray-600`}
+                    <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : ''}`}>Danh sách kích thước</h2>
+                    <button
+                        className={`px-3 py-1 rounded-md hover:bg-gray-600 ${darkMode ? 'bg-gray-500 text-white' : 'bg-gray-500 text-white'}`}
                         onClick={() => setAddPopupOpen(true)}
                     >
                         Thêm kích thước
@@ -107,15 +88,15 @@ const List = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {sizes.map(size => (
-                            <tr className={`${darkMode ? ' text-meta-3 ' : ''}`} key={size.id}>
-                                <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b py-2 px-4`}>{size.id}</td>
-                                <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b py-2 px-4`}>{size.size}</td>
-                                <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b py-2 px-4`}>
-                                    <button className={`${darkMode ? 'bg-[#E94E77] text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-md mr-2 hover:bg-red-600`}>
+                        {sizes.map((size) => (
+                            <tr key={size._id} className={`${darkMode ? 'text-meta-3' : ''}`}>
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{size._id}</td>
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{size.name}</td>
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>
+                                    <button onClick={() => handleDeleteSize(size._id)} className={`${darkMode ? 'bg-[#E94E77] text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-md mr-2 hover:bg-red-600`}>
                                         Xóa
                                     </button>
-                                    <button 
+                                    <button
                                         className={`${darkMode ? 'bg-[#4CAF50] text-white' : 'bg-green-500 text-white'} px-3 py-1 rounded-md hover:bg-green-600`}
                                         onClick={() => handleEditClick(size)}
                                     >
@@ -135,6 +116,6 @@ const List = () => {
             </div>
         </div>
     );
-}
+};
 
-export default List;
+export default SizeList;

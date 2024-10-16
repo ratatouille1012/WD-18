@@ -21,6 +21,11 @@ import ListSize from './pages/admin/size/listSize';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+  import { element } from 'prop-types';
+import NotFound from './pages/user/notFound';
+import ListBrand from './pages/admin/brand/listBrand';
 
 const routeConfig = [
   {
@@ -62,6 +67,10 @@ const routeConfig = [
       {
         path: "bill/detail/:billId",
         element:<DetailBill/>,
+      },
+      {
+        path: "brand/list",
+        element:<ListBrand/>,
       },
     ],
   },
@@ -114,12 +123,27 @@ const routeConfig = [
         element: <CheckOut />,
       },
     ]
+  },
+  {
+    path:"/notfound",
+    element:<NotFound />,
   }
   
 ];
 
 function App() {
   const routes = useRoutes(routeConfig);
+  const [data, setData] = useState('');
+
+  useEffect(() => {
+    axios.get('/api/data') 
+      .then(response => {
+        setData(response.data.message);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
 
   return (
     <>

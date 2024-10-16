@@ -54,8 +54,12 @@ const CartSideLeft: FC<Props> = ({ toggleOBCL }) => {
                                 <a href={`/product/${item.id}?label=Sản%20phẩm`} className='w-36'><img src={item.image} alt={item.name} className="w-16 h-16 object-cover" /></a>
                                 <div className="ml-2 flex-grow">
                                     <h3 className="text-sm font-semibold line-clamp-3">{item.name}</h3>
-                                    <p className="text-xs text-gray-500">Số lượng: {item.quantity}</p>
-                                     <p className="text-xs text-gray-500">
+                                    <div className="flex gap-x-4">
+                                        <p className="text-xs text-gray-500">Màu: {item.color}</p>
+                                        <p className="text-xs text-gray-500">Kích cỡ: {item.size}</p>
+                                    </div>    
+                                    <p className="text-xs text-gray-500">Số lượng: {item.quantity}</p>                               
+                                    <p className="text-xs text-gray-500">
                                         Giá: {item.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                                     </p>
                                 </div>

@@ -220,14 +220,27 @@ const Cart = () => {
                                     </div>
 
 
-                                    <div className="bg-gray-100 p-6 rounded-md">
+                                    <div className="bg-gray-100 p-6 rounded-md w-[300px]">
                                         <h2 className="text-4xl font-extrabold text-gray-800">{formatPrice(totalAmount)}</h2>
+                                        <div className="tt-2 max-h-52 overflow-y-auto ">
+                                                {cartItems.map(item => (
+                                                    <div key={item.idcart} className="flex items-center border-b py-2">
+                                                        <img src={item.image} alt={item.name} className="h-12 w-12 object-cover mr-2" />
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium line-clamp-2">{item.name}</span>
+                                                            <span className="text-sm">Số lượng: {item.quantity}</span>
+                                                            <span className="text-sm">{formatPrice(item.price)}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                        </div>
                                         <ul className="text-gray-800 mt-8 space-y-4">
                                             <li className="flex flex-wrap gap-4 text-sm">Phí ship <span className="ml-auto font-bold">{shippingFee.toLocaleString()} VND</span></li>
                                             <li className="flex flex-wrap gap-4 text-sm">Voucher <span className="ml-auto font-bold">-{discount.toLocaleString()}%</span></li>
                                             <li className="flex flex-wrap gap-4 text-sm">Tax <span className="ml-auto font-bold">0%</span></li>
                                             <li className="flex flex-wrap gap-4 text-sm font-bold border-t-2 pt-4">Total <span className="ml-auto">{(shippingFee + totalAmount - (totalAmount * discount/100)).toLocaleString()} VND</span></li>
                                         </ul>
+                                        
                                     </div>
                                 </form>
                             </div>

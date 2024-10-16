@@ -139,16 +139,27 @@ const DetailP = () => {
             color: selectedColor,
             quantity: count,
         };
-
+    
         const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
-        existingCart.push(cartItem);
+        const existingItemIndex = existingCart.findIndex(item => 
+            item.id === cartItem.id && item.size === cartItem.size && item.color === cartItem.color
+        );
+    
+        if (existingItemIndex > -1) {
+            existingCart[existingItemIndex].quantity += cartItem.quantity;
+        } else {
+            existingCart.push(cartItem);
+        }
+    
         localStorage.setItem('cart', JSON.stringify(existingCart));
         setCount(1);
         setSelectedSize('');
         setSelectedColor('');
         alert('Sản phẩm đã được thêm vào giỏ hàng!');
-
+    
+        window.location.reload();
     }
+    
     
     if (!product) {
         return <div>Không tìm thấy sản phẩm.</div>;
