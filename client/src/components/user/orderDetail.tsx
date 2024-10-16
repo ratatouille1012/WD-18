@@ -28,11 +28,10 @@ interface Bill {
 
 const MenuDetail: React.FC<{ order: Order, bill: Bill }> = ({ order, bill }) => {
 
-    const navigate = useNavigate(); // Khởi tạo hook để điều hướng
+    const navigate = useNavigate(); 
 
-  // Hàm để xử lý sự kiện khi nhấn nút "Trở lại"
   const handleGoBack = () => {
-    navigate(-1); // Trở lại trang trước đó
+    navigate(-1); 
   };
 
   return (

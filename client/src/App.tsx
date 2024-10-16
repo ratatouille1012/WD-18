@@ -8,7 +8,6 @@ import SaleNews from './pages/user/saleNews';
 import Contact from './pages/user/contact';
 import ProductDetail from './pages/user/productDetail';
 import DetailNews from './pages/user/detailNews';
-import MyAccount from './pages/user/myaccount';
 import ClientLayout from './layouts/clientlayout';
 import AdminLayout from './layouts/adminlayout';
 import Dashboard from './pages/admin/Dashboard/dashboard';
@@ -22,8 +21,8 @@ import ListSize from './pages/admin/size/listSize';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
-import BillHis from './components/user/billhis';
 import OrderDetail from './components/user/orderDetail';
+import MyAccount from './pages/user/myAccount';
 
 const routeConfig = [
   {

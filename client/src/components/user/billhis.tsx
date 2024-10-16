@@ -1,8 +1,7 @@
-import { Button } from 'antd';
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link từ react-router-dom
+import { Button } from '@material-tailwind/react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-// Định nghĩa interface cho sản phẩm
 interface Product {
   product_id: number;
   name: string;
@@ -10,7 +9,6 @@ interface Product {
   quantity: number;
 }
 
-// Định nghĩa interface cho hóa đơn (BillHis)
 interface Bill {
   billhis_id: number;
   bill_id: number;
@@ -21,7 +19,7 @@ interface Bill {
 
 const BillHis = () => {
   // Danh sách hóa đơn ban đầu
-  const [bills, setBills] = useState<Bill[]>([
+  const [bills] = useState<Bill[]>([
     {
       billhis_id: 1,
       bill_id: 101,
@@ -51,8 +49,8 @@ const BillHis = () => {
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">BillHis ID</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Bill ID</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Thời gian</th>
-            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Trạng thái</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Sản phẩm</th>
+            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Trạng thái</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Hành động</th>
           </tr>
         </thead>
@@ -62,7 +60,6 @@ const BillHis = () => {
               <td className="border-b border-gray-300 p-4">{bill.billhis_id}</td>
               <td className="border-b border-gray-300 p-4">{bill.bill_id}</td>
               <td className="border-b border-gray-300 p-4">{bill.time}</td>
-              <td className="border-b border-gray-300 p-4">{bill.status}</td>
               <td className="border-b border-gray-300 p-4">
                 {bill.products.map(product => (
                   <div key={product.product_id}>
@@ -70,9 +67,10 @@ const BillHis = () => {
                   </div>
                 ))}
               </td>
+              <td className="border-b border-gray-300 p-4">{bill.status}</td>
               <td className="border-b border-gray-300 p-4">
                 <Link to={`/detail/${bill.billhis_id}`}>
-                  <Button type="primary">Chi tiết</Button>
+                  <Button type='primary'>Chi tiết</Button>
                 </Link>
               </td>
             </tr>
