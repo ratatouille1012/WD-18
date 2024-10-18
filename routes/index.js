@@ -12,6 +12,7 @@ import shipRouter from "./ship.js";
 import orderItemRouter from "./orderItem.js";
 import imageRouter from "./upload.js";
 import cartRouter from "./cart.js";
+import UserRouter from "./user.js";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use("/ship", shipRouter);
 router.use("/orderItem", orderItemRouter);
 router.use("/images", imageRouter);
 router.use('/cart', cartRouter);
+router.use('/user', UserRouter);
 
 export default router;
