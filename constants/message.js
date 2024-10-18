@@ -10,6 +10,7 @@ export const errorMessages = Object.freeze({
   DELETE_FAIL: "Delete fail",
   INVALID_BODY_REQUEST: "Invalid body request!",
   PERMISSION_DENIED: "Permission denied!",
+  ITEM_EXISTED : "Item already exists"
 });
 
 export const successMessages = Object.freeze({

@@ -30,7 +30,7 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
     brand: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId, 
       ref : "brand",
       default: "No brand",
     },

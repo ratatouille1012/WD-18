@@ -18,3 +18,7 @@ app.use(errorHandlerNotFound, errorHandler);
 app.listen(PORT || 8000, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+app.use((err, req, res, next) => {
+  console.error('Error details:', err); // Ghi lỗi chi tiết ra console
+  res.status(500).json({ error: err.message || 'Internal Server Error' }); // Trả về lỗi dưới dạng JSON
+});

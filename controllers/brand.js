@@ -17,6 +17,7 @@ export const getBrand = async (req, res, next) => {
 export const createBrand = async (req, res, next) => {
   try {
     const data = await brand.create(req.body);
+    
     if (!data) {
       return res.status(400).json({ message: "Them thương hiệu that bai!" });
     }
