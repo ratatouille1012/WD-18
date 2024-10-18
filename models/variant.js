@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 const variantSchema = new mongoose.Schema({
     product : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "product",
-        required : true
+        ref : 'Product',
     },
     color : {
         type : mongoose.Schema.Types.ObjectId,
@@ -25,6 +24,9 @@ const variantSchema = new mongoose.Schema({
     },
     salePrice : {
         type : Number,
+    },
+    variantImage : {
+        type : [String]
     },
     isShow : {
         type : Boolean,

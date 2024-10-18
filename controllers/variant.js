@@ -4,13 +4,7 @@ import { errorMessages, successMessages } from "../constants/message.js";
 
 export const getVariant = async (req, res, next) => {
     try {
-      const checkVariant = await variant.findOne({
-        color: req.body.color,
-        size: req.body.size,
-    });
-    if (checkVariant) {
-        return res.status(400).json({ message: "Biến thể này đã tồn tại!" });
-    }
+      
         const data = await variant.find({}).populate('color').populate('size');
         if (data && data.length > 0) {
             return res.status(200).json({
@@ -27,6 +21,13 @@ export const getVariant = async (req, res, next) => {
 export const createVariant = async (req, res, next) => {
     try {
         const data = await variant.create(req.body);
+        const checkVariant = await variant.findOne({
+          color: req.body.color,
+          size: req.body.size,
+      });
+      if (checkVariant) {
+          return res.status(400).json({ message: "Biến thể này đã tồn tại!" });
+      }
         if (!data) {
             return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
           }
