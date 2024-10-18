@@ -7,6 +7,9 @@ import { TPproducts } from '../../../types/products';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { TPbrand } from '../../../types/brand';
+import Trash from '../../../svg/trash';
+import { TPcolor } from '../../../types/color';
+import { TPsize } from '../../../types/size';
 
 const AddProduct = () => {
     const { darkMode } = useTheme();
@@ -16,6 +19,9 @@ const AddProduct = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const nav = useNavigate();
     const [imageURLs, setImageURLs] = useState<string[]>([]);
+    const [colors, setColors] = useState<TPcolor[]>([]);
+    const [sizes, setSizes] = useState<TPsize[]>([]);
+    const [variants, setVariants] = useState([{ color: '', size: '', price_import: '', price_list: '', price_selling: '', quantity: '' }]);
 
     const { register, handleSubmit, formState: { errors } } = useForm<TPproducts>();
 
@@ -42,15 +48,15 @@ const AddProduct = () => {
 
     const handleAddImageURL = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
-            event.preventDefault(); 
+            event.preventDefault();
             const value = event.currentTarget.value.trim();
 
             if (value) {
                 if (imageURLs.length < 4) {
                     setImageURLs(prev => [...prev, value]);
-                    event.currentTarget.value = ''; 
+                    event.currentTarget.value = '';
                 } else {
-                    setErrorMessage("Bạn chỉ có thể thêm tối đa 4 ảnh.");
+                    setErrorMessage("You can only add up to 4 images.");
                 }
             }
         }
@@ -64,71 +70,128 @@ const AddProduct = () => {
         try {
             setLoading(true);
             const token = window.localStorage.getItem('token');
-
+    
             if (imageURLs.length === 0) {
-                setErrorMessage("Ít nhất một URL hình ảnh phải được cung cấp.");
+                setErrorMessage("At least one image URL must be provided.");
                 return;
             }
-
+    
+            const formattedVariants = variants.map(variant => {
+                const colorObj = colors.find(c => c.name === variant.color);
+                const sizeObj = sizes.find(s => String(s.name) === String(variant.size));
+    
+                if (!colorObj || !sizeObj) {
+                    throw new Error(`Invalid color or size for variant: ${JSON.stringify(variant)}`);
+                }
+    
+                return {
+                    color: colorObj._id,
+                    size: sizeObj._id,
+                    quantity: parseInt(variant.quantity) || 0,
+                    importPrice: parseFloat(variant.price_import) || 0,
+                    listPrice: parseFloat(variant.price_list) || 0,
+                    salePrice: parseFloat(variant.price_selling) || 0,
+                };
+            });
+    
             const requestBody = {
-                ...values,
+                title: values.title,
+                price: parseFloat(values.price) || 0,
+                brand: values.brand,
+                category: values.category,
                 images: imageURLs,
+                variants: formattedVariants
             };
-
-            console.log("Request Body:", requestBody);
-
-            await axios.post("/api/products", requestBody, {
+    
+            console.log("Request Body:", requestBody); // Ghi lại request body để kiểm tra
+    
+            const productResponse = await axios.post("/api/products", requestBody, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
-            nav("/admin/product/list");
+    
+            if (productResponse.data.success) {
+                nav('/admin');
+            }
+    
         } catch (error) {
-            console.error('Error response:', error.response);
-            if (axios.isAxiosError(error)) {
-                setErrorMessage(error.response?.data.message || "Something went wrong.");
+            console.error('Error creating product:', error);
+            if (error.response) {
+                console.error('Server responded with:', error.response.data);
+                setErrorMessage("Error creating product: " + error.response.data); // Hiển thị thông báo chi tiết
             } else {
-                setErrorMessage("An unexpected error occurred.");
+                setErrorMessage("Error creating product. Please check the console for details.");
             }
         } finally {
             setLoading(false);
         }
     };
-
+    
+    
     const onSubmit = (values: TPproducts) => {
-        console.log("Form submitted with values:", values);
         addProduct(values);
     };
 
+    const addVariant = () => {
+        setVariants([...variants, { color: '', size: '', price_import: '', price_list: '', price_selling: '', quantity: '' }]);
+    };
+
+    const removeVariant = (index: number) => {
+        if (variants.length > 1) {
+            setVariants(variants.filter((_, i) => i !== index));
+        } else {
+            alert('At least one variant must remain.');
+        }
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [colorResponse, sizeResponse] = await Promise.all([
+                    axios.get("/api/color"),
+                    axios.get("/api/size"),
+                ]);
+                setColors(colorResponse.data.data);
+                setSizes(sizeResponse.data.data);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [setLoading]);
+
     return (
         <div className="pb-10">
-            <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Thêm sản phẩm</h1>
+            <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Add Product</h1>
             <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-10`}>
-                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin chung</h2>
+                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>General Information</h2>
                 {errorMessage && <div className="text-red-500">{errorMessage}</div>}
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                     <div className="flex gap-x-4 w-full">
-                        <input 
-                            type="text" 
-                            placeholder="Tên sản phẩm"   
-                            {...register('title', { required: "Tên sản phẩm là bắt buộc" })} 
+                        <input
+                            type="text"
+                            placeholder="Product Name"
+                            {...register('title', { required: "Product name is required" })}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} w-full border p-2 rounded`}
                         />
                         {errors.title && <span className="text-red-500">{errors.title.message}</span>}
-                        
-                        <input 
-                            type="number" 
-                            placeholder="Giá sản phẩm"   
-                            {...register('price', { required: "Giá sản phẩm là bắt buộc" })} 
+
+                        <input
+                            type="number"
+                            placeholder="Product Price"
+                            {...register('price', { required: "Product price is required" })}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} w-full border p-2 rounded`}
                         />
                         {errors.price && <span className="text-red-500">{errors.price.message}</span>}
                     </div>
                     <div className="flex gap-x-4 w-full">
-                        <select 
-                            {...register('brand', { required: "Thương hiệu là bắt buộc" })} 
+                        <select
+                            {...register('brand', { required: "Brand is required" })}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
                         >
-                            <option value="" disabled hidden>Thương hiệu</option>
+                            <option value="" disabled hidden>Brand</option>
                             {brands.map(brand => (
                                 <option key={brand._id} value={brand._id}>
                                     {brand.name}
@@ -137,11 +200,11 @@ const AddProduct = () => {
                         </select>
                         {errors.brand && <span className="text-red-500">{errors.brand.message}</span>}
 
-                        <select 
-                            {...register('category', { required: "Danh mục là bắt buộc" })} 
+                        <select
+                            {...register('category', { required: "Category is required" })}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
                         >
-                            <option value="" disabled hidden>Danh mục</option>
+                            <option value="" disabled hidden>Category</option>
                             {categories.map(cate => (
                                 <option key={cate._id} value={cate._id}>
                                     {cate.name}
@@ -151,44 +214,126 @@ const AddProduct = () => {
                         {errors.category && <span className="text-red-500">{errors.category.message}</span>}
                     </div>
 
-                    {/* Input for Image URLs */}
-                    <input 
-                        type="text" 
-                        placeholder="Địa chỉ hình ảnh (URL)" 
-                        onKeyDown={handleAddImageURL} 
-                        className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`} 
+                    <input
+                        type="text"
+                        placeholder="Image URL"
+                        onKeyDown={handleAddImageURL}
+                        className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                     />
-                    <div className="text-sm text-gray-500">Nhập URL cho hình ảnh của sản phẩm và nhấn Enter</div>
+                    <div className="text-sm text-gray-500">Enter image URL and press Enter</div>
 
-                    {/* Display added image URLs */}
                     <div className="flex flex-wrap gap-2 mt-2">
                         {imageURLs.map((url, index) => (
                             <div key={index} className="relative">
-                                <img 
-                                    src={url} 
-                                    alt={`Image ${index + 1}`} 
-                                    className="h-24 w-24 object-cover rounded"
+                                <img
+                                    src={url}
+                                    alt={`product-${index}`}
+                                    className="w-24 h-24 object-cover rounded"
                                 />
-                                <button 
-                                    type="button" 
-                                    onClick={() => removeImage(index)} 
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                >
-                                    &times;
+                                <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 text-red-500">
+                                    <Trash />
                                 </button>
                             </div>
                         ))}
                     </div>
-                    {imageURLs.length >= 4 && <div className="text-red-500">Bạn đã đạt giới hạn 4 ảnh.</div>}
 
-                    <button 
-                        type="submit" 
-                        className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-3 mt-6 rounded-md`}
-                    >
-                        Thêm sản phẩm
+                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mt-6`}>Variants</h2>
+                    {variants.map((variant, index) => (
+                        <div key={index} className="flex gap-x-4">
+                            <select
+                                value={variant.color}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].color = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
+                            >
+                                <option value="" disabled hidden>Color</option>
+                                {colors.map(color => (
+                                    <option key={color._id} value={color.name}>
+                                        {color.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={variant.size}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].size = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
+                            >
+                                <option value="" disabled hidden>Size</option>
+                                {sizes.map(size => (
+                                    <option key={size._id} value={size.name}>
+                                        {size.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <input
+                                type="number"
+                                placeholder="Import Price"
+                                value={variant.price_import}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].price_import = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="List Price"
+                                value={variant.price_list}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].price_list = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="Selling Price"
+                                value={variant.price_selling}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].price_selling = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="Quantity"
+                                value={variant.quantity}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].quantity = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <button type="button" onClick={() => removeVariant(index)} className="text-red-500">
+                                <Trash />
+                            </button>
+                        </div>
+                    ))}
+                    <button type="button" onClick={addVariant} className="text-blue-500">Add Variant</button>
+
+                    <button type="submit" className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white mt-4 p-2 rounded`}>
+                        Add Product
                     </button>
                 </form>
-            </div>  
+            </div>
         </div>
     );
 };

@@ -1,8 +1,10 @@
+import { ObjectId } from "mongoose";
+
 export type TPVariant = {
     _id: string; 
-    product: string; 
-    color?: string; 
-    size?: string; 
+    product: ObjectId; 
+    color: ObjectId; 
+    size: ObjectId; 
     quantity?: number; 
     importPrice?: number; 
     listPrice?: number;

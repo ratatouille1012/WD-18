@@ -15,10 +15,10 @@ const Detail = () => {
     const { darkMode } = useTheme();
     const { id } = useParams<{ id: string }>();
     const nav = useNavigate();
-    // const [variants, setVariants] = useState([{}]);
+    const [variants, setVariants] = useState([{}]);
     const { setLoading } = useLoading();
-    // const [colors, setColors] = useState<TPcolor[]>([]);
-    // const [sizes, setSizes] = useState<TPsize[]>([]);
+    const [colors, setColors] = useState<TPcolor[]>([]);
+    const [sizes, setSizes] = useState<TPsize[]>([]);
     const [brands, setBrands] = useState<TPbrand[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [product, setProduct] = useState<TPproducts | null>(null);
@@ -72,46 +72,55 @@ const Detail = () => {
 
     useEffect(() => {
         fetchProduct();
-        fetchBrands(); // Fetch brands when the component mounts
+        fetchBrands(); 
         fetchCategories();
     }, [id]);
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         setLoading(true);
-    //         try {
-    //             const [colorResponse, sizeResponse] = await Promise.all([
-    //                 axios.get("/api/color"),
-    //                 axios.get("/api/size"),
-    //             ]);
-    //             setColors(colorResponse.data.data);
-    //             setSizes(sizeResponse.data.data);
-    //         } catch (error) {
-    //             console.error(error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-    //     fetchData();
-    // }, [setLoading]);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [colorResponse, sizeResponse] = await Promise.all([
+                    axios.get("/api/color"),
+                    axios.get("/api/size"),
+                ]);
+                setColors(colorResponse.data.data);
+                setSizes(sizeResponse.data.data);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [setLoading]);
 
-    // const addVariant = () => {
-    //     setVariants([...variants, { id: variants.length + 1 }]);
-    // };
+    const addVariant = () => {
+        setVariants([...variants, { id: variants.length + 1 }]);
+    };
 
-    // const removeVariant = (index) => {
-    //     if (variants.length > 1) {
-    //         setVariants(variants.filter((_, i) => i !== index));
-    //     } else {
-    //         alert('Phải có ít nhất 1 biến thể.');
-    //     }
-    // };
-
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-        if (product) {
-            setProduct({ ...product, [e.target.name]: e.target.value });
+    const removeVariant = (index) => {
+        if (variants.length > 1) {
+            setVariants(variants.filter((_, i) => i !== index));
+        } else {
+            alert('Phải có ít nhất 1 biến thể.');
         }
     };
+
+    const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+        const { name, value } = e.target;
+        // Cập nhật giá trị cho brand và category
+        if (name === 'brand' || name === 'category') {
+            setProduct(prev => ({
+                ...prev,
+                [name]: { _id: value }
+            }));
+        } else {
+            setProduct(prev => ({ ...prev, [name]: value }));
+        }
+    };
+    
+    
 
     const handleAddImageURL = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
@@ -129,10 +138,18 @@ const Detail = () => {
     };
 
     const handleUpdate = async (values: TPproducts) => {
-        const token = localStorage.getItem('token'); 
+        const token = localStorage.getItem('token');
+    
+        const { _id, createdAt, updatedAt, ...updatedValues } = values;
+        if (!updatedValues.thumbnail || updatedValues.thumbnail === "none") {
+            delete updatedValues.thumbnail;  
+        }
+    
+        updatedValues.brand = values.brand._id;  
+        updatedValues.category = values.category._id; 
     
         try {
-            const response = await axios.put(`/api/products/update/${id}`, values, {
+            const response = await axios.put(`/api/products/update/${id}`, updatedValues, {
                 headers: {
                     Authorization: `Bearer ${token}`, 
                 },
@@ -141,20 +158,22 @@ const Detail = () => {
             nav("/admin/product/list");
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                console.error('Axios error:', error.response?.data);
                 setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
-                console.error('Axios error:', error.response);
             } else {
-                setErrorMessage('An unexpected error occurred. Please try again.');
                 console.error('Error:', error.message);
+                setErrorMessage('An unexpected error occurred. Please try again.');
             }
         }
     };
+    
+    
     
 
     return (
         <div className="pb-10">
             <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Chi tiết sản phẩm</h1>
-            {/* <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
+            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
                 <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Biến thể</h2>
                 <form className="mt-10">
                     {variants.map((variant, index) => (
@@ -211,14 +230,14 @@ const Detail = () => {
                         </button>
                     </div>
                 </form>
-            </div> */}
+            </div>
 
             <div className="flex gap-x-4">
                 {/* Product Information */}
                 <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-2/6`}>
                     
                     <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4 mt-6`}>Thông tin sản phẩm</h2>
-                    <form onSubmit={handleUpdate}  className="flex flex-col gap-4">
+                    <form onSubmit={(e) => { e.preventDefault(); handleUpdate(product); }}  className="flex flex-col gap-4">
                         <input
                             type="text"
                             name="title"
@@ -244,7 +263,7 @@ const Detail = () => {
                             required
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                         >
-                            <option value="" disabled hidden>Thương hiệu</option>
+                            <option value="2" disabled hidden>Thương hiệu</option>
                             {brands.map(brand => (
                                 <option key={brand._id} value={brand._id}>
                                     {brand.name}
@@ -258,7 +277,7 @@ const Detail = () => {
                             required
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                         >
-                            <option value="" disabled hidden>Danh mục</option>
+                            <option value="1" disabled hidden>Danh mục</option>
                             {categories.map(category => (
                                 <option key={category._id} value={category._id}>
                                     {category.name}

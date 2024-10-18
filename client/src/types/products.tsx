@@ -13,6 +13,6 @@ export type TPproducts = {
     category: ObjectId;         
     thumbnail?: string;        
     images: ObjectId;        
-    createdAt?: string;      
-    updatedAt?: string;        
+    createdAt?: Date;      
+    updatedAt?: Date;        
 };
