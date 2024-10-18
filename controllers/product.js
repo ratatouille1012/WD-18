@@ -95,26 +95,69 @@ export const removeProductById = async (req, res, next) => {
 };
 
 // ! Xoá mềm
-export const softRemoveProductById = async (req, res, next) => {
+// export const softRemoveProductById = async (req, res, next) => {
+//   try {
+//     const data = await Product.findByIdAndUpdate(
+//       `${req.params.id}`,
+//       {
+//         hide: true,
+//       },
+//       {
+//         new: true,
+//       }
+//     );
+//     //! findByIdAndUpdate !== findByIdAndRemove
+//     if (!data) {
+//       return res.status(400).json({ message: "Cap nhat san pham that bai!" });
+//     }
+//     return res.status(201).json({
+//       message: "Cap nhat san pham thanh cong!",
+//       data,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+export const DeleteVariant = async (req, res, next) => {
   try {
-    const data = await Product.findByIdAndUpdate(
-      `${req.params.id}`,
-      {
-        hide: true,
-      },
-      {
-        new: true,
-      }
-    );
-    //! findByIdAndUpdate !== findByIdAndRemove
-    if (!data) {
-      return res.status(400).json({ message: "Cap nhat san pham that bai!" });
+    const variantId = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "sản phẩm không tồn tại" });
     }
-    return res.status(201).json({
-      message: "Cap nhat san pham thanh cong!",
-      data,
-    });
+    product.variant = product.variant.filter(
+      (variant) => variant._id.toString() !== variantId
+    );
+    await product.save();
+    res.status('200').json({
+      message: 'Biến thể đã bị xóa thành công',
+      product
+    })
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Có lỗi xảy ra', error });
   }
-};
+}
+
+export const AddVariant = async (req, res) => {
+  try {
+    const { color, size, quantity } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ message: 'Sản phẩm không tồn tại' });
+    }
+
+    // Thêm biến thể mới vào danh sách biến thể
+    product.variants.push({ color, size, quantity });
+    await product.save();
+
+    res.status(201).json({
+        message: 'Biến thể mới đã được thêm thành công',
+        product
+    });
+} catch (error) {
+    res.status(500).json({ message: 'Có lỗi xảy ra', error });
+}
+}
+
