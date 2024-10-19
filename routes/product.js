@@ -12,6 +12,7 @@ import productSchema from "../validations/product.js";
 import validBodyRequest from "../middlewares/validRequestBody.js";
 import { checkAuth } from "../middlewares/checkAuth.js";
 import { checkIsAdmin } from "../middlewares/checkIsAdmin.js";
+import upload from "../middlewares/multerConfig.js";
 
 const productRouter = Router();
 
@@ -22,8 +23,8 @@ productRouter.use(checkAuth, checkIsAdmin);
 productRouter.delete("/delete/:id", removeProductById);
 
 productRouter.use(validBodyRequest(productSchema)); // middleware
-productRouter.post("/", createProduct);
-productRouter.put("/update/:id", updateProductById);
+productRouter.post("/",upload.array('images', 4), createProduct);
+productRouter.put("/update/:id",upload.array('images', 4), updateProductById);
 productRouter.delete("/delete/:id/variant", DeleteVariant);
 productRouter.post("/create/:id/variant", AddVariant);
   

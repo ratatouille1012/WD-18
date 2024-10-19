@@ -18,20 +18,23 @@ export const getProducts = async (req, res, next) => {
 };
 export const createProduct = async (req, res, next) => {
   try {
-    const data = await Product.create(req.body);
+    const { image, ...rest } = req.body; // Lấy đường dẫn ảnh từ req.body
+    const data = await Product.create({
+      ...rest,
+      image: req.file.path, // Lưu đường dẫn ảnh
+    });
+
     const updateCategory = await Category.findByIdAndUpdate(
       data.category,
-      {
-        $push: { products: data._id },
-      },
+      { $push: { products: data._id } },
       { new: true }
     );
 
     if (!data || !updateCategory) {
-      return res.status(400).json({ message: "Them san pham that bai!" });
+      return res.status(400).json({ message: "Thêm sản phẩm thất bại!" });
     }
     return res.status(201).json({
-      message: "Them san pham thanh cong!",
+      message: "Thêm sản phẩm thành công!",
       data,
     });
   } catch (error) {
@@ -56,16 +59,22 @@ export const getProductById = async (req, res, next) => {
 
 export const updateProductById = async (req, res, next) => {
   try {
-    const data = await Product.findByIdAndUpdate(`${req.params.id}`, req.body, {
-      new: true,
-    });
+    const { image, ...rest } = req.body; // Lấy đường dẫn ảnh từ req.body
+    const updateData = {
+      ...rest,
+    };
+
+    if (req.file) {
+      updateData.image = req.file.path; // Cập nhật đường dẫn ảnh nếu có
+    }
+
+    const data = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
     const updateCategory = await Category.findByIdAndUpdate(
       data.category,
-      {
-        $push: { products: data._id },
-      },
+      { $push: { products: data._id } },
       { new: true }
     );
+
     if (!data || !updateCategory) {
       return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
     }

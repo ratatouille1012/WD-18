@@ -51,10 +51,9 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    images: {
-      type : mongoose.Schema.Types.ObjectId,
-      ref : "images",
-    },
+    images: [{
+      type: String, // Mỗi đường dẫn ảnh sẽ là một chuỗi
+    }],
     variants: [variantSchema]
   },
   {

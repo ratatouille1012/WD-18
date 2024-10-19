@@ -9,7 +9,6 @@ import voucherRouter from "./voucher.js";
 import orderRouter from "./order.js";
 import shipRouter from "./ship.js";
 import orderItemRouter from "./orderItem.js";
-import imageRouter from "./upload.js";
 import cartRouter from "./cart.js";
 import UserRouter from "./user.js";
 
@@ -25,7 +24,6 @@ router.use("/voucher", voucherRouter);
 router.use("/order", orderRouter);
 router.use("/ship", shipRouter);
 router.use("/orderItem", orderItemRouter);
-router.use("/images", imageRouter);
 router.use('/cart', cartRouter);
 router.use('/user', UserRouter);
 
