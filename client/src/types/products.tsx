@@ -4,7 +4,8 @@ export type TPproducts = {
     _id: string;               
     title: string;            
     price: number;            
-    description?: string;     
+    description?: string; 
+    img_des?:string;
     hide?: boolean;           
     discountPercentage?: number; 
     rating?: number;          
@@ -12,7 +13,15 @@ export type TPproducts = {
     brand: ObjectId;            
     category: ObjectId;         
     thumbnail?: string;        
-    images: ObjectId;        
+    images: string[];        
+    variant?: {
+        color: ObjectId;
+        size: ObjectId;
+        quantity: number;
+        importPrice: number;
+        listPrice: number;
+        salePrice: number;
+    }[];
     createdAt?: Date;      
     updatedAt?: Date;        
 };

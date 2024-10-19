@@ -15,355 +15,325 @@ const Detail = () => {
     const { darkMode } = useTheme();
     const { id } = useParams<{ id: string }>();
     const nav = useNavigate();
-    const [variants, setVariants] = useState([{}]);
     const { setLoading } = useLoading();
+    const { register, handleSubmit } = useForm<TPproducts>();
+
+    const [variant, setVariant] = useState<any[]>([{ id: 1 }]);
     const [colors, setColors] = useState<TPcolor[]>([]);
     const [sizes, setSizes] = useState<TPsize[]>([]);
     const [brands, setBrands] = useState<TPbrand[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [selectedBrand, setSelectedBrand] = useState<string | undefined>();
+    const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
     const [product, setProduct] = useState<TPproducts | null>(null);
     const [errorMessage, setErrorMessage] = useState<string>('');
-    const fetchBrands = async () => {
+    const [newImageUrl, setNewImageUrl] = useState<string>('');
+
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/brand'); 
-            setBrands(response.data.data);
-            console.log(response.data.data);
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
-                console.error('Axios error:', error.response);
-            } else {
-                setErrorMessage('An unexpected error occurred. Please try again.');
-                console.error('Error:', error.message);
+            const [productResponse, brandsResponse, categoriesResponse, colorsResponse, sizesResponse] = await Promise.all([
+                axios.get(`/api/products/${id}`),
+                axios.get('/api/brand'),
+                axios.get('/api/categories'),
+                axios.get('/api/color'),
+                axios.get('/api/size'),
+            ]);
+            setProduct(productResponse.data.data);
+            setBrands(brandsResponse.data.data);
+            setCategories(categoriesResponse.data.data);
+            setColors(colorsResponse.data.data);
+            setSizes(sizesResponse.data.data);
+            setSelectedBrand(productResponse.data.data.brand?._id);
+            setSelectedCategory(productResponse.data.data.category?._id);
+
+            if (productResponse.data.data.variant) {
+                setVariant(productResponse.data.data.variant.map((variant: any, index: number) => ({
+                    id: index + 1,
+                    color: variant.color,
+                    size: variant.size,
+                    price_import: variant.importPrice,
+                    price_list: variant.listPrice,
+                    price_selling: variant.salePrice,
+                    quantity: variant.quantity,
+                })));
             }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchCategories = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get('/api/categories'); 
-            setCategories(response.data.data);
         } catch (error) {
-            console.error('Error fetching categories:', error);
-            setErrorMessage('Could not fetch category list.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchProduct = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get(`/api/products/${id}`);
-            setProduct(response.data.data);
-            console.log(response.data.data);
-            
-        } catch (error) {
-            console.error('Error fetching product:', error);
-            setErrorMessage('Could not fetch product details.');
+            setErrorMessage('Could not fetch data. Please try again later.');
+            console.error('Fetch error:', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchProduct();
-        fetchBrands(); 
-        fetchCategories();
+        fetchData();
     }, [id]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const [colorResponse, sizeResponse] = await Promise.all([
-                    axios.get("/api/color"),
-                    axios.get("/api/size"),
-                ]);
-                setColors(colorResponse.data.data);
-                setSizes(sizeResponse.data.data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [setLoading]);
-
     const addVariant = () => {
-        setVariants([...variants, { id: variants.length + 1 }]);
+        setVariant([...variant, { id: variant.length + 1 }]);
     };
 
-    const removeVariant = (index) => {
-        if (variants.length > 1) {
-            setVariants(variants.filter((_, i) => i !== index));
+    const removeVariant = (index: number) => {
+        if (variant.length > 1) {
+            setVariant(variant.filter((_, i) => i !== index));
         } else {
-            alert('Phải có ít nhất 1 biến thể.');
+            alert('At least one variant is required.');
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-        const { name, value } = e.target;
-        // Cập nhật giá trị cho brand và category
-        if (name === 'brand' || name === 'category') {
-            setProduct(prev => ({
-                ...prev,
-                [name]: { _id: value }
-            }));
-        } else {
-            setProduct(prev => ({ ...prev, [name]: value }));
-        }
-    };
-    
-    
-
-    const handleAddImageURL = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const value = event.currentTarget.value.trim();
-            if (value) {
-                if (product?.images.length < 4) {
-                    setProduct(prev => ({...prev,images: [...prev.images, value]}));
-                    event.currentTarget.value = '';
-                } else {
-                    setErrorMessage("Bạn chỉ có thể thêm tối đa 4 ảnh.");
-                }
+    const handleVariantChange = (index: number, field: string, value: any) => {
+        const updatedVariants = variant.map((variant, i) => {
+            if (i === index) {
+                return { ...variant, [field]: value };
             }
+            return variant;
+        });
+    
+        const hasMissingColor = updatedVariants.some(variant => !variant.color);
+        if (hasMissingColor) {
+            setErrorMessage('Please fill in all required fields for variants.');
+        } else {
+            setVariant(updatedVariants);
+        }
+    };
+    
+
+    const handleAddImageURL = () => {
+        if (newImageUrl) {
+            if (product && product.images.length < 4) {
+                setProduct(prev => ({ ...prev, images: [...prev.images, newImageUrl]}));
+                setNewImageUrl('');
+            } else {
+                setErrorMessage("You can only add up to 4 images.");
+            }
+        }
+    };
+
+    const handleRemoveImage = (index: number) => {
+        if (product) {
+            const updatedImages = product.images.filter((_, i) => i !== index);
+            setProduct({ ...product, images: updatedImages });
         }
     };
 
     const handleUpdate = async (values: TPproducts) => {
         const token = localStorage.getItem('token');
-    
         const { _id, createdAt, updatedAt, ...updatedValues } = values;
-        if (!updatedValues.thumbnail || updatedValues.thumbnail === "none") {
-            delete updatedValues.thumbnail;  
+
+        updatedValues.brand = selectedBrand;
+        updatedValues.category = selectedCategory;
+    
+        if (variant && variant.length > 0) {
+            updatedValues.variant = variant.map(variant => ({
+                color: variant.color,
+                size: variant.size,
+                quantity: variant.quantity,
+                importPrice: variant.price_import,
+                listPrice: variant.price_list,
+                salePrice: variant.price_selling,
+            }));
         }
     
-        updatedValues.brand = values.brand._id;  
-        updatedValues.category = values.category._id; 
+        if (product?.images) {
+            updatedValues.images = product.images;
+        }
+    
+        console.log('Dữ liệu gửi đi:', updatedValues);
     
         try {
-            const response = await axios.put(`/api/products/update/${id}`, updatedValues, {
+            await axios.put(`/api/products/update/${id}`, updatedValues, {
                 headers: {
-                    Authorization: `Bearer ${token}`, 
+                    Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Product updated:', response.data);
             nav("/admin/product/list");
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error('Axios error:', error.response?.data);
-                setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
-            } else {
-                console.error('Error:', error.message);
-                setErrorMessage('An unexpected error occurred. Please try again.');
-            }
+            setErrorMessage('Cập nhật sản phẩm thất bại. Vui lòng thử lại.');
+            console.error('Lỗi cập nhật:', error.response?.data || error);
         }
     };
     
     
     
-
+    
     return (
         <div className="pb-10">
-            <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Chi tiết sản phẩm</h1>
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
-                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Biến thể</h2>
-                <form className="mt-10">
-                    {variants.map((variant, index) => (
-                        <div key={index} className="flex justify-between mt-6">
-                            <div className="input-with-placeholder">
-                                <select id={`color-${index}`} required>
-                                    <option value="" disabled hidden>Color</option>
-                                    {colors.map(color => (
-                                        <option key={color._id} value={color._id}>
-                                            {color.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <label htmlFor={`color-${index}`}>Color</label>
-                            </div>
-                            <div className="input-with-placeholder">
-                                <select id={`size-${index}`} required>
-                                    <option value="" disabled hidden>Size</option>
-                                    {sizes.map(size => (
-                                        <option key={size._id} value={size._id}>
-                                            {size.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <label htmlFor={`size-${index}`}>Size</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" defaultValue={variant.price_import} id={`price-import-${index}`} required />
-                                <label htmlFor={`price-import-${index}`}>Giá nhập</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" defaultValue={variant.price_list} id={`price-list-${index}`} required />
-                                <label htmlFor={`price-list-${index}`}>Giá niêm yết</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" defaultValue={variant.price_selling} id={`price-selling-${index}`} required />
-                                <label htmlFor={`price-selling-${index}`}>Giá bán</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" defaultValue={variant.quantity} id={`quantity-${index}`} required />
-                                <label htmlFor={`quantity-${index}`}>Số lượng</label>
-                            </div>
-                            <button type="button" onClick={() => removeVariant(index)}>
-                                <Trash />
-                            </button>
-                        </div>
-                    ))}
-                    <div className="mt-4">
-                        <button type="button" onClick={addVariant} className={`${darkMode ? 'text-amber-500 border border-amber-500' : 'text-blue-700 border border-blue-700'} px-3 py-1 rounded-md mr-2 `}>
-                            + Thêm biến thể
-                        </button>
-                        <button type="submit" className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-1 rounded-md`}>
-                            Lưu
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div className="flex gap-x-4">
-                {/* Product Information */}
-                <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-2/6`}>
-                    
-                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4 mt-6`}>Thông tin sản phẩm</h2>
-                    <form onSubmit={(e) => { e.preventDefault(); handleUpdate(product); }}  className="flex flex-col gap-4">
-                        <input
-                            type="text"
-                            name="title"
-                            placeholder="Tên sản phẩm"
-                            value={product?.title || ''}
-                            onChange={handleChange}
-                            required
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        />
-                        <input
-                            type="text"
-                            name="price"
-                            placeholder="Giá"
-                            value={product?.price || ''}
-                            onChange={handleChange}
-                            required
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        />
-                         <select
-                            name="brand"
-                            value={product?.brand._id || ''}
-                            onChange={handleChange}
-                            required
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        >
-                            <option value="2" disabled hidden>Thương hiệu</option>
-                            {brands.map(brand => (
-                                <option key={brand._id} value={brand._id}>
-                                    {brand.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            name="category"
-                            value={product?.category._id || ''}
-                            onChange={handleChange}
-                            required
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        >
-                            <option value="1" disabled hidden>Danh mục</option>
-                            {categories.map(category => (
-                                <option key={category._id} value={category._id}>
-                                    {category.name}
-                                </option>
-                            ))}
-                        </select> 
-                        <input 
-                            type="text" 
-                            placeholder="Địa chỉ hình ảnh (URL)" 
-                            onKeyDown={handleAddImageURL} 
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`} 
-                        />
-                        <div className="text-sm text-gray-500">Nhập URL cho hình ảnh của sản phẩm và nhấn Enter</div>
-                        {/* Display added image URLs */}
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            {product?.images.map((url, index) => (
-                                <div key={index} className="relative">
-                                    <img 
-                                        src={url} 
-                                        alt={`Image ${index + 1}`} 
-                                        className="h-16 w-16 object-cover rounded"
-                                    />
-                                    <button 
-                                        type="button" 
-                                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                        onClick={() => {
-                                            if (product) {
-                                                setProduct({ 
-                                                    ...product, 
-                                                    images: product.images.filter((_, i) => i !== index) 
-                                                });
-                                            }
-                                        }}
+            <form onSubmit={handleSubmit(handleUpdate)} action="">
+                <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Chi tiết sản phẩm</h1>
+                {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+                <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
+                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Biến thể</h2>
+                    <div className="mt-10">
+                        {variant.map((variant, index) => (
+                            <div key={index} className="flex justify-between mt-6">
+                                <label className="flex flex-col">
+                                    <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Màu</span>
+                                    <select
+                                        value={variant.color}
+                                        required
+                                        onChange={(e) => handleVariantChange(index, 'color', e.target.value)}
+                                        className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                                     >
-                                        &times;
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                                        <option value="" disabled hidden>Màu</option>
+                                        {colors.map(color => (
+                                            <option key={color._id} value={color._id}>{color.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
 
-                        <button
-                            type="submit"
-                            className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-3 mt-6 rounded-md`}
-                        >
-                            Cập nhật
-                        </button>
-                    </form>
+                                <label className="flex flex-col">
+                                    <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Kích cỡ</span>
+                                    <select
+                                        value={variant.size}
+                                        required
+                                        onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
+                                        className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                    >
+                                        <option value="" disabled hidden>Kích cỡ</option>
+                                        {sizes.map(size => (
+                                            <option key={size._id} value={size._id}>{size.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                {/* Price Inputs */}
+                                {['Giá nhập', 'Giá niêm yết', 'Giá bản', 'Số lượng'].map((field, i) => (
+                                    <label key={i} className="flex flex-col">
+                                        <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>{field}</span>
+                                        <input
+                                            type="number"
+                                            defaultValue={variant[field]}
+                                            required
+                                            onChange={(e) => handleVariantChange(index, field, e.target.value)}
+                                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                        />
+                                    </label>
+                                ))}
+
+                                <button type="button" onClick={() => removeVariant(index)}><Trash /></button>
+                            </div>
+                        ))}
+                        <div className="mt-4">
+                            <button type="button" onClick={addVariant} className={`${darkMode ? 'text-amber-500 border border-amber-500' : 'text-blue-700 border border-blue-700'} px-3 py-1 rounded-md mr-2`}>+ Thêm biến thể</button>
+                        </div>  
+                    </div>
                 </div>
 
-                {/* Description Section */}
-                {/* <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-4/6`}>
-                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Mô tả</h2>
-                    {product && product.subDescriptions.length > 0 ? (
-                        <div>
-                            {product.subDescriptions.map((sub, index) => (
-                                <div key={index} className="mb-4">
-                                    <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{sub.title}</h3>
-                                    <p className={`${darkMode ? 'text-gray-400' : 'text-black'}`}>{sub.content}</p>
-                                </div>
-                            ))}
+                <div className="flex gap-x-4">
+                    <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-2/6`}>
+                        <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin sản phẩm</h2>
+                        <div className="flex flex-col gap-4">
+                            <label className="flex flex-col">
+                                <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Tên sản phẩm</span>
+                                <input
+                                    type="text"
+                                    placeholder="Tên sản phẩm"
+                                    defaultValue={product?.title}
+                                    {...register('title', { required: true })}
+                                    className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                />
+                            </label>
+                            <label className="flex flex-col">
+                                <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Giá</span>
+                                <input
+                                    type="number"
+                                    placeholder="Giá"
+                                    defaultValue={product?.price}
+                                    {...register('price', { required: true })}
+                                    className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                />
+                            </label>
+                            <label className="flex flex-col">
+                                <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Thương hiệu</span>
+                                <select
+                                    value={selectedBrand}
+                                    onChange={(e) => {
+                                        setSelectedBrand(e.target.value);
+                                        register('brand').onChange(e); 
+                                    }}
+                                    className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                >
+                                    <option value="" disabled hidden>Thương hiệu</option>
+                                    {brands.map(brand => (
+                                        <option key={brand._id} value={brand._id}>{brand.name}</option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label className="flex flex-col">
+                                <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Danh mục</span>
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => {
+                                        setSelectedCategory(e.target.value);
+                                        register('category').onChange(e);
+                                    }}
+                                    className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                >
+                                    <option value="" disabled hidden>Danh mục</option>
+                                    {categories.map(category => (
+                                        <option key={category._id} value={category._id}>{category.name}</option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label className="flex flex-col">
+                                <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Image URL</span>
+                                <input
+                                    type="text"
+                                    value={newImageUrl}
+                                    onChange={(e) => setNewImageUrl(e.target.value)}
+                                    placeholder="Image URL"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleAddImageURL();
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                />
+                            </label>
+                            <div className="text-sm text-gray-500">Enter image URL and press Enter</div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {product?.images.map((url, index) => (
+                                    <div key={index} className="relative">
+                                        <img src={url} alt={`Image ${index + 1}`} className="h-16 w-16 object-cover rounded" />
+                                        <button type="button" onClick={() => handleRemoveImage(index)} className="absolute top-0 right-0 text-red-500">&times;</button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    ) : (
-                        <p className={`${darkMode ? 'text-gray-400' : 'text-black'}`}>Chưa có mô tả cho sản phẩm này.</p>
-                    )}
-                    <form className='mt-10' onSubmit={handleSubmit}>
+                    </div>
+
+                    {/* Description Section */}
+                    <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-4/6`}>
+                        <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Mô tả</h2>
+                        <div className="mb-4">
+                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{product?.img_des}</h3>
+                            <img src={product?.img_des} alt={product?.img_des} />
+                        </div>
                         <textarea
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} block w-full h-32 p-2 border rounded`}
                             placeholder="Mô tả..."
                             required
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            defaultValue={product?.description}
+                            {...register('description', { required: true })}
                         />
                         <input
                             type="text"
                             placeholder="Link ảnh"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
+                            defaultValue={product?.img_des}
+                            {...register('img_des', { required: true })}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} mt-2 w-full p-2 border border-gray-300 rounded`}
                             required
                         />
-                        <button type="submit" className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-lg mt-4`}>
-                            POST
-                        </button>
-                    </form>
-                </div> */}
-            </div>
+                    </div>
+                </div>
+                <button type="submit" className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-3 mt-6 rounded-md`}>
+                    Cập nhật
+                </button>
+            </form>
         </div>
     );
 };

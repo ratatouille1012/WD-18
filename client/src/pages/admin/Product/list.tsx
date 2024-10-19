@@ -111,13 +111,17 @@ const List = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {products.map(product => (
-                            <tr className={`${darkMode ? 'text-meta-3' : ''}`} key={product._id}>
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{product._id}</td>
+                        {products.map((product,index) => (
+                            <tr className={`${darkMode ? 'text-meta-3' : ''}`} key={index}>
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{index+1}</td>
                                 <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{product.title}</td>
                                 <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{product.price}</td>
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{product.brand.name}</td> 
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{product.category.name}</td> 
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>
+                                    {product.brand ? product.brand.name : 'N/A'}
+                                </td>
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>
+                                    {product.category ? product.category.name : 'N/A'}
+                                </td>
                                 <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>
                                     <div className="flex space-x-2">
                                         {product.images.map((img, index) => (

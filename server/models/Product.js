@@ -14,6 +14,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "no description",
     },
+    img_des: {
+      type: String,
+      default: "none",
+    },
     hide: {
       type: Boolean,
       default: false,
@@ -45,6 +49,30 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
     images: { type: [String], required: true },
+    variant:[
+      {
+        color : {
+          type : mongoose.Schema.Types.ObjectId,
+          ref : "color"
+      },
+      size : {
+          type : mongoose.Schema.Types.ObjectId,
+          ref : "size"
+      },
+      quantity : {
+          type : Number,
+      },
+      importPrice : {
+          type : Number,
+      },
+      listPrice : {
+          type : Number,
+      },
+      salePrice : {
+          type : Number,
+      }
+    }
+    ]
   },
   {
     timestamps: true,

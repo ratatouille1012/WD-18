@@ -2,6 +2,7 @@ import { errorMessages, successMessages } from "../constants/message.js";
 import Category from "../models/Category.js";
 import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
+import mongoose from 'mongoose';
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -19,22 +20,21 @@ export const getProducts = async (req, res, next) => {
 };
 export const createProduct = async (req, res, next) => {
   try {
-    const data = await Product.create(req.body);
-    const updateCategory = await Category.findByIdAndUpdate(
-      data.category,
-      {
-        $push: { products: data._id },
-      },
-      { new: true }
-    );
-
-    if (!data || !updateCategory) {
-      return res.status(400).json({ message: "Them san pham that bai!" });
+    const { error } = Product.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: "Invalid body request!", errors: error.details });
     }
-    return res.status(201).json({
-      message: "Them san pham thanh cong!",
-      data,
+
+    const { brand, category, ...productData } = req.body;
+
+    const newProduct = new Product({
+      ...productData,
+      brand: new mongoose.Types.ObjectId(brand), 
+      category: new mongoose.Types.ObjectId(category), 
     });
+
+    const savedProduct = await newProduct.save();
+    return res.status(201).json(savedProduct);
   } catch (error) {
     next(error);
   }
@@ -57,37 +57,40 @@ export const getProductById = async (req, res, next) => {
 
 export const updateProductById = async (req, res, next) => {
   try {
-    const data = await Product.findByIdAndUpdate(`${req.params.id}`, req.body, {
-      new: true,
-    });
-    const updateCategory = await Category.findByIdAndUpdate(
-      data.category,
-      {
-        $push: { products: data._id },
-      },
-      { new: true }
-    );
-    const updateBrand = await Brand.findByIdAndUpdate(
-      data.brand,
-      {
-        $push: { products: data._id },
-      },
-      { new: true }
-    );
-    if (!data || !updateCategory ) {
-      return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID không hợp lệ!" });
     }
-    if (!data || !updateBrand ) {
-      return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
+
+    const { variants, ...productData } = req.body; // Tách biệt productData và variants
+
+    // Nếu không muốn cập nhật variants, xóa trường _id
+    if (variants) {
+      const sanitizedVariants = variants.map(({ _id, ...variant }) => variant); // Bỏ qua _id
+      productData.variants = sanitizedVariants;
     }
-    return res.status(201).json({
-      message: successMessages.UPDATE_SUCCESS,
-      data,
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      productData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Sản phẩm không được tìm thấy!" });
+    }
+
+    return res.status(200).json({
+      message: "Cập nhật sản phẩm thành công!",
+      data: updatedProduct,
     });
   } catch (error) {
     next(error);
   }
 };
+
+
 
 // ! Xoá cứng! Không dùng
 export const removeProductById = async (req, res, next) => {
