@@ -129,13 +129,18 @@ const List = () => {
                                         ))}
                                     </div>
                                 </td>
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4flex`}>
+                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b gap-x-1 py-2 px-4 flex`}>
                                     <button 
                                         onClick={() => deleteProduct(product._id)} 
-                                        className={`${darkMode ? 'bg-[#E94E77] text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-md mr-2 hover:bg-red-600`}
+                                        className={`${darkMode ? 'bg-[#E94E77] text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-md  hover:bg-red-600`}
                                     >
                                         Xóa
                                     </button>
+                                    <Link to={`../product/edit/${product._id}`}>
+                                        <button className={`${darkMode ? 'bg-[#4CAF50] text-white' : 'bg-green-500 text-white'} px-3 py-1 rounded-md hover:bg-green-600`}>
+                                            Sửa
+                                        </button>
+                                    </Link>
                                     <Link to={`../product/detail/${product._id}`}>
                                         <button className={`${darkMode ? 'bg-[#4CAF50] text-white' : 'bg-green-500 text-white'} px-3 py-1 rounded-md hover:bg-green-600`}>
                                             Chi tiết

@@ -76,6 +76,16 @@ const AddProduct = () => {
                 return;
             }
 
+            const variantMap = new Map();
+            for (const variant of variants) {
+                const key = `${variant.color}-${variant.size}`;
+                if (variantMap.has(key)) {
+                    alert(`Chỉ được tồn tại một biến thẻ màu "${variant.color}" và kích cỡ "${variant.size}".`);
+                    return;
+                }
+                variantMap.set(key, true);
+            }
+
             const formattedVariants = variants.map(variant => {
                 const colorObj = colors.find(c => c.name === variant.color);
                 const sizeObj = sizes.find(s => String(s.name) === String(variant.size));

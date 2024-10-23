@@ -11,9 +11,10 @@ import { useForm } from 'react-hook-form';
 import { Category } from '../../../types/categories';
 import { TPbrand } from '../../../types/brand';
 
-const Detail = () => {
+const Edit = () => {
     const { darkMode } = useTheme();
     const { id } = useParams<{ id: string }>();
+    const nav = useNavigate();
     const { setLoading } = useLoading();
     const { register, handleSubmit } = useForm<TPproducts>();
 
@@ -68,26 +69,108 @@ const Detail = () => {
     useEffect(() => {
         fetchData();
     }, [id]);
+
+    const addVariant = () => {
+        setVariant([...variant, { id: variant.length + 1 }]);
+    };
+
+    const removeVariant = (index: number) => {
+        if (variant.length > 1) {
+            setVariant(variant.filter((_, i) => i !== index));
+        } else {
+            alert('At least one variant is required.');
+        }
+    };
+
+    const handleVariantChange = (index: number, field: string, value: any) => {
+        const updatedVariants = variant.map((variant, i) => {
+            if (i === index) {
+                return { ...variant, [field]: value };
+            }
+            return variant;
+        });
+    
+        const hasMissingColor = updatedVariants.some(variant => !variant.color);
+        if (hasMissingColor) {
+            setErrorMessage('Please fill in all required fields for variants.');
+        } else {
+            setVariant(updatedVariants);
+        }
+    };
+    
+
+    const handleAddImageURL = () => {
+        if (newImageUrl) {
+            if (product && product.images.length < 4) {
+                setProduct(prev => ({ ...prev, images: [...prev.images, newImageUrl]}));
+                setNewImageUrl('');
+            } else {
+                setErrorMessage("You can only add up to 4 images.");
+            }
+        }
+    };
+
+    const handleRemoveImage = (index: number) => {
+        if (product) {
+            const updatedImages = product.images.filter((_, i) => i !== index);
+            setProduct({ ...product, images: updatedImages });
+        }
+    };
+
+    const handleUpdate = async (values: TPproducts) => {
+        const token = localStorage.getItem('token');
+        const { _id, createdAt, updatedAt, ...updatedValues } = values;
+
+        updatedValues.brand = selectedBrand;
+        updatedValues.category = selectedCategory;
+    
+        if (variant && variant.length > 0) {
+            updatedValues.variant = variant.map(variant => ({
+                color: variant.color,
+                size: variant.size,
+                quantity: variant.quantity,
+                importPrice: variant.price_import,
+                listPrice: variant.price_list,
+                salePrice: variant.price_selling,
+            }));
+        }
+    
+        if (product?.images) {
+            updatedValues.images = product.images;
+        }
+    
+        console.log('Dữ liệu gửi đi:', updatedValues);
+    
+        try {
+            await axios.put(`/api/products/update/${id}`, updatedValues, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            nav("/admin/product/list");
+        } catch (error) {
+            setErrorMessage('Cập nhật sản phẩm thất bại. Vui lòng thử lại.');
+            console.error('Lỗi cập nhật:', error.response?.data || error);
+        }
+    };
+    
+    
+    
     
     return (
         <div className="pb-10">
-            <div>
+            <form onSubmit={handleSubmit(handleUpdate)} action="">
                 <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-2`}>Chi tiết sản phẩm</h1>
+                {errorMessage && <p className="text-red-500">{errorMessage}</p>}
                 <div className="flex gap-x-4">
                     <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-2/6`}>
                         <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin sản phẩm</h2>
-                        <div className="flex gap-x-2">
-                            {product?.images.map((url, index) => (
-                                <img src={url} alt={`Product image ${index + 1}`} width="80" />
-                            ))}
-                        </div>
                         <div className="flex flex-col gap-4">
                             <label className="flex flex-col">
                                 <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Tên sản phẩm</span>
                                 <input
                                     type="text"
                                     placeholder="Tên sản phẩm"
-                                    disabled
                                     defaultValue={product?.title}
                                     {...register('title', { required: true })}
                                     className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
@@ -98,7 +181,6 @@ const Detail = () => {
                                 <input
                                     type="number"
                                     placeholder="Giá"
-                                    disabled
                                     defaultValue={product?.price}
                                     {...register('price', { required: true })}
                                     className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
@@ -108,7 +190,6 @@ const Detail = () => {
                                 <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Thương hiệu</span>
                                 <select
                                     value={selectedBrand}
-                                    disabled
                                     onChange={(e) => {
                                         setSelectedBrand(e.target.value);
                                         register('brand').onChange(e); 
@@ -126,7 +207,6 @@ const Detail = () => {
                                 <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Danh mục</span>
                                 <select
                                     value={selectedCategory}
-                                    disabled
                                     onChange={(e) => {
                                         setSelectedCategory(e.target.value);
                                         register('category').onChange(e);
@@ -139,6 +219,32 @@ const Detail = () => {
                                     ))}
                                 </select>
                             </label>
+
+                            <label className="flex flex-col">
+                                <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Image URL</span>
+                                <input
+                                    type="text"
+                                    value={newImageUrl}
+                                    onChange={(e) => setNewImageUrl(e.target.value)}
+                                    placeholder="Image URL"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleAddImageURL();
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                                />
+                            </label>
+                            <div className="text-sm text-gray-500">Enter image URL and press Enter</div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {product?.images.map((url, index) => (
+                                    <div key={index} className="relative">
+                                        <img src={url} alt={`Image ${index + 1}`} className="h-16 w-16 object-cover rounded" />
+                                        <button type="button" onClick={() => handleRemoveImage(index)} className="absolute top-0 right-0 text-red-500">&times;</button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
@@ -149,6 +255,21 @@ const Detail = () => {
                             <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{product?.img_des}</h3>
                             <img src={product?.img_des} alt={product?.img_des} />
                         </div>
+                        <textarea
+                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} block w-full h-32 p-2 border rounded`}
+                            placeholder="Mô tả..."
+                            required
+                            defaultValue={product?.description}
+                            {...register('description', { required: true })}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Link ảnh"
+                            defaultValue={product?.img_des}
+                            {...register('img_des', { required: true })}
+                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} mt-2 w-full p-2 border border-gray-300 rounded`}
+                            required
+                        />
                     </div>
                 </div>
                 <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
@@ -160,7 +281,8 @@ const Detail = () => {
                                     <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Màu</span>
                                     <select
                                         value={variant.color}
-                                        disabled
+                                        required
+                                        onChange={(e) => handleVariantChange(index, 'color', e.target.value)}
                                         className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                                     >
                                         <option value="" disabled hidden>Màu</option>
@@ -174,7 +296,8 @@ const Detail = () => {
                                     <span className={`${darkMode ? 'text-white' : 'text-gray-700'}`}>Kích cỡ</span>
                                     <select
                                         value={variant.size}
-                                        disabled
+                                        required
+                                        onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
                                         className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                                     >
                                         <option value="" disabled hidden>Kích cỡ</option>
@@ -196,18 +319,26 @@ const Detail = () => {
                                         <input
                                             type="number"
                                             value={variant[key]} 
-                                            disabled
+                                            required
+                                            onChange={(e) => handleVariantChange(index, key, e.target.value)} 
                                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
                                         />
                                     </label>
                                 ))}
+                                <button type="button" onClick={() => removeVariant(index)}><Trash /></button>
                             </div>
                         ))}
+                        <div className="mt-4">
+                            <button type="button" onClick={addVariant} className={`${darkMode ? 'text-amber-500 border border-amber-500' : 'text-blue-700 border border-blue-700'} px-3 py-1 rounded-md mr-2`}>+ Thêm biến thể</button>
+                        </div>  
                     </div>
                 </div>
-            </div>
+                <button type="submit" className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-3 mt-6 rounded-md`}>
+                    Cập nhật
+                </button>
+            </form>
         </div>
     );
 };
 
-export default Detail;
+export default Edit;

@@ -26,6 +26,7 @@ import { useEffect, useState } from 'react';
   import { element } from 'prop-types';
 import NotFound from './pages/user/notFound';
 import ListBrand from './pages/admin/brand/listBrand';
+import Edit from './pages/admin/Product/edit';
 
 const routeConfig = [
   {
@@ -43,6 +44,10 @@ const routeConfig = [
       {
         path: "product/detail/:id",
         element:<Detail/>,
+      },
+      {
+        path: "product/edit/:id",
+        element:<Edit/>,
       },
       {
         path: "product/add",

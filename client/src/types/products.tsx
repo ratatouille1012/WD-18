@@ -5,7 +5,7 @@ export type TPproducts = {
     title: string;            
     price: number;            
     description?: string; 
-    img_des?:string;
+    img_des:string;
     hide?: boolean;           
     discountPercentage?: number; 
     rating?: number;          
