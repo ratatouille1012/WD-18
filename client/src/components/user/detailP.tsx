@@ -88,7 +88,7 @@ const menuFilter = [
 const DetailP = () => {
     const { id } = useParams();
     const product = menuProduct.find(item => item.id === id);
-    const [currentImage, setCurrentImage] = useState(product.img);
+    const [currentImage, setCurrentImage] = useState();
     const [selectedSize, setSelectedSize] = useState('');
     const [selectedColor, setSelectedColor] = useState('');
     const [count, setCount] = useState(1);
