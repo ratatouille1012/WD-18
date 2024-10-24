@@ -12,6 +12,7 @@ import shipRouter from "./ship.js";
 import orderItemRouter from "./orderItem.js";
 import imageRouter from "./image.js";
 import Cartrouter from "./cart.js";
+import receiverRouter from "./receiver.js";
 
 const router = Router();
 
@@ -28,8 +29,9 @@ router.use("/ship", shipRouter);
 router.use("/orderItem", orderItemRouter);
 router.use("/image", imageRouter);
 router.use("/cart", Cartrouter)
+router.use("/receiver", receiverRouter);
 router.get("/data", (req, res) => {
-    res.json({ message: "Hello from the API!" });
+    res.json({ message: "Hello from the API!" 
+      });
   });
-
 export default router;
