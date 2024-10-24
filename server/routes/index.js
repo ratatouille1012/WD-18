@@ -11,6 +11,7 @@ import orderRouter from "./order.js";
 import shipRouter from "./ship.js";
 import orderItemRouter from "./orderItem.js";
 import imageRouter from "./image.js";
+import Cartrouter from "./cart.js";
 
 const router = Router();
 
@@ -26,6 +27,7 @@ router.use("/order", orderRouter);
 router.use("/ship", shipRouter);
 router.use("/orderItem", orderItemRouter);
 router.use("/image", imageRouter);
+router.use("/cart", Cartrouter)
 router.get("/data", (req, res) => {
     res.json({ message: "Hello from the API!" });
   });

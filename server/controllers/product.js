@@ -6,18 +6,53 @@ import mongoose from 'mongoose';
 
 export const getProducts = async (req, res, next) => {
   try {
-    const data = await Product.find().populate("category").populate('brand');
+    const { brand, category, size, minPrice, maxPrice } = req.query;
+    
+    // Tạo query object
+    const query = {};
+
+    // Lọc theo brand
+    if (brand) {
+      query.brand = new mongoose.Types.ObjectId(brand);
+    }
+
+    // Lọc theo category
+    if (category) {
+      query.category = new mongoose.Types.ObjectId(category);
+    }
+
+    // Lọc theo size (giả sử sản phẩm có mảng sizes và bạn muốn kiểm tra tồn tại size trong mảng này)
+    if (size) {
+      query['variants.size'] = size;
+    }
+
+    // Lọc theo khoảng giá
+    if (minPrice || maxPrice) {
+      query['variants.price'] = {};
+      if (minPrice) {
+        query['variants.price'].$gte = minPrice; // Lớn hơn hoặc bằng minPrice
+      }
+      if (maxPrice) {
+        query['variants.price'].$lte = maxPrice; // Nhỏ hơn hoặc bằng maxPrice
+      }
+    }
+
+    // Tìm kiếm sản phẩm với các điều kiện lọc
+    const data = await Product.find(query).populate("category").populate('brand');
+    
     if (data && data.length > 0) {
       return res.status(200).json({
-        message: "Lay danh sach san pham thanh cong!",
+        message: "Lấy danh sách sản phẩm thành công!",
         data,
       });
     }
-    return res.status(404).json({ message: "Khong co san pham nao!" });
+
+    return res.status(404).json({ message: "Không có sản phẩm nào!" });
   } catch (error) {
     next(error);
   }
 };
+
 export const createProduct = async (req, res, next) => {
   try {
     const { error } = Product.validate(req.body);
