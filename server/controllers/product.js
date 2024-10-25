@@ -3,6 +3,9 @@ import Category from "../models/Category.js";
 import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
 import mongoose from 'mongoose';
+import multer from 'multer'
+import { storage } from '../utils/cloudinary.js'; // Import cấu hình Cloudinary
+
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -53,6 +56,9 @@ export const getProducts = async (req, res, next) => {
   }
 };
 
+const upload = multer({ storage });
+
+// Hàm tạo sản phẩm có upload nhiều ảnh
 export const createProduct = async (req, res, next) => {
   try {
     const { error } = Product.validate(req.body);
@@ -62,10 +68,14 @@ export const createProduct = async (req, res, next) => {
 
     const { brand, category, ...productData } = req.body;
 
+    // Lưu URL ảnh sau khi upload lên Cloudinary
+    const imageUrls = req.files.map(file => file.path); // Lấy URL của nhiều ảnh
+
     const newProduct = new Product({
       ...productData,
-      brand: new mongoose.Types.ObjectId(brand), 
-      category: new mongoose.Types.ObjectId(category), 
+      brand: new mongoose.Types.ObjectId(brand),
+      category: new mongoose.Types.ObjectId(category),
+      images: imageUrls, // Lưu URLs của nhiều ảnh
     });
 
     const savedProduct = await newProduct.save();
@@ -74,6 +84,9 @@ export const createProduct = async (req, res, next) => {
     next(error);
   }
 };
+
+// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
+export const uploadImages = upload.array('images', 10); // Tối đa 10 ảnh cùng lúc
 
 export const getProductById = async (req, res, next) => {
   try {
