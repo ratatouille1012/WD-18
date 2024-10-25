@@ -53,6 +53,7 @@ export const updateCart = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
         }
 
+        // Cập nhật số lượng sản phẩm
         cart.variantQuantity = variantQuantity;
         await cart.save();
         res.status(200).json(cart);
