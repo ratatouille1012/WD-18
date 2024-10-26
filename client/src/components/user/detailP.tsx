@@ -1,99 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Rating } from "@material-tailwind/react";
+import { TPproducts } from '../../types/products';
+import useColor from '../../hook/useColor';
+import useSize from '../../hook/useSize';
+import useAddToCart from '../../hook/useCart';
+import { Cart } from '../../types/cart';
 
-const menuProduct = [
-    {
-        id: "1",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/nike-air-zoom-pegasus-38-cw7356-101-01-300x300.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 1000000,
-        link: "/product/1",
-        submenu: [
-            {   
-                img1:"https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/nike-air-zoom-pegasus-38-cw7356-101-01-300x300.jpg",
-                img2:"https://bizweb.dktcdn.net/100/413/756/products/air-zoom-pegasus-38-running-shoes-hmsj6q.jpg?v=1633072850363",
-                img3:"https://bizweb.dktcdn.net/100/413/756/products/air-zoom-pegasus-38-running-shoes-hmsj6q-1.jpg?v=1633072850363",
-                img4:"https://bizweb.dktcdn.net/100/413/756/products/air-zoom-pegasus-38-running-shoes-hmsj6q-2.jpg?v=1633072850363",
-                title:"Reebok SOLEFURY DV6923",
-                text:(`
-                Được thiết kế phù hợp phong cách thường ngày, những đôi giày nam táo bạo mang hơi hướng thời trang đường phố từ cảm hứng dáng điệu từ những đôi Reebok tiền bối.
 
-                Chúng được thiết kế với đế đệm ngoài riêng biệt thể hiện sự tôn kính đối với mẫu giày chạy bộ của những năm 90. Mũi giày mang đến cảm giác vững chắc mà vẫn tinh tế.
+type Props = {
+    product: TPproducts;
+  };
 
-                Miếng lót giày xốp EVA có thể tháo rời giúp bạn thoải mái cả ngày dài, trong khi đó đế ngoài bằng cao su làm tăng sức bền cho đôi giày.
-
-                `),
-                imgTitle:"https://bizweb.dktcdn.net/100/347/092/files/z-dv6923-01.jpg?v=1580908389890",
-            }
-        ]
-    },
-    {
-        id: "2",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/ultraboost-pb-shoes-blue-eg0426-01-standard-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 4000000,
-        link: "/product/2",
-    },
-    {
-        id: "3",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/z-g28999-02-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 3000000,
-        link: "/product/3",
-    },
-    {
-        id: "4",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-furysole-dv4481-1-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 2000000,
-        link: "/product/4",
-    },
-    {
-        id: "5",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/puma-love-wns-372104-03-30861-1-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 1000000,
-        link: "/product/5",
-    },
-];
-
-const menuFilter = [
-    {
-        id: "2",
-        title: "Size",
-        subMenu: [
-            { id: "2-1", title: "39" },
-            { id: "2-2", title: "40"  },
-            { id: "2-3", title: "41"  },
-            { id: "2-4", title: "42"  },
-            { id: "2-5", title: "43" },
-            { id: "2-6", title: "44" },
-            { id: "2-7", title: "45" }
-        ]
-    },
-    {
-        id: "3",
-        title: "Màu",
-        subMenu: [
-            { id: "3-1", title: "Xanh",style:"blue" },
-            { id: "3-2", title: "Đỏ",style:"red" },
-            { id: "3-3", title: "Trắng",style:"white" },
-            { id: "3-4", title: "Đen",style:"black" },
-            { id: "3-5", title: "Vàng",style:"yellow" }
-        ]
-    }
-];
-
-const DetailP = () => {
+const DetailP: React.FC<Props> = ({product}) => {
     const { id } = useParams();
-    const product = menuProduct.find(item => item.id === id);
-    const [currentImage, setCurrentImage] = useState();
+    console.log("ok:",product);
+    const [currentImage, setCurrentImage] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
     const [selectedColor, setSelectedColor] = useState('');
-    const [count, setCount] = useState(1);
+    const [count, setCount] = useState(0);
     const [activeButton, setActiveButton] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
+    const { size,loadingSize } = useSize();
+    const { color,loadingColor } = useColor()
+    const [availableQuantity, setAvailableQuantity] = useState(0);
+    const [availablePrice, setAvailablePrice] = useState('');
+    const [availableId, setAvailableId] = useState('');
+    const { addToCart, loading, error } = useAddToCart();
+    
+    useEffect(() => {
+        if (product && product.images && product.images.length > 0) {
+            setCurrentImage(product.images[0]);
+        }
+    }, [product]);
 
     const handleImageClick = () => {
         setIsOpen(true);
@@ -107,15 +46,8 @@ const DetailP = () => {
         setActiveButton(index);
     };
 
-    const handleIncrement = () => {
-        setCount(count + 1);
-    };
-
-    const handleDecrement = () => {
-        if (count > 1) {
-            setCount(count - 1);
-        }
-    };
+    const handleIncrement = () => count < availableQuantity && setCount(count + 1);
+    const handleDecrement = () => count > 1 && setCount(count - 1);
 
     const handleChange = (event) => {
         setSelectedSize(event.target.value);
@@ -128,48 +60,54 @@ const DetailP = () => {
     const generateRandomId = () => {
         return 'cart-' + Math.random().toString(36).substr(2, 9);
     };
-    const handleAddToCart = () => {
-        const cartItem = {
-            idcart: generateRandomId(),
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: currentImage,
-            size: selectedSize,
-            color: selectedColor,
-            quantity: count,
-        };
     
-        const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
-        const existingItemIndex = existingCart.findIndex(item => 
-            item.id === cartItem.id && item.size === cartItem.size && item.color === cartItem.color
-        );
-    
-        if (existingItemIndex > -1) {
-            existingCart[existingItemIndex].quantity += cartItem.quantity;
-        } else {
-            existingCart.push(cartItem);
+    useEffect(() => {
+        if (product?.variant && selectedSize && selectedColor) {
+            const selectedVariant = product.variant.find(variant =>
+                variant.size.toString() === selectedSize && variant.color.toString() === selectedColor
+            );
+            setAvailableQuantity(selectedVariant ? selectedVariant.quantity : 0);
+            setAvailablePrice(selectedVariant ? selectedVariant.salePrice : product.price);
+            setAvailableId(selectedVariant ? selectedVariant._id :"");
         }
-    
-        localStorage.setItem('cart', JSON.stringify(existingCart));
-        setCount(1);
-        setSelectedSize('');
-        setSelectedColor('');
-        alert('Sản phẩm đã được thêm vào giỏ hàng!');
-    
-        window.location.reload();
+    }, [selectedSize, selectedColor, product]);
+
+    const handleAddToCart = async  () => {
+        if (count <= 0) {
+            alert('Số lượng sản phẩm ko được nhỏ hơn 1.');
+            return;
+        }
+        else if (!selectedSize) {
+            alert('Vui lòng chọn kích cỡ.');
+            return;
+        }
+        else if (!selectedColor) {
+            alert('Vui lòng chọn màu sắc.');
+            return;
+        }else{
+            const userid = JSON.parse(localStorage.getItem("user"))?._id;
+            console.log(id);
+            
+            const cartItem: Cart = {
+                user: userid,
+                variantId: availableId,
+                variantQuantity: count,
+            };
+            
+            await addToCart(cartItem);
+            window.location.reload();
+
+        }
     }
     
     
     if (!product) {
         return <div>Không tìm thấy sản phẩm.</div>;
     }
-
-    const submenuImages = product.submenu && product.submenu[0] 
-        ? Object.values(product.submenu[0]).slice(0, 4) 
-        : [];
-
-    const submenu = product.submenu && product.submenu[0];
+    
+    const getColorNameById = (id) => color.find(item => item._id === id)?.name;
+    const getSizeNameById = (id) => size.find(item => item._id === id)?.name;
+    
     return (
         <>
             <div className="font-sans bg-white mt-16 mb-10">
@@ -177,8 +115,8 @@ const DetailP = () => {
                     <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 ">
                     <div className="lg:col-span-3 flex w-full lg:sticky top-0 text-center">
                     <div className="flex flex-col gap-y-6 mr-4">
-                            {submenuImages.length > 0 ? (
-                                submenuImages.map((img, index) => (
+                            {product.images.length > 0 ? (
+                                product.images.map((img, index) => (
                                     <div key={index} className="w-24 h-20 flex items-center justify-center rounded-lg p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer" onClick={() => setCurrentImage(img)}>
                                         <img src={img} alt={`Product image ${index + 1}`} className="w-full" />
                                     </div>
@@ -210,64 +148,73 @@ const DetailP = () => {
 
 
                         <div className="lg:col-span-2">
-                            <h2 className="text-2xl font-extrabold text-gray-800">{product.name}</h2>
+                            <h2 className="text-2xl font-extrabold text-gray-800">{product.title}</h2>
                             <div className="text-2xl text-[#E5E5E5]">__________</div>
-                            <div className="text-[#FF6634] font-bold text-[1.5em] py-3">{product.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</div>
+                            <div className="text-[#FF6634] font-bold text-[1.5em] py-3">{availablePrice.toLocaleString() || product.price.toLocaleString()} VNĐ</div>
                             <div className="leading-[1.6] font-bold">Hàng xách tay Nhật, Fullbox, Cam kết 100% chính hãng, Phát hiện hàng giả xin đền 10 lần tiền. </div>
                             <div className="leading-[1.6] font-bold py-6">Miễn phí đổi size | đổi mẫu trong 1 tuần !!!</div>
-                            <div className="flex"><span className='mr-2 font-semibold'>Size:</span>{selectedSize && <h2 className=""> {selectedSize}</h2>}</div>
+                            <div className="flex">
+                                <span className='mr-2 font-semibold'>Kích cỡ:</span>
+                                {selectedSize && <h2>{getSizeNameById(selectedSize)}</h2>}
+                            </div>
                             <div className="flex gap-x-2 my-2">
-                            {menuFilter[0].subMenu.map((item) => (
-                                <div key={item.id} className="relative w-9 h-9">
+                            {size.map((item) => (
+                                <div key={item._id} className="relative w-9 h-9">
                                     <input
                                         type="radio"
-                                        className="w-9 h-9 absolute appearance-none border  checked:border-gray-300 border-black checked:border-[3px] checked:border-transparent rounded-sm cursor-pointer z-10"
-                                        value={item.title}
+                                        className="w-9 h-9 absolute appearance-none border  checked:border-gray-300 border-black checked:border-[3px] rounded-sm cursor-pointer z-10"
+                                        value={item._id}
                                         name="size"
                                         onChange={handleChange}
                                     />
                                     <label className="w-9 h-9 flex justify-center items-center relative">
-                                        {item.title}
+                                        {item.name}
                                     </label>
                                 </div>
                             ))}
                             </div>
-                            <div className="flex"><span className='mr-2 font-semibold'>Màu:</span>{selectedColor && <h2 className=""> {selectedColor}</h2>}</div>
+                            <div className="flex">
+                                <span className='mr-2 font-semibold'>Màu:</span>
+                                {selectedColor && <h2>{getColorNameById(selectedColor)}</h2>}
+                            </div>
                             <div className="flex gap-x-2 my-2">
-                            {menuFilter[1].subMenu.map((item) => (
-                                <div key={item.id} className="relative w-9 h-9">
+                            {color.map((item) => (
+                                <div key={item._id} className="relative w-9 h-9">
                                     <input
                                         type="radio"
-                                        style={{ backgroundColor: item.style }}
-                                        className={`w-6 h-6 absolute appearance-none border rounded-full border-gray-300 checked:border-black checked:border-[3px] checked:border-transparent cursor-pointer z-10`}
-                                        value={item.title}
+                                        style={{ backgroundColor: item.colorCode }}
+                                        className={`w-6 h-6 absolute appearance-none border rounded-full border-gray-300 checked:border-black checked:border-[3px] cursor-pointer z-10`}
+                                        value={item._id}
                                         name="color"
                                         onChange={handleChangeColor}
                                     />
                                 </div>
                             ))}
                             </div>
-                            <div className="border-dashed border-t mt-8 py-6 flex gap-x-6">
-                                <div className="flex items-center w-28 justify-between border">
-                                    <button 
-                                        className="bg-[#F9F9F9] boder p-2 "
-                                        onClick={handleDecrement}
-                                    >
-                                        -
-                                    </button>
-                                    <span className="text-xl  px-6">{count}</span>
-                                    <button 
-                                        className="bg-[#F9F9F9] border p-2 "
-                                        onClick={handleIncrement}
-                                    >
-                                        +
-                                    </button>
+                            <div className="border-dashed border-t mt-8 pt-6 flex gap-x-6">
+                                <div className="">
+                                    <div className="flex items-center w-28 justify-between border">
+                                        <button 
+                                            className="bg-[#F9F9F9] boder p-2 "
+                                            onClick={handleDecrement}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="text-xl  px-6">{count}</span>
+                                        <button 
+                                            className="bg-[#F9F9F9] border p-2 "
+                                            onClick={handleIncrement}
+                                        >
+                                            +
+                                        </button> 
+                                    </div>
                                 </div>
                                 <button  onClick={handleAddToCart} className='uppercase bg-[#FF6633] text-white font-bold text-[18px] px-4 py-2'>thêm vào giỏ hàng</button>
                             </div>
-                            <div className="border-dashed border-t py-2"><span>Mã:</span> N/A</div>
-                            <div className="border-dashed border-t py-2"><span>Danh mục:</span> N/A</div>
-                            <div className="border-dashed border-t py-2"><span>Brand:</span> N/A</div>
+                            <div className="pb-6 text-xs mt-1">Số lượng có sẵn: {availableQuantity}</div>
+                            <div className="border-dashed border-t py-2"><span>Mã:</span> {product._id}</div>
+                            <div className="border-dashed border-t py-2"><span>Danh mục:</span> {product.category.name}</div>
+                            <div className="border-dashed border-t py-2"><span>Thương hiệu:</span> {product.brand.name}</div>
                         </div>
                     </div>
                     <div className="border-t flex gap-x-4 mt-28">
@@ -290,9 +237,9 @@ const DetailP = () => {
                     </div>
                     {activeButton === 0 && (
                         <div className="mt-10">
-                            <h3 className="text-xl font-bold text-gray-800">{submenu && submenu.title}</h3>
-                            <p className='text-base leading-6 text-gray-700 mt-4'>{submenu ? submenu.text : 'Mô tả trống.'}</p>
-                            <img className='h-[500px] w-auto mt-5' src={submenu && submenu.imgTitle} alt="none" />
+                            <h3 className="text-xl font-bold text-gray-800">Mô tả</h3>
+                            <p className='text-base leading-6 text-gray-700 mt-4'>{product.description}</p>
+                            <img className='h-[500px] w-auto mt-5' src={product.img_des} alt="none" />
                         </div>
                     )}
                     {activeButton === 1 && (

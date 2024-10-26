@@ -48,12 +48,12 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    images: { type: [String], required: true },
+    images: { type: [String] },
     variant:[
       {
         color : {
           type : mongoose.Schema.Types.ObjectId,
-          ref : "color"
+          ref : "color" 
       },
       size : {
           type : mongoose.Schema.Types.ObjectId,

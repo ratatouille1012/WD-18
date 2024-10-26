@@ -1,6 +1,6 @@
 import variant from "../models/variant.js"
 import { errorMessages, successMessages } from "../constants/message.js";
-
+import Product from "../models/Product.js";
 
 export const getVariant = async (req, res, next) => {
     try {
@@ -47,19 +47,31 @@ export const updateVariant = async (req, res, next) => {
     }
 };
 export const getVariantById = async (req, res, next) => {
-    try {
-        const data = await variant.findById(req.params.id);
-        if (!data) {
-            return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
-          }
-          return res.status(201).json({
-            message: successMessages.UPDATE_SUCCESS,
-            data,
-          });
-    } catch (error) {
-        next(error);
-    }
+  try {
+      const product = await Product.findOne({ "variant._id": req.params.id })
+          .populate('variant.color')
+          .populate('variant.size');
+
+      if (!product) {
+          return res.status(404).json({ message: "Biến thể không tìm thấy!" });
+      }
+
+      // Find the specific variant by ID
+      const variant = product.variant.id(req.params.id);
+      if (!variant) {
+          return res.status(404).json({ message: "Biến thể không tìm thấy!" });
+      }
+
+      return res.status(200).json({
+          message: successMessages.UPDATE_SUCCESS,
+          data: variant,
+      });
+  } catch (error) {
+      next(error);
+  }
 };
+
+
 
 export const removeVariant = async (req, res, next) => {
     try {

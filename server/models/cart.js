@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { type } from "os";
 
 const cartSchema = new mongoose.Schema({
+    
     user : {
         type : mongoose.Schema.Types.ObjectId,
         required : true,
@@ -10,11 +11,11 @@ const cartSchema = new mongoose.Schema({
     variantId : {
         type : mongoose.Schema.Types.ObjectId,
         required : true,
-        ref : 'variant'
+        ref : 'Product.variant'
     },
     variantQuantity : {
         type : mongoose.Schema.Types.Number,
-        ref : 'variant'
+        required : true,
     }
 });
 

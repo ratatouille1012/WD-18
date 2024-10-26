@@ -3,46 +3,13 @@ import TitleMainLeft from '../../theme/titleMainLeft';
 import BoxProduct from '../../theme/boxProduct';
 import BoxBgIMG from '../../theme/boxBgIMG';
 import Slider from "react-slick"; 
-
-const menuContent2Product = [
-    {
-        id: "1",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/nike-air-zoom-pegasus-38-cw7356-101-01-300x300.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 1000000,
-        link: "/product/1",
-    },
-    {
-        id: "2",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/ultraboost-pb-shoes-blue-eg0426-01-standard-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 4000000,
-        link: "/product/2",
-    },
-    {
-        id: "3",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/z-g28999-02-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 3000000,
-        link: "/product/3",
-    },
-    {
-        id: "4",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-furysole-dv4481-1-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 2000000,
-        link: "/product/4",
-    },
-    {
-        id: "5",
-        img: "https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/puma-love-wns-372104-03-30861-1-400x400.jpg",
-        name: "Giày chạy Nike Chính hãng – Air Zoom Pegasus 38  | JapanSport CW7356-101",
-        price: 1000000,
-        link: "/product/5",
-    },
-];
+import Loading from '../../theme/loading';
+import useCategory from '../../hook/useCategory';
+import useProduct from '../../hook/useProduct';
 
 const ContentProduct = () => {
+    const { products, loading } = useProduct();
+    const { categories,loadingCategories } = useCategory();
     const settings = {
         dots: true,
         infinite: false,
@@ -78,7 +45,7 @@ const ContentProduct = () => {
             
         ]
     };
-
+    if (loading || loadingCategories) return <Loading isShow={true} />;
     return (
         <>
             <TitleMainLeft text={`Giày thể thao nam`} />
@@ -86,8 +53,8 @@ const ContentProduct = () => {
                 <BoxBgIMG fullIMG={`https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/giaynam.jpg`} />
                 <div className="slider-container">
                     <Slider {...settings}>
-                        {menuContent2Product.map((product) => (
-                            <div key={product.id} style={{ padding: '10px' }}>
+                        {products.map((product) => (
+                            <div key={product._id} style={{ padding: '10px' }}>
                                 <BoxProduct product={product} className="box-product" />
                             </div>
                         ))}

@@ -1,75 +1,96 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Trash from '../../svg/trash';
 import ButtonRemoveCart from '../../theme/buttonRemoveCart';
-
-type CartItem = {
-    idcart: number;
-    name: string;
-    price: number;
-    quantity: number;
-    color: string;
-    size: string;
-    image: string; 
+import useCart from '../../hook/useCart';
+import useVariant from '../../hook/useVariant';
+import useProduct from '../../hook/useProduct';
+import useOrder from '../../hook/useOder';
+const generateOrderCode = () => {
+    return 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 };
-
-const formatPrice = (price: number) => {
-    return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-};
-
 const Cart = () => {
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [checkOut, setischeckOut] = useState(false);
     const [shippingOption, setShippingOption] = useState('regular'); 
     const [shippingFee, setShippingFee] = useState(15000);
     const [voucherCode, setVoucherCode] = useState('');
     const [discount, setDiscount] = useState(0);
     const [isVoucherValid, setIsVoucherValid] = useState(false);
-    console.log(cartItems);
+    const { cart, loadingCart,Delete,updateCart,setCart } = useCart();
+    const { variant, loadingVariant,getOne } = useVariant();
+    const { getProductByVariantId,productDetails } = useProduct();
+    const [userName, setUserName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [address, setAddress] = useState('');
+    const {createOrder} = useOrder();
+    const {DeleteAll } = useCart();
 
-    useEffect(() => {
-        const retrieveCartItems = () => {
-            const storedItems = localStorage.getItem('cart');
-            if (storedItems) {
-                const parsedItems = JSON.parse(storedItems);
-                console.log('Retrieved items:', parsedItems);
-                setCartItems(parsedItems);
+    const fetchProductDetails = async () => {
+        await Promise.all(cart.map(item => {
+            if (item.variantId) {
+                return getProductByVariantId(item.variantId);
             }
-        };
-
-        retrieveCartItems();
-
-        const handleStorageChange = (event: StorageEvent) => {
-            if (event.key === 'cart') {
-                retrieveCartItems();    
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
-    }, []);
-
-    const removeItem = (id: number) => {
-        if (window.confirm('Bạn chắc chắn muốn xóa không?')) {
-            const updatedItems = cartItems.filter(item => item.idcart !== id);
-            setCartItems(updatedItems);
-            localStorage.setItem('cart', JSON.stringify(updatedItems)); 
-        }
+        }));
     };
 
-    const changeQuantity = (id: number, increment: boolean) => {
-        const updatedItems = cartItems.map(item => {
-            if (item.idcart === id) {
-                const newQuantity = increment ? item.quantity + 1 : Math.max(item.quantity - 1, 1);
-                return { ...item, quantity: newQuantity };
+    useEffect(() => {
+        fetchProductDetails();
+    }, [cart]);
+
+    useEffect(() => {
+        fetchProductDetails();
+        cart.forEach(item => {
+            if (item.variantId) {
+                getOne(item.variantId);
+            }
+        });
+    }, [cart]);
+
+    const calculateTotal = () => {
+        return cart.reduce((total, item) => {
+            const product = productDetails[item.variantId];
+            return product ? total + (product.price * item.variantQuantity) : total;
+        }, 0);
+    };
+    const total = calculateTotal();
+    const getUserId = () => {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+            const user = JSON.parse(userString);
+            return user._id; 
+        }
+        return null; 
+    };
+    const changeQuantity = async (itemId, increment) => {
+        console.log(itemId, increment);
+        
+        const updatedCart = cart.map(item => {
+            if (item._id === itemId) {
+                const newQuantity = item.variantQuantity + increment;
+    
+                if (newQuantity < 1) {
+                    alert('Số lượng không thể nhỏ hơn 1.');
+                    return item;
+                }
+    
+                const variants = variant[item.variantId];
+                const availableQuantity = variants?.quantity || 0;
+    
+                if (newQuantity > availableQuantity) {
+                    alert(`Chỉ còn ${availableQuantity} sản phẩm.`);
+                    return item;
+                }
+    
+                updateCart(item._id, newQuantity);
+                return { ...item, variantQuantity: newQuantity };
             }
             return item;
         });
-        setCartItems(updatedItems);
-        localStorage.setItem('cart', JSON.stringify(updatedItems));
+    
+        setCart(updatedCart);
     };
-
+    
+    const userId = getUserId();
+    console.log(userId);
     const handleCheckout = () => {
         setischeckOut(true);
     };
@@ -99,21 +120,36 @@ const Cart = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        localStorage.removeItem('cart');
-        setCartItems([]);
-        setischeckOut(false);
-        alert('Thanh toán thành công');
+        const orderDetails = {
+            user: getUserId(), 
+            orderCode: generateOrderCode(),
+            orderItems: cart,
+            total: (shippingFee + total - (total * discount / 100)),
+            voucherCode: discount > 0 ? voucherCode : null,
+            name: userName,
+            phone: phone,
+            address: address,
+        };
+
+        try {
+            const orderResponse = await createOrder(orderDetails);
+            console.log('Order created successfully:', orderResponse);
+            alert('Thanh toán thành công');
+            localStorage.removeItem('cart');
+            DeleteAll(userId)
+        } catch (error) {
+            console.error('Error creating order:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        }
     };
 
-    const totalAmount = useMemo(() => {
-        return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    }, [cartItems]);
-
+    console.log("cart:",cart);
+    
     return (
         <>
-            {cartItems.length === 0 ? (
+            {cart.length === 0 ? (
                 <p className='w-full text-center mt-7'>Chưa có sản phẩm trong giỏ hàng</p>
             ) : (
                 <div className="w-full mt-10">
@@ -129,42 +165,68 @@ const Cart = () => {
                                 </tr>
                             </thead>
                             <tbody className='text-black'>
-                                {cartItems.map(item => (
-                                    <tr key={item.idcart} className='h-[120px]'>
+                                {cart.map((item,index) => {
+                                    const product = productDetails[item.variantId];
+                                    const variants = variant[item.variantId];
+                                    
+                                    
+                                    console.log("asdadqwfr",product,variants);
+                                    if (!product) {
+                                        console.warn(`Product not found for variant ID: ${item.variantId}`);
+                                        return (
+                                            <div key={index} className="flex justify-between items-center border-b py-2 px-2">
+                                                <p>Product not found for variant ID: {item.variantId}</p>
+                                            </div>
+                                        );
+                                    }
+        
+                                    if (!product) {
+                                        return (
+                                            <div key={index} className="flex justify-between items-center border-b py-2 px-2">
+                                                <p>Product not found for variant ID: {item.variantId}</p>
+                                            </div>
+                                        );
+                                    }
+                                    const colorName = variants?.color?.name || 'N/A';
+                                    const sizeName = variants?.size?.name || 'N/A';
+                                    
+                                    return (
+                                        <tr key={index} className='h-[120px]'>
                                         <td className='border p-4'>
                                             <div className="flex gap-x-4">
-                                                <img src={item.image} alt={item.name} className="h-full w-[120px]" />
+                                                <img src={product.images[0]} alt={product.title} className="h-full w-[120px]" />
                                                 <div className='xs:hidden sm:hidden md:block'>
-                                                    <h2 className='font-bold line-clamp-2'>{item.name}</h2>
-                                                    <p className='font-medium text-[18px]'>Màu: <span className='text-[#666666]'>{item.color}</span></p>
-                                                    <p className='font-medium text-[18px]'>Size: <span className='text-[#666666]'>{item.size}</span></p>
+                                                    <h2 className='font-bold line-clamp-2'>{product.title}</h2>
+                                                    <p className='font-medium text-[18px]'>Màu: <span className='text-[#666666]'>{colorName}</span></p>
+                                                    <p className='font-medium text-[18px]'>Size: <span className='text-[#666666]'>{sizeName}</span></p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className='border p-4 text-center'>{formatPrice(item.price)}</td>
+                                        <td className='border p-4 text-center'>{product.price.toLocaleString()} VNĐ</td>
                                         <td className='border p-4'>
                                             <div className="flex items-center justify-between">
-                                                <button onClick={() => changeQuantity(item.idcart, true)}>+</button>
-                                                <span>{item.quantity}</span>
-                                                <button onClick={() => changeQuantity(item.idcart, false)}>-</button>
+                                                <button onClick={() => changeQuantity(item._id, 1)}>+</button>
+                                                <span>{item.variantQuantity}</span>
+                                                <button onClick={() => changeQuantity(item._id, -1)}>-</button>
                                             </div>
                                         </td>
-                                        <td className='border p-4 text-center'>{formatPrice(item.price * item.quantity)}</td>
+                                        <td className='border p-4 text-center'>{(product.price * item.variantQuantity).toLocaleString()} VNĐ</td>
                                         <td className='border text-center p-4'>
-                                            <button onClick={() => removeItem(item.idcart)} aria-label="Remove item">
+                                            <button onClick={() => Delete(item._id)} aria-label="Remove item">
                                                 <Trash />
                                             </button>
                                         </td>
                                     </tr>
-                                ))}
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>
                     <div className="flex gap-4 flex-row-reverse mt-4">
-                        <h3>Tổng cộng: {formatPrice(totalAmount)}</h3>
+                        <h3>Tổng cộng: {total.toLocaleString()} VNĐ</h3>
                     </div>
                     <div className="flex gap-4 flex-row-reverse mt-2">
-                        <ButtonRemoveCart setCartItems={setCartItems} />
+                        <ButtonRemoveCart userId={userId} />
                         <button onClick={() => handleCheckout()} className='bg-gray-700 mb-2 text-white font-bold py-2 px-4 rounded hover:bg-gray-800 transition duration-300'>
                             Thanh Toán
                         </button>
@@ -182,12 +244,12 @@ const Cart = () => {
                                     <div className="max-w-lg">
                                         <h2 className="text-2xl font-extrabold text-gray-800">Thông tin người nhận</h2>
                                         <div className="grid gap-4 mt-8">
-                                            <input type="text" placeholder="Họ và tên" className="px-4 py-3.5 bg-white text-gray-800 w-full text-sm border-b-2 focus:border-gray-800 outline-none" />
+                                            <input type="text" placeholder="Họ và tên" value={userName} onChange={(e) => setUserName(e.target.value)} className="px-4 py-3.5 bg-white text-gray-800 w-full text-sm border-b-2 focus:border-gray-800 outline-none" />
                                             <div className="flex bg-white border-b-2 focus-within:border-gray-800 overflow-hidden">
-                                                <input type="number" placeholder="SĐT" className="px-4 py-3.5 bg-white text-gray-800 w-full text-sm outline-none" />
+                                                <input type="number" placeholder="SĐT" value={phone} onChange={(e) => setPhone(e.target.value)} className="px-4 py-3.5 bg-white text-gray-800 w-full text-sm outline-none" />
                                             </div>
                                             <div className=" grid xs:grid-cols-2 md:grid-cols-1 gap-6">
-                                                <input type="text" placeholder="Địa chỉ" className="px-4 py-3.5 bg-white text-gray-800 w-full text-sm border-b-2 focus:border-gray-800 outline-none" />
+                                                <input type="text" placeholder="Địa chỉ" value={address} onChange={(e) => setAddress(e.target.value)} className="px-4 py-3.5 bg-white text-gray-800 w-full text-sm border-b-2 focus:border-gray-800 outline-none" />
                                                 <input 
                                                     value={voucherCode}
                                                     onChange={handleVoucherChange} 
@@ -221,24 +283,48 @@ const Cart = () => {
 
 
                                     <div className="bg-gray-100 p-6 rounded-md w-[300px]">
-                                        <h2 className="text-4xl font-extrabold text-gray-800">{formatPrice(totalAmount)}</h2>
+                                        <h2 className="text-4xl font-extrabold text-gray-800">{total.toLocaleString()} </h2>
                                         <div className="tt-2 max-h-52 overflow-y-auto ">
-                                                {cartItems.map(item => (
-                                                    <div key={item.idcart} className="flex items-center border-b py-2">
-                                                        <img src={item.image} alt={item.name} className="h-12 w-12 object-cover mr-2" />
+                                                {cart.map((item,index) => {
+                                                    const product = productDetails[item.variantId];
+                                                    const variants = variant[item.variantId];
+                                                    
+                                                    
+                                                    console.log("asdadqwfr",product,variants);
+                                                    if (!product) {
+                                                        console.warn(`Product not found for variant ID: ${item.variantId}`);
+                                                        return (
+                                                            <div key={index} className="flex justify-between items-center border-b py-2 px-2">
+                                                                <p>Product not found for variant ID: {item.variantId}</p>
+                                                            </div>
+                                                        );
+                                                    }
+                        
+                                                    if (!product) {
+                                                        return (
+                                                            <div key={index} className="flex justify-between items-center border-b py-2 px-2">
+                                                                <p>Product not found for variant ID: {item.variantId}</p>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return(
+                                                        <div key={index} className="flex items-center border-b py-2">
+                                                        <img src={product.images[0]} alt={product.title} className="h-12 w-12 object-cover mr-2" />
                                                         <div className="flex flex-col">
-                                                            <span className="font-medium line-clamp-2">{item.name}</span>
-                                                            <span className="text-sm">Số lượng: {item.quantity}</span>
-                                                            <span className="text-sm">{formatPrice(item.price)}</span>
+                                                            <span className="font-medium line-clamp-2">{product.title}</span>
+                                                            <span className="text-sm">Số lượng: {item.variantQuantity}</span>
+                                                            <span className="text-sm">{product.price.toLocaleString()} VNĐ</span>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                    )
+                                                }
+                                                )}
                                         </div>
                                         <ul className="text-gray-800 mt-8 space-y-4">
                                             <li className="flex flex-wrap gap-4 text-sm">Phí ship <span className="ml-auto font-bold">{shippingFee.toLocaleString()} VND</span></li>
                                             <li className="flex flex-wrap gap-4 text-sm">Voucher <span className="ml-auto font-bold">-{discount.toLocaleString()}%</span></li>
                                             <li className="flex flex-wrap gap-4 text-sm">Tax <span className="ml-auto font-bold">0%</span></li>
-                                            <li className="flex flex-wrap gap-4 text-sm font-bold border-t-2 pt-4">Total <span className="ml-auto">{(shippingFee + totalAmount - (totalAmount * discount/100)).toLocaleString()} VND</span></li>
+                                            <li className="flex flex-wrap gap-4 text-sm font-bold border-t-2 pt-4">Total <span className="ml-auto">{(shippingFee + total - (total * discount/100)).toLocaleString()} VND</span></li>
                                         </ul>
                                         
                                     </div>

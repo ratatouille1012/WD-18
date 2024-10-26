@@ -18,10 +18,10 @@ export const createOrder = async (req, res, next) => {
   try {
     const data = await order.create(req.body);
     if (!data) {
-      return res.status(400).json({ message: "Them order that bai!" });
+      return res.status(400).json({ message: "Đặt hàng that bai!" });
     }
     return res.status(201).json({
-      message: "Them order thanh cong!",
+      message: "Đặt hàng thanh cong!",
       data,
     });
   } catch (error) {

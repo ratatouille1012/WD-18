@@ -4,10 +4,9 @@ import BoxProduct from '../../theme/boxProduct';
 import Loading from '../../theme/loading';
 import useProduct from '../../hook/useProduct';
 
-const ProductNew = ({productt}) => {
+const ProductNew = () => {
     const [displayCount, setDisplayCount] = useState(5);
     const { products, loading } = useProduct();
-
 
     useEffect(() => {
         const updateDisplayCount = () => {

@@ -10,6 +10,20 @@ const orderSchema = new mongoose.Schema({
         type : String,
         required : true
     },
+    orderItems : [
+        {
+            quantity : {
+                type : Number
+            },
+            variantId:{
+                type : mongoose.Schema.Types.ObjectId,
+                ref : 'Product.variant'
+            },
+            variantQuantity : {
+                type : Number,
+            } 
+        }
+    ],
     orderStatus : {
         type : String,
     },
@@ -23,7 +37,20 @@ const orderSchema = new mongoose.Schema({
     ship : {
         type : mongoose.Schema.Types.ObjectId,
         ref : "ship"
-    }
+    },
+    name : {
+        type : String,
+        required : true
+    },
+    address : {
+        type : String,
+        required : true
+    },
+    phone : {
+       type : Number,
+       required : true
+    },
+    
 });
 
 export default mongoose.model("order", orderSchema);

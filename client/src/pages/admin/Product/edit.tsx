@@ -10,13 +10,15 @@ import { TPproducts } from '../../../types/products';
 import { useForm } from 'react-hook-form';
 import { Category } from '../../../types/categories';
 import { TPbrand } from '../../../types/brand';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 const Edit = () => {
     const { darkMode } = useTheme();
     const { id } = useParams<{ id: string }>();
     const nav = useNavigate();
     const { setLoading } = useLoading();
-    const { register, handleSubmit } = useForm<TPproducts>();
+    const { register, handleSubmit,setValue } = useForm<TPproducts>();
 
     const [variant, setVariant] = useState<any[]>([{ id: 1 }]);
     const [colors, setColors] = useState<TPcolor[]>([]);
@@ -160,7 +162,7 @@ const Edit = () => {
     return (
         <div className="pb-10">
             <form onSubmit={handleSubmit(handleUpdate)} action="">
-                <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-2`}>Chi tiết sản phẩm</h1>
+                <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-2`}>Sua sản phẩm</h1>
                 {errorMessage && <p className="text-red-500">{errorMessage}</p>}
                 <div className="flex gap-x-4">
                     <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-2/6`}>
@@ -248,20 +250,28 @@ const Edit = () => {
                         </div>
                     </div>
 
-                    {/* Description Section */}
-                    <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-4/6`}>
+                   {/* Description Section */}
+                   <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-4/6`}>
                         <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Mô tả</h2>
                         <div className="mb-4">
-                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{product?.img_des}</h3>
+                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{product?.description}</h3>
                             <img src={product?.img_des} alt={product?.img_des} />
                         </div>
-                        <textarea
+                        
+                        {/* CKEditor*/}
+                        <CKEditor
+                            editor={ClassicEditor}
+                            data={product?.description}  
+                            onChange={(event, editor) => {
+                                const data = editor.getData();
+                                setValue('description', data); 
+                            }}
+                            config={{
+                                placeholder: 'Mô tả...',
+                            }}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} block w-full h-32 p-2 border rounded`}
-                            placeholder="Mô tả..."
-                            required
-                            defaultValue={product?.description}
-                            {...register('description', { required: true })}
                         />
+
                         <input
                             type="text"
                             placeholder="Link ảnh"
