@@ -26,17 +26,18 @@ const orderSchema = new mongoose.Schema({
     ],
     orderStatus : {
         type : String,
+        default:"Chờ xử lý"
     },
     total : {
         type : Number,
     },
     voucher : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "voucher"
+        ref : "voucher",
     },
     ship : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "ship"
+        ref : "ship",
     },
     name : {
         type : String,
@@ -49,8 +50,14 @@ const orderSchema = new mongoose.Schema({
     phone : {
        type : Number,
        required : true
-    },
+    }
     
-});
+}
+,
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
 export default mongoose.model("order", orderSchema);

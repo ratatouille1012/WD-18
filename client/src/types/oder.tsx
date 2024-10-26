@@ -14,5 +14,7 @@ export type Order {
     ship?: string;          
     name: string;          
     address?: string;       
-    phone?: number;         
+    phone?: number;        
+    createdAt?: Date;      
+    updatedAt?: Date;         
 }

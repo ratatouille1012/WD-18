@@ -27,6 +27,7 @@ import { useEffect, useState } from 'react';
 import NotFound from './pages/user/notFound';
 import ListBrand from './pages/admin/brand/listBrand';
 import Edit from './pages/admin/Product/edit';
+import MyAccount from './pages/user/myAccount';
 
 const routeConfig = [
   {
@@ -86,6 +87,10 @@ const routeConfig = [
       {
         path: '/',
         element: <HomePage />,
+      },
+      {
+        path: '/account',
+        element: <MyAccount />,
       },
       {
         path: '/product',

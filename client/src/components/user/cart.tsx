@@ -46,11 +46,17 @@ const Cart = () => {
     }, [cart]);
 
     const calculateTotal = () => {
+        if (!Array.isArray(cart)) {
+            console.error("Cart is not an array:", cart);
+            return 0; 
+        }
+    
         return cart.reduce((total, item) => {
             const product = productDetails[item.variantId];
             return product ? total + (product.price * item.variantQuantity) : total;
         }, 0);
     };
+    
     const total = calculateTotal();
     const getUserId = () => {
         const userString = localStorage.getItem('user');

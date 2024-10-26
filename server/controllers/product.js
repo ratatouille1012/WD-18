@@ -4,7 +4,6 @@ import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
 import mongoose from 'mongoose';
 import multer from 'multer'
-<<<<<<< HEAD
 import { storage } from '../utils/cloudinary.js'; 
 
 export const getProductVariant = async (req,res) => {
@@ -25,10 +24,7 @@ export const getProductVariant = async (req,res) => {
         res.status(500).json({ message: 'Lỗi máy chủ' });
     }
 }
-=======
-import { storage } from '../utils/cloudinary.js'; // Import cấu hình Cloudinary
 
->>>>>>> origin/Tanh
 
 export const getProducts = async (req, res, next) => {
   try {

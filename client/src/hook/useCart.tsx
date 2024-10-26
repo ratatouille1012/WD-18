@@ -1,17 +1,21 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Cart } from '../types/cart';
+import {  useNavigate } from 'react-router-dom';
 
 const useCart = () => {
     const [cart, setCart] = useState<Cart[]>([]);
     const [loadingCart, setLoading] = useState<boolean>(false);
+    const nav = useNavigate()
     const addToCart = async (values: Cart) => {
         console.log("hahah",values);
+        
         try {
             setLoading(true);
             const token = localStorage.getItem('token'); 
             if (!token) {
-                throw new Error('User not authenticated');
+                alert("Ban can phai dang nhap.")
+                nav("/login")
             }
 
             const response = await axios.post(
@@ -108,16 +112,28 @@ const useCart = () => {
         }
     }
 
-    const updateCart = async (cartId, variantQuantity) => {
+    const updateCart = async (_id, variantQuantity) => {
+        console.log(_id, variantQuantity);
+        
         try {
-            const response = await axios.put(`/api/cart/update/${cartId}`, { variantQuantity });
-            setCart(prevCart => prevCart.map(item => 
-                item._id === cartId ? { ...item, variantQuantity } : item
-            ));
-            return response.data;
+            const token = localStorage.getItem('token');
+            const response = await axios.put(`/api/cart/update`, {_id, variantQuantity },{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setCart(prevCart => 
+                prevCart.map(item =>
+                    item._id === _id ? { ...item, variantQuantity: variantQuantity } : item
+                )
+            );
+            // window.location.reload();
         } catch (error) {
-            console.error("Error updating cart:", error);
-            throw error;
+            if (axios.isAxiosError(error)) {
+                console.error('Error response:', error.response?.data);
+            } else {
+                console.error('Error:', error.message);
+            }
         }
     };
     useEffect(()=>{
