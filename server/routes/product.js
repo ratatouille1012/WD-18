@@ -7,7 +7,10 @@ import {
   softRemoveProductById,
   updateProductById,
   uploadImages,
+<<<<<<< HEAD
   getProductVariant,
+=======
+>>>>>>> origin/Tanh
 } from "../controllers/product.js";
 import productSchema from "../validations/product.js";
 import validBodyRequest from "../middlewares/validRequestBody.js";
