@@ -11,6 +11,7 @@ type Props = {
 const BarLeft: FC<Props> = ({ toggleOBL }) => {
     const [isOprnBarLeft, setOprnBarLeft] = useState(true);
     const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+    const user = JSON.parse(localStorage.getItem('user') || 'null'); // Lấy thông tin người dùng
 
     const closeOPL = () => {
         setOprnBarLeft(!isOprnBarLeft);
@@ -35,8 +36,14 @@ const BarLeft: FC<Props> = ({ toggleOBL }) => {
         { label: "Khuyến mãi", link: "/sale" },
         { label: "Tin tức", link: "/new" },
         { label: "Liên hệ", link: "/contact" },
-        { label: "Đăng nhập", link: "/login" },
+        { label: user ? "Đăng xuất" : "Đăng nhập", link: user ? "#" : "/login" }, 
     ];
+
+    const handleLogout = () => {
+        localStorage.removeItem('user'); 
+        localStorage.removeItem('token'); 
+        alert("User logged out")
+    };
 
     return (
         <div className={`fixed top-0 left-0 w-full h-full z-50 ${isOprnBarLeft ? 'block' : 'hidden'}`}>
@@ -51,11 +58,17 @@ const BarLeft: FC<Props> = ({ toggleOBL }) => {
                     {menuBarLeft.map((menu, index) => (
                         <div key={index} className="flex flex-col">
                             <div className="flex items-center justify-between w-full border-t last:border-b-0">
-                                <Link to={`${menu.link}?label=${encodeURIComponent(menu.label)}`} className="flex-1" onClick={() => {
-                                    if (menu.link === "/product") {
-                                        setActiveSubmenu(null); 
-                                    }
-                                }}>
+                                <Link 
+                                    to={user && menu.label === "Đăng xuất" ? "#" : `${menu.link}?label=${encodeURIComponent(menu.label)}`} 
+                                    className="flex-1"
+                                    onClick={() => {
+                                        if (menu.label === "Đăng xuất") {
+                                            handleLogout(); 
+                                        } else if (menu.link === "/product") {
+                                            setActiveSubmenu(null); 
+                                        }
+                                    }}
+                                >
                                     <MenuHeader
                                         style={`w-full py-[15px] px-[20px] text-[rgba(102,102,102,.85)]`}
                                         font={`font-[700]`}

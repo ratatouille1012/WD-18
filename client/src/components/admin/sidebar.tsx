@@ -119,7 +119,7 @@ const sidebar = () => {
                     className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'formLayout' ? '!text-white' : ''}`}
                     to="color/list"
                   >
-                    Biến thể màu sắc
+                    Màu sắc
                   </Link>
                 </li>
                 <li>
@@ -127,7 +127,15 @@ const sidebar = () => {
                     className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'formLayout' ? '!text-white' : ''}`}
                     to="size/list"
                   >
-                    Biến thể kiếc thước
+                    Kích thước
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'formLayout' ? '!text-white' : ''}`}
+                    to="brand/list"
+                  >
+                    Thương hiệu
                   </Link>
                 </li>
               </ul>

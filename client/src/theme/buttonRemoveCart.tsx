@@ -1,13 +1,14 @@
 import React from 'react';
+import useCart from '../hook/useCart';
 
 type Props = {
     setCartItems: (items: any[]) => void;
 };
 
-const ButtonRemoveCart: React.FC<Props> = ({ setCartItems,style }) => {
+const ButtonRemoveCart: React.FC<Props> = ({ userId,style }) => {
+    const {DeleteAll } = useCart();
     const removeCart = () => {
-        localStorage.removeItem('cart');
-        setCartItems([]);
+        DeleteAll(userId)
     };
 
     return (

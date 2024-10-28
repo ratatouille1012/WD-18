@@ -5,6 +5,7 @@ import { useLoading } from "../contexts/loading";
 import Sidebar from "../components/admin/sidebar";
 import Header from "../components/admin/header";
 import { useTheme } from "../contexts/theme";
+import withAdminAuth from "../HOC/withAdminAuth ";
 
 function AdminLayout() {
   const { loading } = useLoading();
@@ -24,4 +25,4 @@ function AdminLayout() {
   );
 }
 
-export default AdminLayout;
+export default withAdminAuth(AdminLayout);

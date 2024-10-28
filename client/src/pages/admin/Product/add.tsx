@@ -1,215 +1,350 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../contexts/theme';
+import { useLoading } from '../../../contexts/loading';
+import axios from 'axios';
+import { Category } from '../../../types/categories';
+import { TPproducts } from '../../../types/products';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { TPbrand } from '../../../types/brand';
 import Trash from '../../../svg/trash';
+import { TPcolor } from '../../../types/color';
+import { TPsize } from '../../../types/size';
 
-const colors = [
-    {
-        id: "1",
-        colorName: "Đen",
-        colorCode: "#000000",
-    },
-    {
-        id: "2",
-        colorName: "Trắng",
-        colorCode: "#FFFFFF",
-    },
-    {
-        id: "3",
-        colorName: "Vàng",
-        colorCode: "#FFFF00",
-    },
-    {
-        id: "4",
-        colorName: "Đỏ",
-        colorCode: "#FF0000",
-    },
-    {
-        id: "5",
-        colorName: "Xanh",
-        colorCode: "#0000FF",
-    },
-    {
-        id: "6",
-        colorName: "Hồng",
-        colorCode: "#FF69B4",
-    },
-];
-
-const sizes = [
-    { id: "1", sizeName: "39" },
-    { id: "2", sizeName: "40" },
-    { id: "3", sizeName: "42" },
-    { id: "4", sizeName: "43" },
-];
-
-const initialProducts = [
-    { id: 1, name: 'Giày Thể Thao A', category: "Giày thể thao", imgUrl1: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl2: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl3: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg',
-         subDescriptions: [
-            {
-                description: "Được thiết kế phù hợp phong cách thường ngày, những đôi giày nam táo bạo mang hơi hướng thời trang đường phố từ cảm hứng dáng điệu từ những đôi Reebok tiền bối. Chúng được thiết kế với đế đệm ngoài riêng biệt thể hiện sự tôn kính đối với mẫu giày chạy bộ của những năm 90. Mũi giày mang đến cảm giác vững chắc mà vẫn tinh tế. Miếng lót giày xốp EVA có thể tháo rời giúp bạn thoải mái cả ngày dài, trong khi đó đế ngoài bằng cao su làm tăng sức bền cho đôi giày.",
-                imageUrl: "https://bizweb.dktcdn.net/100/347/092/files/z-dv6923-01.jpg?v=1580908389890",
-            }
-        ],  
-        subBienthe:[
-            {   
-                id:"1",
-                idcolor:"1",
-                idsize:"3",
-                price_import:150000,
-                price_list:250000,
-                price_selling:200000,
-                quantity:2
-            },
-            {   
-                id:"2",
-                idcolor:"3",
-                idsize:"4",
-                price_import:100000,
-                price_list:250000,
-                price_selling:200000,
-                quantity:3
-            }
-        ]
-    },
-    { id: 2, name: 'Giày Da B', category: "Giày Nữ",  imgUrl1: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl2: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl3: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', 
-        subDescriptions: [] ,
-        subBienthe:[{}]
-    },
-    { id: 3, name: 'Giày Chạy Bộ C', category: "Giày Nam",  imgUrl1: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl2: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl3: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', 
-        subDescriptions: [] ,
-        subBienthe:[{}]
-    },
-    { id: 4, name: 'Giày Sneaker D', category: "Giày Nam",  imgUrl1: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl2: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl3: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', 
-        subDescriptions: [] ,
-        subBienthe:[{}]
-    },
-    { id: 5, name: 'Giày Đi Bộ E', category: "Giày Nữ",  imgUrl1: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl2: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', imgUrl3: 'https://giaythethao1.giaodienwebmau.com/wp-content/uploads/2021/09/reebok-dmx-series-2k-dv9724-01-400x400.jpg', 
-        subDescriptions: [] ,
-        subBienthe:[{}]
-    },
-];
-
-const add = () => {
+const AddProduct = () => {
     const { darkMode } = useTheme();
-    const [variants, setVariants] = useState([{}]); 
+    const { setLoading } = useLoading();
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [brands, setBrands] = useState<TPbrand[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const nav = useNavigate();
+    const [imageURLs, setImageURLs] = useState<string[]>([]);
+    const [colors, setColors] = useState<TPcolor[]>([]);
+    const [sizes, setSizes] = useState<TPsize[]>([]);
+    const [variants, setVariants] = useState([{ color: '', size: '', importPrice: '', listPrice: '', salePrice: '', quantity: '' }]);
 
-    const addVariant = () => {
-        setVariants([...variants, {}]); 
-    };
-    const removeVariant = (index) => {
-        if (variants.length > 1) { 
-            const newVariants = variants.filter((_, i) => i !== index);
-            setVariants(newVariants);
-        } else {
-            alert('Phải có ít nhất 1 biến thể.');
+    const { register, handleSubmit, formState: { errors } } = useForm<TPproducts>();
+
+    useEffect(() => {
+        const fetchBrandsAndCategories = async () => {
+            try {
+                setLoading(true);
+                const [brandsResponse, categoriesResponse] = await Promise.all([
+                    axios.get("/api/brand"),
+                    axios.get("/api/categories"),
+                ]);
+                setBrands(brandsResponse.data.data);
+                setCategories(categoriesResponse.data.data);
+            } catch (error) {
+                console.error(error);
+                setErrorMessage("Failed to load brands or categories.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBrandsAndCategories();
+    }, [setLoading]);
+
+    const handleAddImageURL = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const value = event.currentTarget.value.trim();
+
+            if (value) {
+                if (imageURLs.length < 4) {
+                    setImageURLs(prev => [...prev, value]);
+                    event.currentTarget.value = '';
+                } else {
+                    setErrorMessage("You can only add up to 4 images.");
+                }
+            }
         }
     };
-  return (
-    <>
-    <div className="pb-10">
+
+    const removeImage = (index: number) => {
+        setImageURLs(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const addProduct = async (values: TPproducts) => {
+        try {
+            setLoading(true);
+            const token = window.localStorage.getItem('token');
+
+            if (imageURLs.length === 0) {
+                setErrorMessage("At least one image URL must be provided.");
+                return;
+            }
+
+            const variantMap = new Map();
+            for (const variant of variants) {
+                const key = `${variant.color}-${variant.size}`;
+                if (variantMap.has(key)) {
+                    alert(`Chỉ được tồn tại một biến thẻ màu "${variant.color}" và kích cỡ "${variant.size}".`);
+                    return;
+                }
+                variantMap.set(key, true);
+            }
+
+            const formattedVariants = variants.map(variant => {
+                const colorObj = colors.find(c => c.name === variant.color);
+                const sizeObj = sizes.find(s => String(s.name) === String(variant.size));
+
+                if (!colorObj || !sizeObj) {
+                    throw new Error(`Invalid color or size for variant: ${JSON.stringify(variant)}`);
+                }
+
+                return {
+                    color: colorObj._id,
+                    size: sizeObj._id,
+                    quantity: parseInt(variant.quantity) || 0,
+                    importPrice: parseFloat(variant.importPrice) || 0,
+                    listPrice: parseFloat(variant.listPrice) || 0,
+                    salePrice: parseFloat(variant.salePrice) || 0,
+                };
+            });
+
+            const requestBody = {
+                title: values.title,
+                price: parseFloat(values.price) || 0,
+                brand: values.brand,
+                category: values.category,
+                images: imageURLs,
+                variant: formattedVariants
+            };
+
+            console.log("Request Body:", requestBody);
+
+            const productResponse = await axios.post("/api/products", requestBody, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+                alert("Successfully")
+                nav('/admin/product/list');
+
+        } catch (error) {
+            console.error('Error creating product:', error);
+            if (error.response) {
+                console.error('Server responded with:', error.response.data);
+                setErrorMessage("Error creating product: " + error.response.data.message || "An error occurred");
+            } else {
+                setErrorMessage("Error creating product. Please check the console for details.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const onSubmit = (values: TPproducts) => {
+        addProduct(values);
+    };
+
+    const addVariant = () => {
+        setVariants([...variants, { color: '', size: '', importPrice: '', listPrice: '', salePrice: '', quantity: '' }]);
+    };
+
+    const removeVariant = (index: number) => {
+        if (variants.length > 1) {
+            setVariants(variants.filter((_, i) => i !== index));
+        } else {
+            alert('At least one variant must remain.');
+        }
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [colorResponse, sizeResponse] = await Promise.all([
+                    axios.get("/api/color"),
+                    axios.get("/api/size"),
+                ]);
+                setColors(colorResponse.data.data);
+                setSizes(sizeResponse.data.data);
+            } catch (error) {
+                console.error(error);
+                setErrorMessage("Failed to load colors or sizes.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [setLoading]);
+
+    return (
+        <div className="pb-10">
             <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Thêm sản phẩm</h1>
-                {/* Thông tin chung */}
-                <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-10`}>
-                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin chung</h2>
-                    <form  className="flex flex-col gap-4">
-                        <input 
-                            type="text" 
-                            placeholder="Tên sản phẩm"   
-                            required 
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-10`}>
+                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin sản phẩm</h2>
+                {errorMessage && <div className="text-red-500">{errorMessage}</div>}
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+                    <div className="flex gap-x-4 w-full">
+                        <input
+                            type="text"
+                            placeholder="Tên sản phẩm"
+                            {...register('title', { required: "Product name is required" })}
+                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} w-full border p-2 rounded`}
                         />
-                        <input 
-                            type="text" 
-                            placeholder="Danh mục" 
-                            required 
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                        {errors.title && <span className="text-red-500">{errors.title.message}</span>}
+
+                        <input
+                            type="number"
+                            placeholder="Giá"
+                            {...register('price', { required: "Product price is required" })}
+                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} w-full border p-2 rounded`}
                         />
-                        <input 
-                            type="text" 
-                            placeholder="Link ảnh 1" 
-                            required 
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        />
-                        <input 
-                            type="text" 
-                            placeholder="Link ảnh 2" 
-                            required 
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        />
-                        <input 
-                            type="text" 
-                            placeholder="Link ảnh 3"  
-                            required 
-                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
-                        />
-                        <button 
-                            type="submit" 
-                            className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-3 mt-6 rounded-md`}
+                        {errors.price && <span className="text-red-500">{errors.price.message}</span>}
+                    </div>
+                    <div className="flex gap-x-4 w-full">
+                        <select
+                            {...register('brand', { required: "Brand is required" })}
+                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
                         >
-                            Thêm sản phẩm
-                        </button>
-                    </form>
-                </div>  
-            {/* Biến thể*/}
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
-                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Biến thể</h2>
-                <form className="mt-10">
-                    {variants.map((_, index) => (
-                        <div key={index} className="flex justify-between mt-6">
-                            <div className="input-with-placeholder">
-                                <select id={`color-${index}`} required>
-                                    <option value="" disabled selected hidden>Color</option>
-                                    {colors.map(color => (
-                                        <option key={color.id} value={color.colorCode}>
-                                            {color.colorName}
-                                        </option>
-                                    ))}
-                                </select>
-                                <label htmlFor={`color-${index}`}>Color</label>
+                            <option value="" disabled hidden>Thương hiệu</option>
+                            {brands.map(brand => (
+                                <option key={brand._id} value={brand._id}>
+                                    {brand.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.brand && <span className="text-red-500">{errors.brand.message}</span>}
+
+                        <select
+                            {...register('category', { required: "Category is required" })}
+                            className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
+                        >
+                            <option value="" disabled hidden>Danh mục</option>
+                            {categories.map(cate => (
+                                <option key={cate._id} value={cate._id}>
+                                    {cate.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.category && <span className="text-red-500">{errors.category.message}</span>}
+                    </div>
+
+                    <input
+                        type="text"
+                        placeholder="Image URL"
+                        onKeyDown={handleAddImageURL}
+                        className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                    />
+                    <div className="text-sm text-gray-500">Nhập link ảnh và ấn enter</div>
+
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {imageURLs.map((url, index) => (
+                            <div key={index} className="relative">
+                                <img
+                                    src={url}
+                                    alt={`product-${index}`}
+                                    className="w-24 h-24 object-cover rounded"
+                                />
+                                <button type="button" onClick={() => removeImage(index)} className="absolute top-0 right-0 text-red-500">
+                                    <Trash />
+                                </button>
                             </div>
-                            <div className="input-with-placeholder">
-                                <select id={`size-${index}`} required>
-                                    <option value="" disabled selected hidden>Size</option>
-                                    {sizes.map(size => (
-                                        <option key={size.id} value={size.sizeName}>
-                                            {size.sizeName}
-                                        </option>
-                                    ))}
-                                </select>
-                                <label htmlFor={`size-${index}`}>Size</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" id={`price-import-${index}`} required />
-                                <label htmlFor={`price-import-${index}`}>Giá nhập</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" id={`price-list-${index}`} required />
-                                <label htmlFor={`price-list-${index}`}>Giá niêm yết</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" id={`price-selling-${index}`} required />
-                                <label htmlFor={`price-selling-${index}`}>Giá bán</label>
-                            </div>
-                            <div className="input-with-placeholder1">
-                                <input type="number" id={`quantity-${index}`} required />
-                                <label htmlFor={`quantity-${index}`}>Số lượng</label>
-                            </div>
-                            <button type="button" onClick={() => removeVariant(index)}><Trash/></button>
+                        ))}
+                    </div>
+
+                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mt-6`}>Biến thể</h2>
+                    {variants.map((variant, index) => (
+                        <div key={index} className="flex gap-x-4">
+                            <select
+                                value={variant.color}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].color = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
+                            >
+                                <option value="" disabled hidden>Màu</option>
+                                {colors.map(color => (
+                                    <option key={color._id} value={color.name}>
+                                        {color.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={variant.size}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].size = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border w-full p-2 rounded`}
+                            >
+                                <option value="" disabled hidden>Kích cỡ</option>
+                                {sizes.map(size => (
+                                    <option key={size._id} value={size.name}>
+                                        {size.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <input
+                                type="number"
+                                placeholder="Giá nhập"
+                                value={variant.importPrice}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].importPrice = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="Nhá niêm yết"
+                                value={variant.listPrice}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].listPrice = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="Giá bán"
+                                value={variant.salePrice}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].salePrice = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <input
+                                type="number"
+                                placeholder="Số lượng"
+                                value={variant.quantity}
+                                onChange={e => {
+                                    const newVariants = [...variants];
+                                    newVariants[index].quantity = e.target.value;
+                                    setVariants(newVariants);
+                                }}
+                                className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                            />
+
+                            <button type="button" onClick={() => removeVariant(index)} className="text-red-500">
+                                <Trash />
+                            </button>
                         </div>
                     ))}
-                    <div className="mt-4">
-                        <button type="button" onClick={addVariant} className={`${darkMode ? 'text-amber-500 border border-amber-500' : 'text-blue-700 border border-blue-700'} px-3 py-1 rounded-md mr-2`}>
-                            + Thêm biến thể
-                        </button>
-                        <button className={`${darkMode ? 'bg-blue-400 text-white' : 'bg-blue-500 text-white'} px-3 py-1 rounded-md mr-2 hover:bg-blue-600`}>
-                            Lưu
-                        </button>
-                    </div>
-                </form>          
-            </div>          
-        </div>
-    </>
-  )
-}
+                    <div className=""><button type="button" onClick={addVariant} className="text-blue-500 p-2 border border-blue-500 ">Thêm Biến thể</button></div>
+                   
 
-export default add
+                    <button type="submit" className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white mt-4 p-2 rounded`}>
+                        Add Product
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default AddProduct;

@@ -1,6 +1,28 @@
+import axios from "axios";
 import Logo from "../../theme/logo";
+import { LoginFormParams } from "../../types/login";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import isEmail from "validator/lib/isEmail";
+import { MIN_PASSWORD } from "../../consts";
 
 const Login = () => {
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormParams>();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const nav = useNavigate();
+  
+  const onSubmit = async (data: LoginFormParams) => {
+    try {
+      const { data: responseData } = await axios.post("api/auth/login", data);
+      localStorage.setItem("token", responseData.token);
+      localStorage.setItem("user", JSON.stringify(responseData.user));
+      setErrorMessage(null); 
+      nav("/");
+    } catch (error) {
+      setErrorMessage("Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại.");
+    }
+  };
 
   return (
     <div className="bg-white z-50 font-sans w-full fixed left-0 top-0">
@@ -11,15 +33,22 @@ const Login = () => {
           </a>
           <div className="p-8 rounded-2xl bg-white shadow">
             <h2 className="text-gray-800 text-center text-2xl font-bold">Đăng nhập</h2>
-            <form  className="mt-8 space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
               <div>
                 <label className="text-gray-800 text-sm mb-2 block">Email</label>
                 <div className="relative flex items-center">
                   <input
+                  {...register('email', {
+                    required: "Email là bắt buộc",
+                    validate: value => isEmail(value) || "Địa chỉ email không hợp lệ"
+                  })}
                     type="text"
                     className={`w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md `}
                     placeholder="Nhập email của bạn"
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -27,10 +56,20 @@ const Login = () => {
                 <label className="text-gray-800 text-sm mb-2 block">Mật khẩu</label>
                 <div className="relative flex items-center">
                   <input
+                  {...register('password', {
+                    required: "Mật khẩu là bắt buộc",
+                    minLength: {
+                      value: MIN_PASSWORD,
+                      message: `Mật khẩu phải có ít nhất ${MIN_PASSWORD} ký tự`
+                    }
+                  })}
                     type="password"
                     className={`w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md `}
                     placeholder="Nhập mật khẩu của bạn"
                   />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                  )}
                 </div>
               </div>
 

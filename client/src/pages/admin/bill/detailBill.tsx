@@ -235,7 +235,7 @@ const BillDetail = () => {
                                 name="name"
                                 value={recipientData.name}
                                 onChange={handleChangeRecipient}
-                                disabled={status !== 'Chờ xử lý'}
+                                disabled
                                 required
                                 id="recipient-name"
                             />
@@ -247,7 +247,7 @@ const BillDetail = () => {
                                 name="phone"
                                 value={recipientData.phone}
                                 onChange={handleChangeRecipient}
-                                disabled={status !== 'Chờ xử lý'}
+                                disabled
                                 required
                                 id="recipient-phone"
                             />
@@ -260,7 +260,7 @@ const BillDetail = () => {
                             name="address"
                             value={recipientData.address}
                             onChange={handleChangeRecipient}
-                            disabled={status !== 'Chờ xử lý'}
+                            disabled
                             required
                             id="recipient-address"
                         />
@@ -303,7 +303,7 @@ const BillDetail = () => {
                     )})}
                     </tbody>
                 </table>
-                <div className="w-full flex flex-col items-end px-[90px]">
+                <div className={`${darkMode ? 'text-bodydark2' : 'text-black'} w-full flex flex-col items-end px-[90px]`}>
                     <p><strong>Tổng tiền sản phẩm:</strong> {totalPrice.toLocaleString()} </p>
                     <p><strong>Giá vận chuyển:</strong> {(ship ? ship.price : 0).toLocaleString()} </p>
                     <p><strong>Giảm giá voucher:</strong> {discount.toLocaleString()} </p>
@@ -315,7 +315,7 @@ const BillDetail = () => {
                 <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Lịch sử thay đổi trạng thái </h2>
                 <ul>
                     {statusHistory.map((entry, index) => (
-                        <li key={index} className="mb-2">
+                        <li key={index} className={`${darkMode ? 'text-bodydark2' : 'text-black'} mb-2`}>
                             <strong>{entry.status}</strong> - {entry.note} <span className="text-gray-500">({entry.time})</span>
                         </li>
                     ))}
