@@ -22,7 +22,8 @@ const Cart = () => {
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const {createOrder} = useOrder();
-    const {DeleteAll } = useCart();
+    const {DeleteAll,deleteUncheckedItems } = useCart();
+    const [checkedItems, setCheckedItems] = useState(new Set());
 
     const fetchProductDetails = async () => {
         await Promise.all(cart.map(item => {
@@ -45,19 +46,40 @@ const Cart = () => {
         });
     }, [cart]);
 
-    const calculateTotal = () => {
-        if (!Array.isArray(cart)) {
-            console.error("Cart is not an array:", cart);
+    useEffect(() => {
+        const initialCheckedItems = new Set(cart.map(item => item._id));
+        setCheckedItems(initialCheckedItems);
+    }, [cart]);
+    
+    const calculateTotal = (items) => {
+        if (!Array.isArray(items)) {
+            console.error("Items is not an array:", items);
             return 0; 
         }
-    
-        return cart.reduce((total, item) => {
+
+        return items.reduce((total, item) => {
             const product = productDetails[item.variantId];
-            return product ? total + (product.price * item.variantQuantity) : total;
+            const variants = variant[item.variantId];
+            const salePrice = variants?.salePrice;
+            return product ? total + (salePrice * item.variantQuantity) : total;
         }, 0);
     };
     
-    const total = calculateTotal();
+    const checkedCartItems = cart.filter(item => checkedItems.has(item._id));
+    const total = calculateTotal(checkedCartItems);
+
+    const handleCheckboxChange = (itemId) => {
+        setCheckedItems(prev => {
+            const newCheckedItems = new Set(prev);
+            if (newCheckedItems.has(itemId)) {
+                newCheckedItems.delete(itemId);
+            } else {
+                newCheckedItems.add(itemId);
+            }
+            return newCheckedItems;
+        });
+    };
+
     const getUserId = () => {
         const userString = localStorage.getItem('user');
         if (userString) {
@@ -128,11 +150,15 @@ const Cart = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const checkedCartItems = cart.filter(item => checkedItems.has(item._id));
+        const uncheckedCartItems = cart.filter(item => checkedItems.has(item._id)).map(item => item._id);
+
         const orderDetails = {
-            user: getUserId(), 
+            user: getUserId(),
             orderCode: generateOrderCode(),
-            orderItems: cart,
-            total: (shippingFee + total - (total * discount / 100)),
+            orderItems: checkedCartItems,
+            total: (shippingFee + calculateTotal(checkedCartItems) - (calculateTotal(checkedCartItems) * discount / 100)),
             voucherCode: discount > 0 ? voucherCode : null,
             name: userName,
             phone: phone,
@@ -144,7 +170,9 @@ const Cart = () => {
             console.log('Order created successfully:', orderResponse);
             alert('Thanh toán thành công');
             localStorage.removeItem('cart');
-            DeleteAll(userId)
+            deleteUncheckedItems(userId, uncheckedCartItems); 
+            console.log(userId, uncheckedCartItems);
+            window.location.reload();
         } catch (error) {
             console.error('Error creating order:', error);
             alert('Có lỗi xảy ra. Vui lòng thử lại.');
@@ -167,6 +195,7 @@ const Cart = () => {
                                     <th className='border font-normal'>Giá</th>
                                     <th className='border font-normal'>Số lượng</th>
                                     <th className='border font-normal'>Tổng Tiền</th>
+                                    <th className='border font-normal'>Thanh toán</th>
                                     <th className='border font-normal'></th>
                                 </tr>
                             </thead>
@@ -195,6 +224,7 @@ const Cart = () => {
                                     }
                                     const colorName = variants?.color?.name || 'N/A';
                                     const sizeName = variants?.size?.name || 'N/A';
+                                    const salePrice = variants?.salePrice || 'N/A';
                                     
                                     return (
                                         <tr key={index} className='h-[120px]'>
@@ -208,7 +238,7 @@ const Cart = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className='border p-4 text-center'>{product.price.toLocaleString()} VNĐ</td>
+                                        <td className='border p-4 text-center'>{salePrice.toLocaleString()} VNĐ</td>
                                         <td className='border p-4'>
                                             <div className="flex items-center justify-between">
                                                 <button onClick={() => changeQuantity(item._id, 1)}>+</button>
@@ -216,7 +246,14 @@ const Cart = () => {
                                                 <button onClick={() => changeQuantity(item._id, -1)}>-</button>
                                             </div>
                                         </td>
-                                        <td className='border p-4 text-center'>{(product.price * item.variantQuantity).toLocaleString()} VNĐ</td>
+                                        <td className='border p-4 text-center'>{(salePrice * item.variantQuantity).toLocaleString()} VNĐ</td>
+                                        <td className='border p-4 text-center'>
+                                                <input 
+                                                type="checkbox" 
+                                                checked={checkedItems.has(item._id)}
+                                                onChange={() => handleCheckboxChange(item._id)} 
+                                                />
+                                        </td>
                                         <td className='border text-center p-4'>
                                             <button onClick={() => Delete(item._id)} aria-label="Remove item">
                                                 <Trash />
@@ -291,7 +328,7 @@ const Cart = () => {
                                     <div className="bg-gray-100 p-6 rounded-md w-[300px]">
                                         <h2 className="text-4xl font-extrabold text-gray-800">{total.toLocaleString()} </h2>
                                         <div className="tt-2 max-h-52 overflow-y-auto ">
-                                                {cart.map((item,index) => {
+                                            {cart.filter(item => checkedItems.has(item._id)).map((item, index) => {
                                                     const product = productDetails[item.variantId];
                                                     const variants = variant[item.variantId];
                                                     
@@ -313,13 +350,17 @@ const Cart = () => {
                                                             </div>
                                                         );
                                                     }
+
+                                                    const colorName = variants?.color?.name || 'N/A';
+                                                    const sizeName = variants?.size?.name || 'N/A';
+                                                    const salePrice = variants?.salePrice || 'N/A';
                                                     return(
                                                         <div key={index} className="flex items-center border-b py-2">
                                                         <img src={product.images[0]} alt={product.title} className="h-12 w-12 object-cover mr-2" />
                                                         <div className="flex flex-col">
                                                             <span className="font-medium line-clamp-2">{product.title}</span>
                                                             <span className="text-sm">Số lượng: {item.variantQuantity}</span>
-                                                            <span className="text-sm">{product.price.toLocaleString()} VNĐ</span>
+                                                            <span className="text-sm">{salePrice.toLocaleString()} VNĐ</span>
                                                         </div>
                                                     </div>
                                                     )

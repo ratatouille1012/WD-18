@@ -1,76 +1,89 @@
 import { Button } from '@material-tailwind/react';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Order } from '../../types/order';
+import React, { useEffect } from 'react';
+import useProduct from '../../hook/useProduct';
+import useVariant from '../../hook/useVariant';
 
-interface Product {
-  product_id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
+type Props = {
+  orders: Order[];
+};
 
-interface Bill {
-  billhis_id: number;
-  bill_id: number;
-  time: string;
-  status: string;
-  products: Product[]; // Danh sách sản phẩm trong hóa đơn
-}
+const BillHis: React.FC<Props> = ({ orders }) => {
+  const { getProductByVariantId, productDetails } = useProduct();
+  const { getOne, variant } = useVariant();
 
-const BillHis = () => {
-  // Danh sách hóa đơn ban đầu
-  const [bills] = useState<Bill[]>([
-    {
-      billhis_id: 1,
-      bill_id: 101,
-      time: '2024-10-15',
-      status: 'Đã hoàn thành',
-      products: [
-        { product_id: 1, name: 'Sản phẩm A', price: 2000000, quantity: 2 },
-      ],
-    },
-    {
-      billhis_id: 2,
-      bill_id: 102,
-      time: '2024-10-16',
-      status: 'Đang xử lý',
-      products: [
-        { product_id: 2, name: 'Sản phẩm B', price: 4000000, quantity: 1 },
-      ],
-    },
-  ]);
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      await Promise.all(
+        orders.flatMap(order =>
+          order.orderItems.map(item => {
+            if (item.variantId) {
+              return getProductByVariantId(item.variantId);
+            }
+            return null;
+          })
+        )
+      );
+    };
+
+    fetchProductDetails();
+  }, [orders, getProductByVariantId]);
+
+  useEffect(() => {
+    const fetchVariantDetails = async () => {
+      await Promise.all(
+        orders.flatMap(order =>
+          order.orderItems.map(item => {
+            if (item.variantId) {
+              return getOne(item.variantId);
+            }
+            return null;
+          })
+        )
+      );
+    };
+
+    fetchVariantDetails();
+  }, [orders]);
 
   return (
-    <div>
-      {/* Bảng danh sách hóa đơn */}
+    <div className='overflow-y-auto max-h-96'>
       <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">
         <thead className="bg-gray-200">
           <tr>
-            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">BillHis ID</th>
-            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Bill ID</th>
-            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Thời gian</th>
+            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">STT</th>
+            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Mã Đơn</th>
+            <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Thời gian đặt hàng</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Sản phẩm</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Trạng thái</th>
             <th className="border-b border-gray-300 p-4 text-left text-sm font-medium text-gray-600">Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {bills.map(bill => (
-            <tr key={bill.billhis_id}>
-              <td className="border-b border-gray-300 p-4">{bill.billhis_id}</td>
-              <td className="border-b border-gray-300 p-4">{bill.bill_id}</td>
-              <td className="border-b border-gray-300 p-4">{bill.time}</td>
+        {orders.map((order, index) => (
+            <tr key={order.orderCode}>
+              <td className="border-b border-gray-300 p-4">{index + 1}</td>
+              <td className="border-b border-gray-300 p-4 line">{order.orderCode}</td>
+              <td className="border-b border-gray-300 p-4">{new Date(order.createdAt || '').toLocaleDateString()}</td>
               <td className="border-b border-gray-300 p-4">
-                {bill.products.map(product => (
-                  <div key={product.product_id}>
-                    {product.name} - Số lượng: {product.quantity} - Giá: {product.price.toLocaleString()} đ
-                  </div>
-                ))}
+                {order.orderItems.map((item, idx) => {
+                  const product = productDetails[item.variantId];
+                  const variants = variant[item.variantId];
+
+                  return product ? (
+                    <div className='line-clamp-1' key={idx}>
+                      {product.title} - Số lượng: {item.variantQuantity} - Giá: {variants?.salePrice?.toLocaleString()} đ
+                    </div>
+                  ) : (
+                    <p key={idx} className="text-red-500">Product not found for variant ID: {item.variantId}</p>
+                  );
+                })}
               </td>
-              <td className="border-b border-gray-300 p-4">{bill.status}</td>
+              <td className="border-b border-gray-300 p-4">{order.orderStatus}</td>
               <td className="border-b border-gray-300 p-4">
-                <Link to={`/detail/${bill.billhis_id}`}>
-                  <Button type='primary'>Chi tiết</Button>
+                <Link to={`/order/${order._id}`}>
+                  <Button type="primary">Chi tiết</Button>
                 </Link>
               </td>
             </tr>

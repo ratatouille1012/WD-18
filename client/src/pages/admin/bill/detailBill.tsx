@@ -1,357 +1,243 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../contexts/theme';
-
-const initialProducts = [
-    {
-        product_id: 1,
-        name: 'Giày Thể Thao Nike Air Max',
-        category_id: 1,
-        brand_id: 1,
-        description: 'Giày thể thao với đệm khí thoải mái, phù hợp cho mọi hoạt động thể thao.',
-        price: 2500000,
-        product_img: 'link-to-nike-air-max.jpg',
-    },
-    {
-        product_id: 2,
-        name: 'Giày Da Nam Converse',
-        category_id: 2,
-        brand_id: 2,
-        description: 'Giày da cổ điển, phong cách nam tính, thích hợp cho đi làm hoặc đi chơi.',
-        price: 1800000,
-        product_img: 'link-to-converse-classic.jpg',
-    },
-    {
-        product_id: 3,
-        name: 'Giày Cao Gót Nữ H&M',
-        category_id: 3,
-        brand_id: 3,
-        description: 'Giày cao gót thanh lịch, phù hợp cho các dịp tiệc tùng.',
-        price: 2200000,
-        product_img: 'link-to-hm-heels.jpg',
-    },
-    {
-        product_id: 4,
-        name: 'Giày Chạy Bộ Adidas Ultraboost',
-        category_id: 1,
-        brand_id: 1,
-        description: 'Giày chạy bộ với công nghệ đệm tối ưu, hỗ trợ tốt cho người chạy.',
-        price: 3000000,
-        product_img: 'link-to-adidas-ultraboost.jpg',
-    },
-    {
-        product_id: 5,
-        name: 'Giày Lười Nữ Zara',
-        category_id: 2,
-        brand_id: 4,
-        description: 'Giày lười phong cách thời trang, dễ dàng kết hợp với nhiều trang phục.',
-        price: 1500000,
-        product_img: 'link-to-zara-loafers.jpg',
-    },
-];
-
-const initialColors = [
-    { color_id: 1, name: 'Đen', hex: '#000000' },
-    { color_id: 2, name: 'Trắng', hex: '#FFFFFF' },
-    { color_id: 3, name: 'Xanh', hex: '#0000FF' },
-];
-
-const initialSizes = [
-    { size_id: 1, size: '36' },
-    { size_id: 2, size: '37' },
-    { size_id: 3, size: '38' },
-    { size_id: 4, size: '39' },
-    { size_id: 5, size: '40' },
-];
-
-
-const initialVariants = [
-    {
-        variant_id: 1,
-        product_id: 1,
-        color_id: 1,
-        size_id: 1,
-        variant_quantity: 50,
-        variant_import_price: 1000000,
-        variant_list_price: 2500000,
-        variant_sale_price: 2000000,
-        isShow: true,
-    },
-    {
-        variant_id: 2,
-        product_id: 2, 
-        color_id: 2,
-        size_id: 1,
-        variant_quantity: 30,
-        variant_import_price: 800000,
-        variant_list_price: 1800000,
-        variant_sale_price: 1600000,
-        isShow: true,
-    },
-    {
-        variant_id: 3,
-        product_id: 3, 
-        color_id: 1,
-        size_id: 2,
-        variant_quantity: 20,
-        variant_import_price: 1200000,
-        variant_list_price: 2200000,
-        variant_sale_price: 2000000,
-        isShow: true,
-    },
-    {
-        variant_id: 4,
-        product_id: 4,
-        color_id: 3,
-        size_id: 3,
-        variant_quantity: 10,
-        variant_import_price: 1500000,
-        variant_list_price: 3000000,
-        variant_sale_price: 2800000,
-        isShow: true,
-    },
-    {
-        variant_id: 5,
-        product_id: 5, 
-        color_id: 1,
-        size_id: 2,
-        variant_quantity: 15,
-        variant_import_price: 900000,
-        variant_list_price: 1500000,
-        variant_sale_price: 1300000,
-        isShow: true,
-    },
-];
-
-const initialBills = [
-    { bill_id: 1, user_id: 101, bill_code: 'BILL001', status: 'Chờ xử lý', total_bill: 2000000, voucher_id: 'VOUCHER1', ship_id: 'SHIP1' },
-    { bill_id: 2, user_id: 102, bill_code: 'BILL002', status: 'Chờ xử lý', total_bill: 1500000, voucher_id: null, ship_id: 'SHIP2' },
-];
-
-const initialBillItems = [
-    { bill_item_id: 1, bill_id: 1, variant_id: 1,recipient_id:1, quantity: 1, variant_price: 2000000 }, 
-    { bill_item_id: 2, bill_id: 1, variant_id: 2,recipient_id:1, quantity: 1, variant_price: 1600000 },
-    { bill_item_id: 3, bill_id: 2, variant_id: 3,recipient_id:3, quantity: 1, variant_price: 2000000 },
-    { bill_item_id: 4, bill_id: 2, variant_id: 5,recipient_id:3, quantity: 1, variant_price: 1300000 }, 
-];
-
-const initialRecipients = [
-    { recipient_id: 1, name: 'Nguyễn Văn A', phone: '0123456789', address: 'Hà Nội' },
-    { recipient_id: 2, name: 'Trần Thị B', phone: '0987654321', address: 'Trịnh Văn Bô' },
-    { recipient_id: 3, name: 'Lê Văn C', phone: '0912345678', address: 'Trịnh Văn Bô' },
-    { recipient_id: 4, name: 'Phạm Thị D', phone: '0901234567', address: 'Trịnh Văn Bô' },
-];
-
-const initialShips = [
-    { ship_id: 'SHIP1', name: 'Giao hàng tiêu chuẩn', price: 50000 },
-    { ship_id: 'SHIP2', name: 'Giao hàng nhanh', price: 100000 },
-];
-
-const statusOptions = ['Chờ xử lý', 'Đang giao', 'Đã nhận', 'Đã hủy'];
+import useOrder from '../../../hook/useOder';
+import useVariant from '../../../hook/useVariant';
+import useProduct from '../../../hook/useProduct';
 
 const BillDetail = () => {
     const { darkMode } = useTheme();
-    const { billId } = useParams();
-    const bill = initialBills.find(b => b.bill_id === parseInt(billId));
-    const billItems = initialBillItems.filter(item => item.bill_id === bill.bill_id);
+    const { orders, loadingOrder } = useOrder();
+    const { getProductByVariantId, productDetails } = useProduct();
+    const { getOne, variant } = useVariant();
+    const fetchedVariants = new Set(); 
+    useEffect(() => {
+        const fetchDetails = async (fetchFunction) => {
+            if (!orders || !orders.orderItems) return;
 
-    const initialRecipient = initialRecipients.find(r => r.recipient_id === billItems[0].recipient_id);
-    const ship = initialShips.find(s => s.ship_id === bill.ship_id);
-
-    const [status, setStatus] = useState(bill.status);
-    const [recipientData, setRecipient] = useState(initialRecipient || {});
-
-    const [note, setNote] = useState('');
-
-    const [statusHistory, setStatusHistory] = useState([]);
-
-
-    const handleChangeNote = (e) => {
-        setNote(e.target.value);
-    };
-
-    
-
-    const handleChangeStatus = (e) => {
-        setStatus(e.target.value);
-    };
-
-    const handleSaveChanges = () => {
-        const newEntry = {
-            status: status,
-            note: note,
-            time: new Date().toLocaleString(),
+            await Promise.all(
+                orders.orderItems.map(async (item) => {
+                    if (item.variantId && !fetchedVariants.has(item.variantId)) {
+                        console.log(`Fetching details for variant ID: ${item.variantId}`);
+                        await fetchFunction(item.variantId);
+                        fetchedVariants.add(item.variantId);
+                    }
+                })
+            );
         };
-        setStatusHistory(prev => [...prev, newEntry]);
-        setNote(''); 
-    };
 
-    const handleChangeRecipient = (e) => {
-        const { name, value } = e.target;
-        setRecipient(prev => ({ ...prev, [name]: value }));
-    };
+        fetchDetails(getProductByVariantId);
+        fetchDetails(getOne);
+    }, [orders]);
 
-    const totalPrice = billItems.reduce((total, item) => total + item.variant_price * item.quantity, 0);
-    const discount = bill.voucher_id ? 0.1 * totalPrice : 0;
-    const finalTotal = totalPrice + ship.price - discount;
+    if (loadingOrder) {
+        return <p>Loading...</p>;
+    }
+    console.log("Orders:", orders);
+    console.log("Product Details:", productDetails);
 
     return (
         <div className="pb-10">
-            <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Chi tiết đơn hàng: {bill.bill_code}</h1>
-            {/* TT người nhận*/}
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
-                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin người nhận</h2>
-                {recipientData ? (
-                    <>  
-                    <div className="flex gap-x-4">
-                        <div className="input-with-placeholder2 w-full ">
-                            <label htmlFor="bill-code">Mã đơn</label>   
-                            <input
-                                type="text"
-                                name="bill_code"
-                                value={bill.bill_code}
-                                disabled
-                                required
-                                id="bill_code"
-                            />
-                        </div>
-                        <div className="input-with-placeholder2 w-full ">
-                            <label htmlFor="user_id">ID tài khoản đặt hàng</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={bill.user_id}
-                                disabled
-                                required
-                                id="user_id"
-                            />
-                        </div>
-                    </div>       
-                    <div className="flex gap-x-4">                
-                        <div className="input-with-placeholder2 w-full">
-                            <label htmlFor="recipient-name">Tên người nhận</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={recipientData.name}
-                                onChange={handleChangeRecipient}
-                                disabled
-                                required
-                                id="recipient-name"
-                            />
-                        </div>
-                        <div className="input-with-placeholder2 w-full">
-                            <label htmlFor="recipient-phone">SĐT</label>
-                            <input
-                                type="text"
-                                name="phone"
-                                value={recipientData.phone}
-                                onChange={handleChangeRecipient}
-                                disabled
-                                required
-                                id="recipient-phone"
-                            />
-                        </div>
-                    </div> 
-                    <div className="input-with-placeholder2">
-                        <label htmlFor="recipient-address">Địa chỉ</label>
-                        <input
-                            type="text"
-                            name="address"
-                            value={recipientData.address}
-                            onChange={handleChangeRecipient}
-                            disabled
-                            required
-                            id="recipient-address"
-                        />
-                    </div>
-                    </>
-                ) : (
-                    <p><strong>Không tìm thấy thông tin người nhận.</strong></p>
-                )}
-            </div>
-            {/* TT người sản phẩm*/}
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6`}>
-                <div className="flex justify-between"><h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Tông tin sản phẩm</h2></div>
-                <table className="min-w-full mt-4">
-                    <thead>
-                    <tr className={`${darkMode ? 'bg-[#313D4A] text-[rgb(174,183,192)] ' : 'bg-gray-200'} `}>
-                        <th className="py-2 px-4 text-left">Id</th>
+            <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Chi tiết đơn hàng: {orders?.orderCode}</h1>
+            <RecipientInfo orders={orders} darkMode={darkMode} />
+            <ProductInfo orders={orders} productDetails={productDetails} variant={variant} darkMode={darkMode} />
+            <StatusHistory orders={orders} darkMode={darkMode} />
+            <ChangeStatus  orders={orders} darkMode={darkMode} />
+        </div>
+    );
+};
+
+const RecipientInfo = ({ orders, darkMode }) => (
+    <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
+        <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin người nhận</h2>
+        <div className="flex gap-x-4">
+            <InputField label="Mã đơn" value={orders?.orderCode} />
+            <InputField label="ID tài khoản đặt hàng" value={orders?.user} />
+        </div>
+        <div className="flex gap-x-4">
+            <InputField label="Tên người nhận" value={orders?.name} />
+            <InputField label="SĐT" value={orders?.phone} />
+        </div>
+        <InputField label="Địa chỉ" value={orders?.address} />
+    </div>
+);
+
+const InputField = ({ label, value }) => (
+    <div className="input-with-placeholder2 w-full">
+        <label>{label}</label>
+        <input type="text" value={value} disabled required />
+    </div>
+);
+
+const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
+    console.log(orders);
+    
+    const totalPrice = orders?.orderItems?.reduce((acc, item) => {
+        const product = productDetails[item.variantId];
+        const variants = variant[item.variantId];
+        
+        if (product && variants) {
+            return acc + (variants.salePrice * item.variantQuantity);
+        }
+        return acc; 
+    }, 0) || 0;
+
+    return (
+        <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6`}>
+            <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin sản phẩm</h2>
+            <table className="min-w-full mt-4">
+                <thead>
+                    <tr className={`${darkMode ? 'bg-[#313D4A] text-[rgb(174,183,192)] ' : 'bg-gray-200'}`}>
+                        <th className="py-2 px-4 text-left">STT</th>
+                        <th className="py-2 px-4 text-left">Ảnh</th>
                         <th className="py-2 px-4 text-left">Tên sản phẩm</th>
                         <th className="py-2 px-4 text-left">Biến thể</th>
                         <th className="py-2 px-4 text-left">Số lượng</th>
                         <th className="py-2 px-4 text-left">Giá bán</th>
                         <th className="py-2 px-4 text-left">Thành tiền</th>
                     </tr>
-                    </thead>
-                    <tbody>
-                    {billItems.map(item => {
-                        const variant = initialVariants.find(v => v.variant_id === item.variant_id);
-                        const product = initialProducts.find(p => p.product_id === variant.product_id);
-                        const color = initialColors.find(c => c.color_id === variant.color_id);
-                        const size = initialSizes.find(s => s.size_id === variant.size_id);
-                        const itemTotalPrice = item.variant_price * item.quantity;
+                </thead>
+                <tbody>
+                    {orders?.orderItems?.map((item, index) => {
+                        const product = productDetails[item.variantId];
+                        const variants = variant[item.variantId];
+
+                        if (!product || !variants) {
+                            console.error(`Product or variant not found for variant ID: ${item.variantId}`);
+                            return (
+                                <tr key={item.variantId}>
+                                    <td colSpan="6">Product or variant not found for variant ID: {item.variantId}</td>
+                                </tr>
+                            );
+                        }
+
                         return (
-                        <tr className={`${darkMode ? ' text-meta-3 ' : ''} `} key={item.bill_item_id}>
-                            <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b  py-2 px-4`}>{product.product_id}</td>
-                            <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b  py-2 px-4`}>{product.name}</td>
-                            <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b  py-2 px-4`}>Màu: {color.name}, Size: {size.size}</td>
-                            <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b  py-2 px-4`}>{item.quantity}</td>
-                            <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b  py-2 px-4`}>{item.variant_price}</td>
-                            <td className={`${darkMode ? ' border-[#313D4A]' : ''} border-b  py-2 px-4`}>{itemTotalPrice}</td>
-                        </tr>
-                    )})}
-                    </tbody>
-                </table>
-                <div className={`${darkMode ? 'text-bodydark2' : 'text-black'} w-full flex flex-col items-end px-[90px]`}>
-                    <p><strong>Tổng tiền sản phẩm:</strong> {totalPrice.toLocaleString()} </p>
-                    <p><strong>Giá vận chuyển:</strong> {(ship ? ship.price : 0).toLocaleString()} </p>
-                    <p><strong>Giảm giá voucher:</strong> {discount.toLocaleString()} </p>
-                    <p><strong>Tổng tiền cả đơn:</strong> {finalTotal.toLocaleString()} </p>
-                </div>
-            </div>    
-            {/* Lịch sử hay đổi trạng thái*/}
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
-                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Lịch sử thay đổi trạng thái </h2>
-                <ul>
-                    {statusHistory.map((entry, index) => (
-                        <li key={index} className={`${darkMode ? 'text-bodydark2' : 'text-black'} mb-2`}>
-                            <strong>{entry.status}</strong> - {entry.note} <span className="text-gray-500">({entry.time})</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>           
-            {/* Thay đổi trạng thái*/}
-            <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
-                <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thay đổi trạng thái đơn hàng</h2>
-                <div className="input-with-placeholder">
-                        <select value={status} onChange={handleChangeStatus} id={`stt`}>
-                            {statusOptions.map((option, index) => (
-                                <option key={index} value={option}>{option}</option>
-                            ))}
-                        </select>
-                            <label htmlFor={`stt`}>Trạng thái</label>
-                        </div>
-                <div className="input-with-placeholder2 mt-4">
-                <input
-                    type="text"
-                    value={note}
-                    onChange={handleChangeNote}
-                    placeholder="Ghi chú ..."
-                    className={`${darkMode ? 'bg-[#2C394A] text-white border border-gray-700' : 'bg-white text-black border border-gray-300'} w-full h-[90px] p-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out`}
-                />
-                </div>      
+                            <tr key={index}>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{index + 1}</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}><img className='h-[100px]' src={product.images[0]} alt="" /></td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{product.title}</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>Màu: {variants.color?.name || 'N/A'}, Size: {variants.size?.name || 'N/A'}</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{item.variantQuantity}</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{(variants.salePrice).toLocaleString()} VNĐ</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{(variants.salePrice * item.variantQuantity).toLocaleString()} VNĐ</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+            <div className={`${darkMode ? 'text-bodydark2' : 'text-black'} w-full flex flex-col items-end px-[90px]`}>
+                <p><strong>Tổng tiền sản phẩm:</strong> {totalPrice.toLocaleString()} VNĐ</p>
+                <p><strong>Giá vận chuyển:</strong>15.000 VNĐ</p>
+                <p><strong>Giảm giá voucher:</strong>0 VNĐ</p>
+                <p><strong>Tổng tiền cả đơn:</strong> {(orders?.total !== undefined ? orders.total.toLocaleString() : 0)} VNĐ</p>
             </div>
-            <button 
-                    className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded"
-                    onClick={handleSaveChanges}
-                >   
-                    Lưu thay đổi
-            </button>
         </div>
     );
 };
 
+
+const StatusHistory = ({ darkMode, orders }) => {
+    // Kiểm tra nếu orders.updatedAt có giá trị hợp lệ
+    const updatedAt = orders?.updatedAt ? new Date(orders?.updatedAt) : null;
+
+    // Định dạng ngày giờ nếu updatedAt hợp lệ
+    const options = {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    };
+
+    const formattedDate = updatedAt ? new Intl.DateTimeFormat('vi-VN', options).format(updatedAt) : 'N/A';
+
+    return (
+        <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
+            <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Lịch sử thay đổi trạng thái</h2>
+            <ul>
+                <li className={`${darkMode ? 'text-bodydark2' : 'text-black'} mb-2`}>
+                    <strong>{orders?.orderStatus}</strong> - {formattedDate} <span className="text-gray-500"></span>
+                </li>
+            </ul>
+        </div>
+    );
+};
+
+const ChangeStatus = ({ orders, darkMode }) => {
+    const { updateOrderById, loadingOrder } = useOrder(); 
+
+    const handleUpdateOrderStatus = async (newStatus) => {
+        const updatedData = {
+            user: orders?.user,
+            orderCode: orders?.orderCode,
+            orderStatus: newStatus,
+            name: orders?.name,
+            address: orders?.address,
+            phone: orders?.phone,
+        };
+
+        try {
+            await updateOrderById(orders._id, updatedData); 
+            alert(`Đơn hàng đã ${newStatus}.`);
+            window.location.reload(); 
+        } catch (error) {
+            console.error("Error updating order status:", error); 
+        }
+    };
+
+    return (
+        <>
+            {orders?.orderStatus === "Chờ xử lý" && (
+                <div className="gap-x-4 flex">
+                    <button 
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"  
+                        onClick={() => handleUpdateOrderStatus("Đã xác nhận")} 
+                        disabled={loadingOrder}
+                    >
+                        Đã xác nhận
+                    </button>
+                    <button 
+                        className="mt-4 bg-red-500 text-white px-4 py-2 rounded" 
+                        onClick={() => handleUpdateOrderStatus("Đã hủy")} 
+                        disabled={loadingOrder}
+                    >
+                        Hủy đơn hàng
+                    </button>
+                </div>
+            )}
+            {orders?.orderStatus === "Đã xác nhận" && (
+                <div className="mt-4">
+                    <button className="bg-yellow-500 text-white px-4 py-2 rounded"
+                    onClick={() => handleUpdateOrderStatus("Đang giao hàng")} 
+                    disabled={loadingOrder}
+                    >
+                        Đang giao hàng
+                    </button>
+                </div>
+            )}
+            {orders?.orderStatus === "Đang giao hàng" && (
+                <div className="mt-4">
+                    <button className="bg-yellow-400 text-white px-4 py-2 rounded"
+                    onClick={() => handleUpdateOrderStatus("Giao hàng thành công")} 
+                    disabled={loadingOrder}
+                    >
+                        Giao hàng thành công
+                    </button>
+                </div>
+            )}
+            {(orders?.orderStatus === "Giao hàng thành công" || orders?.orderStatus === "Đã hủy") && (
+                <div className="mt-4">
+                    <button 
+                        className="bg-amber-300 text-white px-4 py-2 rounded"
+                    >
+                        Lịch sử đơn hàng
+                    </button>
+                </div>
+            )}
+        </>
+    );
+};
+
 export default BillDetail;
-
-

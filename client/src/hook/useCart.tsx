@@ -75,30 +75,6 @@ const useCart = () => {
 
             if (response.status === 200) {
                 console.log('Removed from cart:', response.data);
-                await Getall();
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error('Error response:', error.response?.data);
-            } else {
-                console.error('Error:', error.message);
-            }
-        } finally {
-            setLoading(false);
-        }
-    }
-    const DeleteAll = async (userId: string) => {
-        try {
-            setLoading(true);
-            const token = localStorage.getItem('token');
-            const response = await axios.delete(`/api/cart/removeAll/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.status === 200) {
-                console.log('Removed from cart:', response.data);
                 window.location.reload();
             }
         } catch (error) {
@@ -111,6 +87,51 @@ const useCart = () => {
             setLoading(false);
         }
     }
+    const DeleteAll = async (userId) => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await axios.delete(`/api/cart/removeAll/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            if (response.status === 200) {
+                console.log('Removed unchecked items from cart:', response.data);
+                window.location.reload();
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('Error response:', error.response?.data);
+            } else {
+                console.error('Error:', error.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const deleteUncheckedItems = async (userId,uncheckedItems) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.delete(`/api/cart/removeUnchecked/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: {
+                    itemIds: uncheckedItems,
+                },
+            });
+            console.log(response.data);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('Error response:', error.response?.data);
+            } else {
+                console.error('Error:', error.message);
+            }
+        }
+    };
 
     const updateCart = async (_id, variantQuantity) => {
         console.log(_id, variantQuantity);
@@ -127,7 +148,6 @@ const useCart = () => {
                     item._id === _id ? { ...item, variantQuantity: variantQuantity } : item
                 )
             );
-            // window.location.reload();
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error('Error response:', error.response?.data);
@@ -139,7 +159,7 @@ const useCart = () => {
     useEffect(()=>{
         Getall();
     },[])
-    return {setCart, addToCart, loadingCart ,cart,Delete,DeleteAll,updateCart};
+    return {setCart, addToCart, loadingCart ,cart,Delete,DeleteAll,updateCart,deleteUncheckedItems};
 };
 
 export default useCart;

@@ -28,6 +28,7 @@ import NotFound from './pages/user/notFound';
 import ListBrand from './pages/admin/brand/listBrand';
 import Edit from './pages/admin/Product/edit';
 import MyAccount from './pages/user/myAccount';
+import OrderDetail from './components/user/orderDetail';
 
 const routeConfig = [
   {
@@ -71,7 +72,7 @@ const routeConfig = [
         element: <ListBill/>,
       },
       {
-        path: "bill/detail/:billId",
+        path: "bill/detail/:orderId",
         element:<DetailBill/>,
       },
       {
@@ -91,6 +92,10 @@ const routeConfig = [
       {
         path: '/account',
         element: <MyAccount />,
+      },
+      {
+        path: '/order/:orderId',
+        element: <OrderDetail />,
       },
       {
         path: '/product',
