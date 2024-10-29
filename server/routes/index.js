@@ -14,6 +14,7 @@ import imageRouter from "./image.js";
 import Cartrouter from "./cart.js";
 import receiverRouter from "./receiver.js";
 import paymentrouter from "./payment.js";
+import ContactRouter from "./contact.js";
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use("/image", imageRouter);
 router.use("/cart", Cartrouter)
 router.use("/receiver", receiverRouter);
 router.use("/payment", paymentrouter);
+router.use("/contact", ContactRouter);
 router.get("/data", (req, res) => {
     res.json({ message: "Hello from the API!" 
       });
