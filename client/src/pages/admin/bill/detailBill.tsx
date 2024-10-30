@@ -3,6 +3,7 @@ import { useTheme } from '../../../contexts/theme';
 import useOrder from '../../../hook/useOder';
 import useVariant from '../../../hook/useVariant';
 import useProduct from '../../../hook/useProduct';
+import { Link } from 'react-router-dom';
 
 const BillDetail = () => {
     const { darkMode } = useTheme();
@@ -136,10 +137,8 @@ const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
 
 
 const StatusHistory = ({ darkMode, orders }) => {
-    // Kiểm tra nếu orders.updatedAt có giá trị hợp lệ
     const updatedAt = orders?.updatedAt ? new Date(orders?.updatedAt) : null;
 
-    // Định dạng ngày giờ nếu updatedAt hợp lệ
     const options = {
         timeZone: 'Asia/Ho_Chi_Minh',
         year: 'numeric',
@@ -180,7 +179,7 @@ const ChangeStatus = ({ orders, darkMode }) => {
 
         try {
             await updateOrderById(orders._id, updatedData); 
-            alert(`Đơn hàng đã ${newStatus}.`);
+            alert(`Đơn hàng ${newStatus}.`);
             window.location.reload(); 
         } catch (error) {
             console.error("Error updating order status:", error); 
@@ -227,12 +226,31 @@ const ChangeStatus = ({ orders, darkMode }) => {
                     </button>
                 </div>
             )}
-            {(orders?.orderStatus === "Giao hàng thành công" || orders?.orderStatus === "Đã hủy") && (
+            {( orders?.orderStatus === "Đã hủy" || orders?.orderStatus === "Đã nhận được hàng") && (
                 <div className="mt-4">
                     <button 
                         className="bg-amber-300 text-white px-4 py-2 rounded"
                     >
-                        Lịch sử đơn hàng
+                    <Link to={`/admin/bill/history`}>Lịch sử đơn hàng</Link> 
+                    </button>
+                </div>
+            )}
+            {(orders?.orderStatus === "Giao hàng thành công") && (
+                <div className="mt-4">
+                    <button 
+                        className="bg-amber-300 text-white px-4 py-2 rounded"
+                    >
+                    <Link to={`/admin/bill/list`}>Danh sách đơn hàng</Link> 
+                    </button>
+                </div>
+            )}
+            {orders?.orderStatus === "Chờ xác nhận hủy đơn hàng" && (
+                <div className="mt-4">
+                    <button className="bg-yellow-400 text-white px-4 py-2 rounded"
+                    onClick={() => handleUpdateOrderStatus("Đã hủy")} 
+                    disabled={loadingOrder}
+                    >
+                        Xác nhận hủy đơn hàng
                     </button>
                 </div>
             )}

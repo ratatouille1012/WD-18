@@ -101,6 +101,9 @@ export const createProduct = async (req, res, next) => {
     return res.status(201).json(savedProduct);
   } catch (error) {
     next(error);
+    console.log('====================================');
+    console.log(error);
+    console.log('====================================');
   }
 };
 

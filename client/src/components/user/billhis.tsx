@@ -9,7 +9,7 @@ type Props = {
   orders: Order[];
 };
 
-const BillHis: React.FC<Props> = ({ orders }) => {
+const BillHis: React.FC<Props> = ({ orders = [] }) => {
   const { getProductByVariantId, productDetails } = useProduct();
   const { getOne, variant } = useVariant();
 
@@ -46,7 +46,9 @@ const BillHis: React.FC<Props> = ({ orders }) => {
 
     fetchVariantDetails();
   }, [orders]);
-
+  if (orders.length === 0) {
+    return <div className="text-center text-gray-600">Bạn chưa mua sản phẩm nào</div>;
+  }
   return (
     <div className='overflow-y-auto max-h-96'>
       <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg">

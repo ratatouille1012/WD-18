@@ -6,10 +6,29 @@ import { useEffect } from 'react';
 
 
 const OrderDetail = () => {
-    const { orderDT, loadingOrder } = useOrder();
+    const { orderDT, loadingOrder,updateOrderById } = useOrder();
     const { getProductByVariantId, productDetails } = useProduct();
     const { getOne, variant } = useVariant();
     console.log(orderDT?.orderItems);
+
+    const handleUpdateOrderStatus = async (newStatus) => {
+      const updatedData = {
+          user: orderDT?.user,
+          orderCode: orderDT?.orderCode,
+          orderStatus: newStatus,
+          name: orderDT?.name,
+          address: orderDT?.address,
+          phone: orderDT?.phone,
+      };
+
+      try {
+          await updateOrderById(orderDT._id, updatedData); 
+          alert(`${newStatus === "Chờ xác nhận hủy đơn hàng" ? "Bạn cần chờ để chúng tôi hủy đơn hàng" : "Cám ơn bạn đã mua hàng <3"}`);
+          window.location.reload(); 
+      } catch (error) {
+          console.error("Error updating order status:", error); 
+      }
+  };
     
     const navigate = useNavigate(); 
     const handleGoBack = () => {
@@ -36,6 +55,8 @@ const fetchProductDetails = async () => {
 useEffect(() => {
   fetchProductDetails();
 }, [orderDT]);
+
+
 
     return (
         <div className='pb-10'>
@@ -136,7 +157,18 @@ useEffect(() => {
                 <div className="mt-6 flex gap-4">
                   {orderDT?.orderStatus === "Chờ xử lý" && (
                     <div className="mt-6 flex gap-4">
-                        <button className="bg-orange-500 text-white px-4 py-2 rounded">Hủy đơn hàng</button>
+                        <button className="bg-orange-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleUpdateOrderStatus("Chờ xác nhận hủy đơn hàng")} 
+                        disabled={loadingOrder}
+                        >Hủy đơn hàng</button>
+                    </div>
+                  )}
+                  {orderDT?.orderStatus === "Giao hàng thành công" && (
+                    <div className="mt-6 flex gap-4">
+                        <button className="bg-orange-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleUpdateOrderStatus("Đã nhận được hàng")} 
+                        disabled={loadingOrder}
+                        >Đã nhận được hàng</button>
                     </div>
                   )}
                 </div>

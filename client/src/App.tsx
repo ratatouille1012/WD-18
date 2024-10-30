@@ -29,6 +29,7 @@ import ListBrand from './pages/admin/brand/listBrand';
 import Edit from './pages/admin/Product/edit';
 import MyAccount from './pages/user/myAccount';
 import OrderDetail from './components/user/orderDetail';
+import HistoryBill from './pages/admin/bill/historyBill';
 
 const routeConfig = [
   {
@@ -70,6 +71,10 @@ const routeConfig = [
       {
         path: "bill/list",
         element: <ListBill/>,
+      },
+      {
+        path: "bill/history",
+        element: <HistoryBill/>,
       },
       {
         path: "bill/detail/:orderId",

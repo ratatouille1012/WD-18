@@ -175,6 +175,14 @@ const sidebar = () => {
                     Danh sách đơn hàng
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'tables' ? '!text-white' : ''}`}
+                    to="bill/history"
+                  >
+                    Lịch sử đơn hàng
+                  </Link>
+                </li>
               </ul>
             </div>
 
