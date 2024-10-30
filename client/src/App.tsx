@@ -23,11 +23,12 @@ import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-  import { element } from 'prop-types';
 import NotFound from './pages/user/notFound';
 import ListBrand from './pages/admin/brand/listBrand';
 import Edit from './pages/admin/Product/edit';
 import MyAccount from './pages/user/myAccount';
+import AddVoucherPopup from './pages/admin/voucher/addVoucher';
+import VoucherList from './pages/admin/voucher/listVoucher';
 
 const routeConfig = [
   {
@@ -65,6 +66,10 @@ const routeConfig = [
       {
         path: "color/list",
         element: <ListCL/>,
+      },
+      {
+        path : "voucher/list",
+        element: <VoucherList/>
       },
       {
         path: "bill/list",

@@ -1,9 +1,13 @@
-// routes/paymentRoutes.js
+
+
 import { Router } from 'express';
-import { createPayment, paymentReturn } from '../controllers/vnpay.js';
-const Vnpayrouter = Router();
+import { createPayment, handleReturnUrl } from '../controllers/vnpay.js';
 
-Vnpayrouter.post('/create', createPayment);
-Vnpayrouter.get('/return', paymentReturn);
+const vnpayrouter = Router();
+// Route tạo thanh toán
+vnpayrouter.post('/create', createPayment);
 
-export default Vnpayrouter;
+// Route nhận kết quả trả về từ VNPay
+vnpayrouter.get('/return', handleReturnUrl);
+
+export default vnpayrouter;

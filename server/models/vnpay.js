@@ -1,13 +1,12 @@
 import mongoose from "mongoose";
+
 const vnpaySchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  orderId: { type: String, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
-  vnp_TransactionStatus: { type: String, required: true },
-  vnp_ResponseCode: { type: String, required: true },
-  vnp_TransactionNo: { type: String, required: true },
-  vnp_BankCode: { type: String, required: true },
-  vnp_PayDate: { type: String, required: true },
-}, { timestamps: true });
+  paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+  vnpayTransactionId: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
 
 export default mongoose.model("vnpay", vnpaySchema);

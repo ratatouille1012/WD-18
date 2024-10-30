@@ -13,8 +13,9 @@ import orderItemRouter from "./orderItem.js";
 import imageRouter from "./image.js";
 import Cartrouter from "./cart.js";
 import receiverRouter from "./receiver.js";
-import paymentrouter from "./payment.js";
 import ContactRouter from "./contact.js";
+import paymentrouter from "./payment.js";
+import momoRouter from "./momo.js";
 
 const router = Router();
 
@@ -32,8 +33,8 @@ router.use("/orderItem", orderItemRouter);
 router.use("/image", imageRouter);
 router.use("/cart", Cartrouter)
 router.use("/receiver", receiverRouter);
-router.use("/payment", paymentrouter);
 router.use("/contact", ContactRouter);
+router.use("/payment", paymentrouter);
 router.get("/data", (req, res) => {
     res.json({ message: "Hello from the API!" 
       });

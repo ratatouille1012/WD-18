@@ -68,7 +68,7 @@ export const updateVoucherById = async (req, res, next) => {
 // ! Xoá cứng! Không dùng
 export const removeVoucherById = async (req, res, next) => {
   try {
-   await voucher.findByIdAndDlete(req.params.id);
+   await voucher.findByIdAndDelete(req.params.id);
    res.json('success')
   } catch (error) {
     next(error);
