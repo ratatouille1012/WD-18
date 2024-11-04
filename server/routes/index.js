@@ -8,14 +8,13 @@ import variantRouter from "./variant.js";
 import brandRouter from "./brand.js";
 import voucherRouter from "./voucher.js";
 import orderRouter from "./order.js";
-import shipRouter from "./ship.js";
 import orderItemRouter from "./orderItem.js";
 import imageRouter from "./image.js";
 import Cartrouter from "./cart.js";
 import receiverRouter from "./receiver.js";
 import ContactRouter from "./contact.js";
 import paymentrouter from "./payment.js";
-import momoRouter from "./momo.js";
+import { getShippingCost } from "../controllers/ship.js";
 
 const router = Router();
 
@@ -28,8 +27,8 @@ router.use("/variant", variantRouter);
 router.use("/brand", brandRouter);
 router.use("/voucher", voucherRouter);
 router.use("/order", orderRouter);
-router.use("/ship", shipRouter);
 router.use("/orderItem", orderItemRouter);
+router.post('/shipping', getShippingCost )
 router.use("/image", imageRouter);
 router.use("/cart", Cartrouter)
 router.use("/receiver", receiverRouter);
