@@ -43,7 +43,7 @@ export const getShippingCost = async (req, res) => {
         let shippingCost = 15000; // Giá cơ bản cho 2km
         if (distance > 2) {
             const extraDistance = Math.ceil(distance - 2); // Tính khoảng cách thêm
-            shippingCost += extraDistance * 200; // Tính phí cho mỗi km thêm
+            shippingCost += extraDistance * 100; // Tính phí cho mỗi km thêm
         }
 
         // Lưu thông tin vào cơ sở dữ liệu

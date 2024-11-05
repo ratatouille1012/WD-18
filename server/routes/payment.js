@@ -1,11 +1,11 @@
 
 
 import { Router } from 'express';
-import vnpayrouter from './vnpay.js';
 import momorouter from './momo.js';
+import ZaloPayrouter from './zalo.js';
 
 const paymentrouter = Router();
-paymentrouter.use('/vnpay', vnpayrouter);
+paymentrouter.use('/zalo', ZaloPayrouter);
 paymentrouter.use('/momo', momorouter);
 
 export default paymentrouter;
