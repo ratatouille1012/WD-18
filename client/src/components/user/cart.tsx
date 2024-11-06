@@ -5,6 +5,7 @@ import useCart from '../../hook/useCart';
 import useVariant from '../../hook/useVariant';
 import useProduct from '../../hook/useProduct';
 import useOrder from '../../hook/useOder';
+import useVoucher from '../../hook/useVoucher';
 const generateOrderCode = () => {
     return 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 };
@@ -17,13 +18,16 @@ const Cart = () => {
     const [isVoucherValid, setIsVoucherValid] = useState(false);
     const { cart, loadingCart,Delete,updateCart,setCart } = useCart();
     const { variant, loadingVariant,getOne } = useVariant();
+    const { voucher } = useVoucher();
     const { getProductByVariantId,productDetails } = useProduct();
     const [userName, setUserName] = useState('');
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
-    const {createOrder} = useOrder();
+    const {createOrder,order} = useOrder();
     const {DeleteAll,deleteUncheckedItems } = useCart();
     const [checkedItems, setCheckedItems] = useState(new Set());
+    console.log("qweqwe2",order);
+    
 
     const fetchProductDetails = async () => {
         await Promise.all(cart.map(item => {
@@ -32,7 +36,8 @@ const Cart = () => {
             }
         }));
     };
-
+    
+    
     useEffect(() => {
         fetchProductDetails();
     }, [cart]);
@@ -136,30 +141,53 @@ const Cart = () => {
         const code = e.target.value;
         setVoucherCode(code);
         validateVoucher(code); 
+        console.log(code)
     };
-
+    
     const validateVoucher = (code) => {
-        if (code === 'DISCOUNT5') { 
-            setDiscount(5); 
-            setIsVoucherValid(true);
+        console.log(voucher);
+        console.log(order);
+        const validVoucher = voucher.find(v => v.code === code);
+        const isVoucherUsed = order.some(v => v.voucher === code);
+        console.log(isVoucherUsed);
+        
+
+        if (isVoucherUsed) {
+            alert("Voucher này đã được sử dụng.");
+            setDiscount(0);
+            setIsVoucherValid(false);
+            return;  
+        }
+    
+        if (validVoucher) {
+            const totalBeforeDiscount = calculateTotal(checkedCartItems);
+            if (totalBeforeDiscount >= validVoucher.maxPrice) {
+                setDiscount(Number(validVoucher.value));
+                setIsVoucherValid(true);
+            } else {
+                alert(`Giá trị đơn hàng phải tối thiểu ${validVoucher.maxPrice.toLocaleString()} VNĐ để áp dụng mã này.`);
+                setDiscount(0);
+                setIsVoucherValid(false);
+            }
         } else {
-            setDiscount(0); 
+            setDiscount(0);
             setIsVoucherValid(false);
         }
     };
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         const checkedCartItems = cart.filter(item => checkedItems.has(item._id));
         const uncheckedCartItems = cart.filter(item => checkedItems.has(item._id)).map(item => item._id);
-
+        const total = calculateTotal(checkedCartItems);
         const orderDetails = {
             user: getUserId(),
             orderCode: generateOrderCode(),
             orderItems: checkedCartItems,
-            total: (shippingFee + calculateTotal(checkedCartItems) - (calculateTotal(checkedCartItems) * discount / 100)),
-            voucherCode: discount > 0 ? voucherCode : null,
+            total: (shippingFee + total  - (total  * discount  / 100)),
+            voucher:voucherCode,
             name: userName,
             phone: phone,
             address: address,

@@ -1,27 +1,40 @@
-import FilterProduct from '../../components/user/filterProduct'
-import FullProduct from '../../components/user/fullProduct'
-import Brand from '../../components/user/brand'
-import SettingSVG from '../../svg/settingSVG'
-import FilterBarLeft from '../../components/user/filterBarLeft'
-import { useState } from 'react'
+import React, { useState } from 'react';
+import FilterProduct from '../../components/user/FilterProduct';
+import FullProduct from '../../components/user/FullProduct';
+import Brand from '../../components/user/Brand';
+import SettingSVG from '../../svg/settingSVG';
+import FilterBarLeft from '../../components/user/FilterBarLeft';
 
-const allProduct = () => {
-  const [isOprnBarLeft, setOprnBarLeft] = useState(false);
+const AllProduct = () => {
+    const [isOpenBarLeft, setOpenBarLeft] = useState(false);
+    const [filters, setFilters] = useState({});
 
-  const buttonOBL = () => {
-    setOprnBarLeft(!isOprnBarLeft);
-  };
-  return (
-    <>
-    <button onClick={buttonOBL} className="w-full xs:flex md:hidden flex justify-center mt-5 items-center"><SettingSVG/><span className='mx-1 uppercase font-bold text-xl '>Lọc </span></button>
-    <div className="flex mt-7 mb-16">
-      <div className="xs:hidden sm:hidden md:block md:w-1/4"><FilterProduct/></div>
-      <div className="xs:w-full sm:w-full md:w-3/4"><FullProduct/></div>
-    </div>
-    <div className="mb-28"><Brand/></div>
-    {isOprnBarLeft &&<FilterBarLeft toggleOBL={buttonOBL}/>}
-    </>
-  )
-}
+    const toggleBarLeft = () => {
+        setOpenBarLeft(!isOpenBarLeft);
+    };
 
-export default allProduct
+    const handleApplyFilters = (selectedFilters) => {
+        setFilters(selectedFilters);
+    };
+
+    return (
+        <>
+            <button onClick={toggleBarLeft} className="w-full xs:flex md:hidden flex justify-center mt-5 items-center">
+                <SettingSVG />
+                <span className='mx-1 uppercase font-bold text-xl'>Lọc</span>
+            </button>
+            <div className="flex mt-7 mb-16">
+                <div className="xs:hidden sm:hidden md:block md:w-1/4">
+                    <FilterProduct onApplyFilters={handleApplyFilters} />
+                </div>
+                <div className="xs:w-full sm:w-full md:w-3/4">
+                    <FullProduct filters={filters} />
+                </div>
+            </div>
+            <div className="mb-28"><Brand /></div>
+            {isOpenBarLeft && <FilterBarLeft toggleOBL={toggleBarLeft} />}
+        </>
+    );
+};
+
+export default AllProduct;

@@ -1,7 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useState} from 'react';
 import useOrder from '../../hook/useOder';
 import useVariant from '../../hook/useVariant';
 import useProduct from '../../hook/useProduct';
+import useVoucher from '../../hook/useVoucher';
 import { useEffect } from 'react';
 
 
@@ -9,7 +11,34 @@ const OrderDetail = () => {
     const { orderDT, loadingOrder,updateOrderById } = useOrder();
     const { getProductByVariantId, productDetails } = useProduct();
     const { getOne, variant } = useVariant();
-    console.log(orderDT?.orderItems);
+    const { voucher } = useVoucher();
+    const [validVoucher, setValidVoucher] = useState(null);
+
+
+    useEffect(() => {
+      const code = orderDT?.voucher;
+      const foundVoucher = voucher.find(v => v.code === code); 
+      setValidVoucher(foundVoucher); 
+    }, [orderDT, voucher]);
+
+    const calculateTotalAmount = () => {
+      if (!orderDT?.orderItems) return 0; 
+      return orderDT?.orderItems?.reduce((total, item) => {
+          const product = productDetails[item.variantId]; 
+          const variantItem = variant[item.variantId];
+
+          if (product && variantItem) {
+              const salePrice = variantItem.salePrice || 0; 
+              const quantity = item.variantQuantity || 0;
+
+              total += salePrice * quantity; 
+          }
+
+          return total;
+      }, 0); 
+  };
+
+  const totalAmount = calculateTotalAmount();
 
     const handleUpdateOrderStatus = async (newStatus) => {
       const updatedData = {
@@ -51,6 +80,8 @@ const fetchProductDetails = async () => {
       }
   }));
 };
+
+
 
 useEffect(() => {
   fetchProductDetails();
@@ -152,7 +183,16 @@ useEffect(() => {
                             </tbody>
                         </table>
                 </div>
-                <div className="mt-4 font-bold text-lg">Tổng tiền thanh toán: <span className='text-red-500'>{orderDT?.total?.toLocaleString()} VNĐ</span></div>
+                <div className="font-bold text-lg mt-4">Tổng tiền sản phẩm: <span className='text-red-500'>{totalAmount.toLocaleString()} VNĐ</span></div>
+                <div className="font-bold text-lg">
+                  Giảm giá: 
+                  {validVoucher ? (
+                    <span className='text-red-500'> {validVoucher.value} %</span>
+                  ) : (
+                    <span className='text-red-500'>0 %</span>
+                  )}
+                </div>
+                <div className="font-bold text-lg">Tổng tiền thanh toán: <span className='text-red-500'>{orderDT?.total?.toLocaleString()} VNĐ</span></div>
                 
                 <div className="mt-6 flex gap-4">
                   {orderDT?.orderStatus === "Chờ xử lý" && (

@@ -3,6 +3,7 @@ import { useTheme } from '../../../contexts/theme';
 import useOrder from '../../../hook/useOder';
 import useVariant from '../../../hook/useVariant';
 import useProduct from '../../../hook/useProduct';
+import useVoucher from '../../../hook/useVoucher';
 import { Link } from 'react-router-dom';
 
 const BillDetail = () => {
@@ -58,7 +59,11 @@ const RecipientInfo = ({ orders, darkMode }) => (
             <InputField label="Tên người nhận" value={orders?.name} />
             <InputField label="SĐT" value={orders?.phone} />
         </div>
-        <InputField label="Địa chỉ" value={orders?.address} />
+        <div className="flex gap-x-4">
+            <InputField label="Mã giảm giá" value={orders?.voucher} />
+            <InputField label="Địa chỉ" value={orders?.address} />
+        </div>
+        
     </div>
 );
 
@@ -70,6 +75,15 @@ const InputField = ({ label, value }) => (
 );
 
 const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
+    const { voucher } = useVoucher();
+    const [validVoucher, setValidVoucher] = useState(null);
+
+
+    useEffect(() => {
+      const code = orders?.voucher;
+      const foundVoucher = voucher.find(v => v.code === code); 
+      setValidVoucher(foundVoucher); 
+    }, [orders, voucher]);
     console.log(orders);
     
     const totalPrice = orders?.orderItems?.reduce((acc, item) => {
@@ -127,8 +141,14 @@ const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
             </table>
             <div className={`${darkMode ? 'text-bodydark2' : 'text-black'} w-full flex flex-col items-end px-[90px]`}>
                 <p><strong>Tổng tiền sản phẩm:</strong> {totalPrice.toLocaleString()} VNĐ</p>
-                <p><strong>Giá vận chuyển:</strong>15.000 VNĐ</p>
-                <p><strong>Giảm giá voucher:</strong>0 VNĐ</p>
+                <p>
+                    <strong>Giảm giá voucher:</strong>
+                    {validVoucher ? (
+                    <span > {validVoucher.value} %</span>
+                  ) : (
+                    <span >0 %</span>
+                  )}
+                </p>
                 <p><strong>Tổng tiền cả đơn:</strong> {(orders?.total !== undefined ? orders.total.toLocaleString() : 0)} VNĐ</p>
             </div>
         </div>

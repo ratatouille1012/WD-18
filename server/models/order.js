@@ -32,8 +32,8 @@ const orderSchema = new mongoose.Schema({
         type : Number,
     },
     voucher : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "voucher",
+        type : String,
+        default:"none",
     },
     ship : {
         type : mongoose.Schema.Types.ObjectId,

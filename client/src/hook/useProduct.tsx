@@ -10,7 +10,7 @@ const useProduct = () => {
     const [product,setProduct] = useState<TPproducts>()
     const [productDetails, setProductDetails] = useState<{ [key: string]: TPproducts }>({});
     const { id, variantId } = useParams();
-    const Getall = async () => {
+    const Getall = async (z) => {
         try {
             setLoading(true);
             const response = await axios.get("/api/products");

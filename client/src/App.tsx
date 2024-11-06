@@ -18,6 +18,7 @@ import Detail from './pages/admin/Product/detail';
 import Add from './pages/admin/Product/add';
 import ListCT from './pages/admin/Category/ListCT';
 import ListSize from './pages/admin/size/listSize';
+import ListVoucher from './pages/admin/voucher/listVoucher';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
@@ -83,6 +84,10 @@ const routeConfig = [
       {
         path: "brand/list",
         element:<ListBrand/>,
+      },
+      {
+        path: "voucher/list",
+        element:<ListVoucher/>,
       },
     ],
   },
