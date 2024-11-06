@@ -24,13 +24,17 @@ import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-  import { element } from 'prop-types';
 import NotFound from './pages/user/notFound';
 import ListBrand from './pages/admin/brand/listBrand';
 import Edit from './pages/admin/Product/edit';
 import MyAccount from './pages/user/myAccount';
+<<<<<<< HEAD
 import OrderDetail from './components/user/orderDetail';
 import HistoryBill from './pages/admin/bill/historyBill';
+=======
+import AddVoucherPopup from './pages/admin/voucher/addVoucher';
+import VoucherList from './pages/admin/voucher/listVoucher';
+>>>>>>> f78133d14acb93caac119c2aa3ccd2d4502b33cb
 
 const routeConfig = [
   {
@@ -68,6 +72,10 @@ const routeConfig = [
       {
         path: "color/list",
         element: <ListCL/>,
+      },
+      {
+        path : "voucher/list",
+        element: <VoucherList/>
       },
       {
         path: "bill/list",

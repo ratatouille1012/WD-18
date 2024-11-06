@@ -1,13 +1,9 @@
 import mongoose from "mongoose";
 
-const shipSchema = new mongoose.Schema({
-    name : {
-        type : String,
-        required : true
-    },
-    price : {
-        type : Number,
-    }
-});
+const ShippingSchema  = new mongoose.Schema({
+    detailedAddress: { type: String, required: true }, // Lưu địa chỉ chi tiết
+    shippingCost: { type: Number, required: true },
+    distance: { type: Number, required: true },
+}, { timestamps: true });
 
-export default mongoose.model("ship", shipSchema);
+export default mongoose.model("shipping", ShippingSchema );

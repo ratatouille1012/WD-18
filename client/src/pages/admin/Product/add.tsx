@@ -18,7 +18,7 @@ const AddProduct = () => {
     const [brands, setBrands] = useState<TPbrand[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const nav = useNavigate();
-    const [imageURLs, setImageURLs] = useState<string[]>([]);
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [colors, setColors] = useState<TPcolor[]>([]);
     const [sizes, setSizes] = useState<TPsize[]>([]);
     const [variants, setVariants] = useState([{ color: '', size: '', importPrice: '', listPrice: '', salePrice: '', quantity: '' }]);
@@ -46,24 +46,18 @@ const AddProduct = () => {
         fetchBrandsAndCategories();
     }, [setLoading]);
 
-    const handleAddImageURL = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const value = event.currentTarget.value.trim();
-
-            if (value) {
-                if (imageURLs.length < 4) {
-                    setImageURLs(prev => [...prev, value]);
-                    event.currentTarget.value = '';
-                } else {
-                    setErrorMessage("You can only add up to 4 images.");
-                }
-            }
+    const handleAddImageFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length + imageFiles.length <= 4) {
+            setImageFiles(prev => [...prev, ...Array.from(files)]);
+            setErrorMessage(null);
+        } else {
+            setErrorMessage("You can only add up to 4 images.");
         }
     };
 
     const removeImage = (index: number) => {
-        setImageURLs(prev => prev.filter((_, i) => i !== index));
+        setImageFiles(prev => prev.filter((_, i) => i !== index));
     };
 
     const addProduct = async (values: TPproducts) => {
@@ -71,55 +65,32 @@ const AddProduct = () => {
             setLoading(true);
             const token = window.localStorage.getItem('token');
 
-            if (imageURLs.length === 0) {
-                setErrorMessage("At least one image URL must be provided.");
+            if (imageFiles.length === 0) {
+                setErrorMessage("At least one image must be provided.");
                 return;
             }
 
-            const variantMap = new Map();
-            for (const variant of variants) {
-                const key = `${variant.color}-${variant.size}`;
-                if (variantMap.has(key)) {
-                    alert(`Chỉ được tồn tại một biến thẻ màu "${variant.color}" và kích cỡ "${variant.size}".`);
-                    return;
-                }
-                variantMap.set(key, true);
-            }
+            const formData = new FormData();
+            formData.append('brand', values.brand);
+formData.append('category', values.category);
+            formData.append('title', values.title);
+            formData.append('price', values.price);
 
-            const formattedVariants = variants.map(variant => {
-                const colorObj = colors.find(c => c.name === variant.color);
-                const sizeObj = sizes.find(s => String(s.name) === String(variant.size));
-
-                if (!colorObj || !sizeObj) {
-                    throw new Error(`Invalid color or size for variant: ${JSON.stringify(variant)}`);
-                }
-
-                return {
-                    color: colorObj._id,
-                    size: sizeObj._id,
-                    quantity: parseInt(variant.quantity) || 0,
-                    importPrice: parseFloat(variant.importPrice) || 0,
-                    listPrice: parseFloat(variant.listPrice) || 0,
-                    salePrice: parseFloat(variant.salePrice) || 0,
-                };
+            imageFiles.forEach(file => {
+                formData.append('images', file);
             });
 
-            const requestBody = {
-                title: values.title,
-                price: parseFloat(values.price) || 0,
-                brand: values.brand,
-                category: values.category,
-                images: imageURLs,
-                variant: formattedVariants
-            };
-
-            console.log("Request Body:", requestBody);
-
-            const productResponse = await axios.post("/api/products", requestBody, {
-                headers: { Authorization: `Bearer ${token}` }
+            const productResponse = await axios.post("/api/products", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                }
             });
-                alert("Successfully")
-                nav('/admin/product/list');
+            console.log('====================================');
+            console.log(productResponse);
+            console.log('====================================');
+            alert("Product added successfully!");
+            nav('/admin/product/list');
 
         } catch (error) {
             console.error('Error creating product:', error);
@@ -177,7 +148,7 @@ const AddProduct = () => {
                 <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Thông tin sản phẩm</h2>
                 {errorMessage && <div className="text-red-500">{errorMessage}</div>}
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-                    <div className="flex gap-x-4 w-full">
+<div className="flex gap-x-4 w-full">
                         <input
                             type="text"
                             placeholder="Tên sản phẩm"
@@ -223,18 +194,18 @@ const AddProduct = () => {
                     </div>
 
                     <input
-                        type="text"
-                        placeholder="Image URL"
-                        onKeyDown={handleAddImageURL}
-                        className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} border p-2 rounded`}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleAddImageFiles}
+                        className="border p-2 rounded"
                     />
-                    <div className="text-sm text-gray-500">Nhập link ảnh và ấn enter</div>
-
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {imageURLs.map((url, index) => (
+                    <div className="text-sm text-gray-500">Chọn tối đa 4 ảnh</div>
+<div className="flex flex-wrap gap-2 mt-2">
+                        {imageFiles.map((file, index) => (
                             <div key={index} className="relative">
                                 <img
-                                    src={url}
+                                    src={URL.createObjectURL(file)}
                                     alt={`product-${index}`}
                                     className="w-24 h-24 object-cover rounded"
                                 />
@@ -284,7 +255,7 @@ const AddProduct = () => {
 
                             <input
                                 type="number"
-                                placeholder="Giá nhập"
+placeholder="Giá nhập"
                                 value={variant.importPrice}
                                 onChange={e => {
                                     const newVariants = [...variants];
@@ -296,7 +267,7 @@ const AddProduct = () => {
 
                             <input
                                 type="number"
-                                placeholder="Nhá niêm yết"
+                                placeholder="Giá niêm yết"
                                 value={variant.listPrice}
                                 onChange={e => {
                                     const newVariants = [...variants];
@@ -335,12 +306,8 @@ const AddProduct = () => {
                             </button>
                         </div>
                     ))}
-                    <div className=""><button type="button" onClick={addVariant} className="text-blue-500 p-2 border border-blue-500 ">Thêm Biến thể</button></div>
-                   
-
-                    <button type="submit" className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white mt-4 p-2 rounded`}>
-                        Add Product
-                    </button>
+                    <button type="button" onClick={addVariant} className="text-blue-500 p-2 border border-blue-500">Thêm Biến thể</button>
+<button type="submit" className="mt-4 bg-blue-500 text-white p-2 rounded">Thêm sản phẩm</button>
                 </form>
             </div>
         </div>
