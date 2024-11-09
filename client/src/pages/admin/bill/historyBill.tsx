@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
+import useOrder from '../../../hook/useOder';
 import { useTheme } from '../../../contexts/theme';
 import { Link } from 'react-router-dom';
-import useOrder from '../../../hook/useOder';
 
-const OrdersList = () => {
+type Props = {};
+
+const HistoryBill = (props: Props) => {
     const { darkMode } = useTheme();
     const { order, loadingOrder } = useOrder();
+
     const filteredOrders = order?.filter(bill => 
-        bill.orderStatus === 'Chờ xử lý' || bill.orderStatus === 'Chờ xác nhận hủy đơn hàng' || bill.orderStatus === 'Đã xác nhận' || bill.orderStatus === 'Đang giao hàng' || bill.orderStatus === 'Giao hàng thành công'
+        bill.orderStatus === 'Đã hủy' || bill.orderStatus === 'Đã nhận được hàng'
     );
+
     return (
         <div className="pb-10">
             <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6`}>
                 <div className="flex justify-between">
-                    <h2 className={`${darkMode ? 'text-white' : 'text-black'} text-xl font-semibold mb-4`}>Danh sách đơn hàng</h2>x
+                    <h2 className={`${darkMode ? 'text-white' : 'text-black'} text-xl font-semibold mb-4`}>Lịch sử đơn hàng</h2>
                 </div>
                 <table className="min-w-full mt-4">
                     <thead>
@@ -29,9 +33,9 @@ const OrdersList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredOrders?.map((bill,index) => (
+                        {filteredOrders?.map((bill, index) => (
                             <tr key={index} className={`${darkMode ? 'bg-[#2A323D] text-meta-3' : 'bg-white text-black'}`}>
-                                <td className="border-b py-2 px-4">{index+1}</td>
+                                <td className="border-b py-2 px-4">{index + 1}</td>
                                 <td className="border-b py-2 px-4">{bill.user}</td>
                                 <td className="border-b py-2 px-4">{bill.orderCode}</td>
                                 <td className="border-b py-2 px-4">{bill.orderStatus}</td>
@@ -39,7 +43,7 @@ const OrdersList = () => {
                                 <td className="border-b py-2 px-4">{bill.voucher || "none"}</td>
                                 <td className="border-b py-2 px-4">{bill.ship || "none"}</td>
                                 <td className="border-b py-2 px-4">
-                                <Link to={`../bill/detail/${bill._id}`}>
+                                    <Link to={`../bill/detail/${bill._id}`}>
                                         <button className={`${darkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white px-3 py-1`}>Chi tiết</button>
                                     </Link>
                                 </td>
@@ -50,6 +54,6 @@ const OrdersList = () => {
             </div>
         </div>
     );
-};
+}
 
-export default OrdersList;
+export default HistoryBill;

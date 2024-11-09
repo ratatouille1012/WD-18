@@ -1,119 +1,220 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useState} from 'react';
+import useOrder from '../../hook/useOder';
+import useVariant from '../../hook/useVariant';
+import useProduct from '../../hook/useProduct';
+import useVoucher from '../../hook/useVoucher';
+import { useEffect } from 'react';
 
-interface Product {
-  product_id: number;
-  name: string;
-  quantity: number;
-  price: number;
-}
 
-interface Order {
-  ship_id: string;
-  order_id: number;
-  status: string;
-  products: Product[];
-  total_amount: number;
-  delivery_status: string;
-}
+const OrderDetail = () => {
+    const { orderDT, loadingOrder,updateOrderById } = useOrder();
+    const { getProductByVariantId, productDetails } = useProduct();
+    const { getOne, variant } = useVariant();
+    const { voucher } = useVoucher();
+    const [validVoucher, setValidVoucher] = useState(null);
 
-interface Bill {
-    billhis_id: number;
-    bill_id: number;
-    time: string;
-    status: string;
-    products: Product[]; // Danh sách sản phẩm trong hóa đơn
-  }
-  
 
-const MenuDetail: React.FC<{ order: Order, bill: Bill }> = ({ order, bill }) => {
+    useEffect(() => {
+      const code = orderDT?.voucher;
+      const foundVoucher = voucher.find(v => v.code === code); 
+      setValidVoucher(foundVoucher); 
+    }, [orderDT, voucher]);
 
+    const calculateTotalAmount = () => {
+      if (!orderDT?.orderItems) return 0; 
+      return orderDT?.orderItems?.reduce((total, item) => {
+          const product = productDetails[item.variantId]; 
+          const variantItem = variant[item.variantId];
+
+          if (product && variantItem) {
+              const salePrice = variantItem.salePrice || 0; 
+              const quantity = item.variantQuantity || 0;
+
+              total += salePrice * quantity; 
+          }
+
+          return total;
+      }, 0); 
+  };
+
+  const totalAmount = calculateTotalAmount();
+
+    const handleUpdateOrderStatus = async (newStatus) => {
+      const updatedData = {
+          user: orderDT?.user,
+          orderCode: orderDT?.orderCode,
+          orderStatus: newStatus,
+          name: orderDT?.name,
+          address: orderDT?.address,
+          phone: orderDT?.phone,
+      };
+
+      try {
+          await updateOrderById(orderDT._id, updatedData); 
+          alert(`${newStatus === "Chờ xác nhận hủy đơn hàng" ? "Bạn cần chờ để chúng tôi hủy đơn hàng" : "Cám ơn bạn đã mua hàng <3"}`);
+          window.location.reload(); 
+      } catch (error) {
+          console.error("Error updating order status:", error); 
+      }
+  };
+    
     const navigate = useNavigate(); 
+    const handleGoBack = () => {
+        navigate(-1); 
+    };
 
-  const handleGoBack = () => {
-    navigate(-1); 
-  };
+  useEffect(() => {
+    fetchProductDetails();
+    orderDT?.orderItems.forEach(item => {
+        if (item.variantId) {
+            getOne(item.variantId);
+        }
+    });
+}, [orderDT]);
 
-  return (
-    <div>
-        <div>
-            <button 
-                onClick={handleGoBack} 
-                className="flex items-center text-gray-500 hover:text-blue-500 transition duration-200"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
+const fetchProductDetails = async () => {
+  await Promise.all(orderDT.orderItems.map(item => {
+      if (item.variantId) {
+          return getProductByVariantId(item.variantId);
+      }
+  }));
+};
+
+
+
+useEffect(() => {
+  fetchProductDetails();
+}, [orderDT]);
+
+
+
+    return (
+        <div className='pb-10'>
+            <div>
+                <button 
+                    onClick={handleGoBack} 
+                    className="flex items-center text-gray-500 hover:text-blue-500 transition duration-200"
                 >
-                    <path
-                        fillRule="evenodd"
-                        d="M7.293 10l4.293-4.293L10 3.293 2 10l8 6.707 1.586-1.414L7.293 10z"
-                        clipRule="evenodd"
-                    />
-                </svg>
-                Trở lại
-            </button>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M7.293 10l4.293-4.293L10 3.293 2 10l8 6.707 1.586-1.414L7.293 10z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                    Trở lại
+                </button>
+            </div>
+            <div className="p-4 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold mb-4">Mã đơn hàng: {orderDT?.orderCode}<span className="font-semibold"></span></h2>
+                <div className="flex ">
+                    <div className="w-1/2">
+                        <p className="text-gray-600">Tên người nhận: {orderDT?.name}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Số điện thoại: {orderDT?.phone}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Địa chỉ nhận hàng: {orderDT?.address}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Ngày đặt hàng: {orderDT?.createdAt}<span className="font-semibold"></span></p>
+                    </div>
+                    <div className="w-1/2 ">
+                        <p className="text-gray-600">Trạng thái: {orderDT?.orderStatus}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Phương thức vận chuyển: {orderDT?.ship || "none"}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Trạng thái giao hàng: {orderDT?.orderStatus}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Voucher: {orderDT?.voucher || "none"}<span className="font-semibold"></span></p>
+                    </div>
+                </div>
+                <h3 className="text-xl font-semibold mt-4">Sản phẩm:</h3>
+                <div className="overflow-x-auto">
+                        <table className='table w-full mt-4  text-[#666666]'>
+                            <thead className='h-[30px]'>
+                              <tr>
+                                <th className='border font-normal w-2/5'>Sản phẩm</th>
+                                <th className='border font-normal'>Giá</th>
+                                <th className='border font-normal'>Số lượng</th>
+                                <th className='border font-normal'>Tổng Tiền</th>
+                              </tr>
+                            </thead>
+                            <tbody className='text-black'>
+                              {orderDT?.orderItems?.map((item,index)=>{
+                                const product = productDetails[item.variantId];
+                                const variants = variant[item.variantId];
+                                console.log("hHHhH",product,variants);
+
+                                if (!product) {
+                                  return (
+                                      <tr className='h-[100px]'>
+                                          <td className='border p-4' colSpan="4">
+                                              Product not found for variant ID: {item.variantId}
+                                          </td>
+                                      </tr>
+                                  );
+                              }
+
+                                const colorName = variants?.color?.name || 'N/A';
+                                const sizeName = variants?.size?.name || 'N/A';
+                                const salePrice = variants?.salePrice || 'N/A';
+                                return (
+                                  <tr className='h-[100px]'>
+                                    <td className='border p-4'>
+                                      <div className="flex gap-x-4">
+                                          <img src={product.images[0]} alt={``} className=" h-[80px]" />
+                                          <div className='xs:hidden sm:hidden md:block'>
+                                            <h2 className='font-bold line-clamp-2'>{product.title}</h2>
+                                            <p className='font-medium text-[18px]'>Màu: <span className='text-[#666666]'>{colorName}</span></p>
+                                            <p className='font-medium text-[18px]'>Size: <span className='text-[#666666]'>{sizeName}</span></p>
+                                          </div>
+                                        </div>
+                                    </td>
+                                    <td className='border p-4 text-center'>{salePrice.toLocaleString()} VNĐ</td>
+                                    <td className='border p-4'>
+                                      <div className="text-center">
+                                        {item.variantQuantity}
+                                      </div>
+                                    </td>
+                                    <td className='border p-4 text-center'>{(item.variantQuantity * salePrice).toLocaleString()} VNĐ</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                        </table>
+                </div>
+                <div className="font-bold text-lg mt-4">Tổng tiền sản phẩm: <span className='text-red-500'>{totalAmount.toLocaleString()} VNĐ</span></div>
+                <div className="font-bold text-lg">
+                  Giảm giá: 
+                  {validVoucher ? (
+                    <span className='text-red-500'> {validVoucher.value} %</span>
+                  ) : (
+                    <span className='text-red-500'>0 %</span>
+                  )}
+                </div>
+                <div className="font-bold text-lg">Tổng tiền thanh toán: <span className='text-red-500'>{orderDT?.total?.toLocaleString()} VNĐ</span></div>
+                
+                <div className="mt-6 flex gap-4">
+                  {orderDT?.orderStatus === "Chờ xử lý" && (
+                    <div className="mt-6 flex gap-4">
+                        <button className="bg-orange-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleUpdateOrderStatus("Chờ xác nhận hủy đơn hàng")} 
+                        disabled={loadingOrder}
+                        >Hủy đơn hàng</button>
+                    </div>
+                  )}
+                  {orderDT?.orderStatus === "Giao hàng thành công" && (
+                    <div className="mt-6 flex gap-4">
+                        <button className="bg-orange-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleUpdateOrderStatus("Đã nhận được hàng")} 
+                        disabled={loadingOrder}
+                        >Đã nhận được hàng</button>
+                    </div>
+                  )}
+                </div>
+            </div>
         </div>
-        <div className="p-4 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
-        
-      <h2 className="text-2xl font-bold mb-4">Mã đơn hàng: <span className="font-semibold">{bill.bill_id}</span></h2>
-      <p className="text-gray-600">Trạng thái: <span className="font-semibold">{order.status}</span></p>
-      <p className="text-gray-600">Phương thức vận chuyển: <span className="font-semibold">{order.ship_id}</span></p>
-      <p className="text-gray-600">Trạng thái giao hàng: <span className="font-semibold">{order.delivery_status}</span></p>
-      
-      <h3 className="text-xl font-semibold mt-4">Sản phẩm:</h3>
-      <ul className="list-disc pl-5">
-        {order.products.map((product) => (
-          <li key={product.product_id} className="flex justify-between py-2">
-            <span>{product.name} (x{product.quantity})</span>
-            <span>{product.price.toLocaleString()} đ</span>
-          </li>
-        ))}
-      </ul>
-
-      
-      <div className="mt-4 font-bold text-lg">Tổng tiền: {order.total_amount.toLocaleString()} đ</div>
-      
-      <div className="mt-6 flex gap-4">
-        <button className="bg-orange-500 text-white px-4 py-2 rounded">Đánh Giá</button>
-      </div>
-    </div>
-    </div>
-    
-    
-  );
-};
-
-// Dữ liệu giả lập
-const orderData: Order = {
-  
-  ship_id: "Hỏa tốc",
-  order_id: 1,
-  status: 'Hoàn Thành',
-  delivery_status: 'Giao hàng thành công',
-  total_amount: 2000000,
-  products: [
-    { product_id: 1, name: 'Sản phẩm A', quantity: 2, price: 2000000 },
-  ],
-};
-
-const billData: Bill = {
-    billhis_id: 1,
-    bill_id: 101, // Thêm mã hóa đơn giả lập
-    time: '2024-10-16',
-    status: 'Hoàn thành',
-    products: orderData.products,
-  };
-
-const OrderDetail: React.FC = () => {
-  return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      <MenuDetail order={orderData} bill={billData} />
-    </div>
-  );
+    );
 };
 
 export default OrderDetail;

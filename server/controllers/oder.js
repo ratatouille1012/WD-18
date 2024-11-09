@@ -43,7 +43,22 @@ export const getOrderById = async (req, res, next) => {
     next(error);
   }
 };
-
+export const getOrderByUserId = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const data = await order.find({ user: userId }).populate('ship').populate('voucher');
+    
+    if (data && data.length > 0) {
+      return res.status(200).json({
+        message: "Lấy danh sách order theo User ID thành công!",
+        data,
+      });
+    }
+    return res.status(404).json({ message: "Không có order nào cho user này!" });
+  } catch (error) {
+    next(error);
+  }
+};
 export const updateOrderById = async (req, res, next) => {
   try {
     const data = await order.findByIdAndUpdate(
@@ -70,6 +85,26 @@ export const removeOrderById = async (req, res, next) => {
   try {
    await order.findByIdAndDlete(req.params.id);
    res.json('success')
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOneOrderByUserIdAndOrderId = async (req, res, next) => {
+  try {
+    console.log("User ID:", req.params.userId);
+    console.log("Order ID:", req.params.orderId);
+
+    const data = await order.findOne({ _id: req.params.orderId, user: req.params.userId }).populate('ship').populate('voucher');
+
+    if (!data) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng này cho người dùng!" });
+    }
+    
+    return res.status(200).json({
+      message: "Lấy đơn hàng thành công!",
+      data,
+    });
   } catch (error) {
     next(error);
   }

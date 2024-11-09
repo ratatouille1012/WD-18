@@ -37,7 +37,7 @@ const AddPopup = ({ onClose, onAdd, darkMode }) => {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed ml-[280px] inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <form onSubmit={handleSubmit(addBrand)} action="">
                 <div className={`p-5 rounded ${darkMode ? 'bg-[#24303F] text-white' : 'bg-white text-black'}`}>
                     <h2 className="text-xl">Thêm thương hiệu</h2>

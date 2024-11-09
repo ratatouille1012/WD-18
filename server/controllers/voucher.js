@@ -16,6 +16,12 @@ export const getVoucher = async (req, res, next) => {
 };
 export const createVoucher = async (req, res, next) => {
   try {
+    const { code } = req.body;
+
+    const existingVoucher = await voucher.findOne({ code });
+    if (existingVoucher) {
+        return res.status(400).json({ message: "Đã tồn tại mã này" });
+    }
     const data = await voucher.create(req.body);
     if (!data) {
       return res.status(400).json({ message: "Them mã giảm giá that bai!" });

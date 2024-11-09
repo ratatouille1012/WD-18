@@ -44,7 +44,9 @@ const CartSideLeft: FC<Props> = ({ toggleOBCL }) => {
     const calculateTotal = () => {
         return cart.reduce((total, item) => {
             const product = productDetails[item.variantId];
-            return product ? total + (product.price * item.variantQuantity) : total;
+            const variants = variant[item.variantId];
+            const salePrice = variants?.salePrice 
+            return product ? total + (salePrice * item.variantQuantity) : total;
         }, 0);
     };
     const total = calculateTotal();
@@ -96,6 +98,7 @@ const CartSideLeft: FC<Props> = ({ toggleOBCL }) => {
                             }
                             const colorName = variants?.color?.name || 'N/A';
                             const sizeName = variants?.size?.name || 'N/A';
+                            const salePrice = variants?.salePrice || 'N/A';
                             return (
                                 <div key={index} className="flex justify-between items-center border-b py-2 px-2">
                                     <a href={`/product/${product._id}?label=Sản%20phẩm`} className='w-36'>
@@ -108,7 +111,7 @@ const CartSideLeft: FC<Props> = ({ toggleOBCL }) => {
                                             <p className="text-xs text-gray-500">Kích cỡ: {sizeName}</p>
                                         </div>
                                         <p className="text-xs text-gray-500">Số lượng: {item.variantQuantity}</p>
-                                        <p className="text-xs text-gray-500">Giá: {product.price.toLocaleString()} VNĐ</p>
+                                        <p className="text-xs text-gray-500">Giá: {salePrice.toLocaleString()} VNĐ</p>
                                     </div>
                                     <button onClick={() => Delete(item._id)} className="text-red-500 text-lg ml-2">
                                         X

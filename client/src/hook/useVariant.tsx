@@ -18,7 +18,11 @@ const useVariant = () => {
                 [variantId]: response.data.data
             }));
         } catch (error) {
-            console.error('Error fetching variant:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('Error response:', error.response?.data);
+            } else {
+                console.error('Error:', error.message);
+            }
         } finally {
             setLoading(false);
         }

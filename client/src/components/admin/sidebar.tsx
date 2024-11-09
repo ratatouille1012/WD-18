@@ -140,10 +140,17 @@ const sidebar = () => {
                 </li>
                 <li>
                   <Link
+<<<<<<< HEAD
+                    className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'formLayout' ? '!text-white' : ''}`}
+                    to="voucher/list"
+                  >
+                    Mã giảm giá
+=======
                     className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'proFormElements' ? '!text-white' : ''}`}
                     to="voucher/list"
                   >
                     Voucher
+>>>>>>> f78133d14acb93caac119c2aa3ccd2d4502b33cb
                   </Link>
                 </li>
               </ul>
@@ -181,6 +188,14 @@ const sidebar = () => {
                     to="bill/list"
                   >
                     Danh sách đơn hàng
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${page === 'tables' ? '!text-white' : ''}`}
+                    to="bill/history"
+                  >
+                    Lịch sử đơn hàng
                   </Link>
                 </li>
               </ul>

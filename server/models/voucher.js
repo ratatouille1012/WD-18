@@ -15,18 +15,15 @@ const voucherSchema = new mongoose.Schema({
     maxPrice : {
         type : Number,
     },
-    startDate : {
-        type : Date,
-    },
     endDate : {
         type : Date,
-    },
-    quantity : {
-        type : Number,
-    },
-    usedQuantity : {
-        type : Number,
     }
-});
+}
+,
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
 export default mongoose.model("voucher", voucherSchema);

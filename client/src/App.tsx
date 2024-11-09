@@ -18,6 +18,7 @@ import Detail from './pages/admin/Product/detail';
 import Add from './pages/admin/Product/add';
 import ListCT from './pages/admin/Category/ListCT';
 import ListSize from './pages/admin/size/listSize';
+import ListVoucher from './pages/admin/voucher/listVoucher';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
@@ -27,8 +28,13 @@ import NotFound from './pages/user/notFound';
 import ListBrand from './pages/admin/brand/listBrand';
 import Edit from './pages/admin/Product/edit';
 import MyAccount from './pages/user/myAccount';
+<<<<<<< HEAD
+import OrderDetail from './components/user/orderDetail';
+import HistoryBill from './pages/admin/bill/historyBill';
+=======
 import AddVoucherPopup from './pages/admin/voucher/addVoucher';
 import VoucherList from './pages/admin/voucher/listVoucher';
+>>>>>>> f78133d14acb93caac119c2aa3ccd2d4502b33cb
 
 const routeConfig = [
   {
@@ -76,12 +82,20 @@ const routeConfig = [
         element: <ListBill/>,
       },
       {
-        path: "bill/detail/:billId",
+        path: "bill/history",
+        element: <HistoryBill/>,
+      },
+      {
+        path: "bill/detail/:orderId",
         element:<DetailBill/>,
       },
       {
         path: "brand/list",
         element:<ListBrand/>,
+      },
+      {
+        path: "voucher/list",
+        element:<ListVoucher/>,
       },
     ],
   },
@@ -96,6 +110,10 @@ const routeConfig = [
       {
         path: '/account',
         element: <MyAccount />,
+      },
+      {
+        path: '/order/:orderId',
+        element: <OrderDetail />,
       },
       {
         path: '/product',
