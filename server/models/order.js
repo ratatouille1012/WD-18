@@ -50,8 +50,8 @@ const orderSchema = new mongoose.Schema({
     phone : {
        type : Number,
        required : true
-    }
-    
+    },
+    isPaid: { type: Boolean, default: false },
 }
 ,
   {

@@ -28,39 +28,46 @@ export const getProductVariant = async (req,res) => {
 
 export const getProducts = async (req, res, next) => {
   try {
-    const { brand, category, size, minPrice, maxPrice } = req.query;
+    const { brand, category, size, minPrice, maxPrice, name } = req.query;
     
-    // Tạo query object
+    // Create query object
     const query = {};
 
-    // Lọc theo brand
+    // Filter by brand
     if (brand) {
       query.brand = new mongoose.Types.ObjectId(brand);
     }
 
-    // Lọc theo category
+    // Filter by category
     if (category) {
       query.category = new mongoose.Types.ObjectId(category);
     }
 
-    // Lọc theo size (giả sử sản phẩm có mảng sizes và bạn muốn kiểm tra tồn tại size trong mảng này)
+    // Filter by size (assuming products have a `sizes` array and you want to check for the existence of the size in that array)
     if (size) {
       query['variants.size'] = size;
     }
 
-    // Lọc theo khoảng giá
+    // Filter by price range
     if (minPrice || maxPrice) {
       query['variants.price'] = {};
       if (minPrice) {
-        query['variants.price'].$gte = minPrice; // Lớn hơn hoặc bằng minPrice
+        query['variants.price'].$gte = minPrice; // Greater than or equal to minPrice
       }
       if (maxPrice) {
-        query['variants.price'].$lte = maxPrice; // Nhỏ hơn hoặc bằng maxPrice
+        query['variants.price'].$lte = maxPrice; // Less than or equal to maxPrice
       }
     }
 
-    // Tìm kiếm sản phẩm với các điều kiện lọc
-    const data = await Product.find(query).populate("category").populate('brand');
+    // Filter by name (partial match, case-insensitive)
+    if (name) {
+      query.title = { $regex: name, $options: "i" };
+    }
+
+    // Find products with the specified filters
+    const data = await Product.find(query)
+      .populate("category")
+      .populate("brand");
     
     if (data && data.length > 0) {
       return res.status(200).json({
@@ -199,5 +206,30 @@ export const softRemoveProductById = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+export const searchProductsByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    // Tạo query cho việc tìm kiếm theo tên sản phẩm, không phân biệt chữ hoa chữ thường
+    const query = name ? { title: { $regex: name, $options: "i" } } : {};
+
+    // Thực hiện tìm kiếm
+    const data = await Product.find(query)
+      .populate("category")
+      .populate("brand");
+
+    if (data && data.length > 0) {
+      return res.status(200).json({
+        message: successMessages.GET_PRODUCTS_SUCCESS,
+        data,
+      });
+    }
+
+    return res.status(404).json({ message: errorMessages.NO_PRODUCTS_FOUND });
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ message: errorMessages.SERVER_ERROR });
   }
 };
