@@ -1,8 +1,8 @@
-// import { Router } from "express";
-// import { login, register } from "../controllers/auth.js";
-// const authRouter = Router();
+ import {Router} from 'express'
+import { getUser, getUserById } from '../controllers/user'
+const userRouter = Router()
 
-// authRouter.post("/register", register);
-// authRouter.post("/login", login);
+userRouter.get('/', getUser);
+userRouter.get('/:id', getUserById);
 
-// export default authRouter;
+export default userRouter;
