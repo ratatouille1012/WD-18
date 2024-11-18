@@ -1,10 +1,13 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const orderSchema = new mongoose.Schema({
-  orderId: { type: String, required: true, unique: true },
-  amount: { type: Number, required: true },
-  paymentStatus: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
-  createdDate: { type: Date, default: Date.now }
+const VnpaySchema = new mongoose.Schema({
+    orderId: { type: String, required: true },
+    amount: { type: Number, required: true },
+    bankCode: { type: String },
+    transactionId: { type: String },
+    status: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model("orderPay", orderSchema);
+const Vnpay = mongoose.model('Vnpay', VnpaySchema);
+export default Vnpay;

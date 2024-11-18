@@ -8,6 +8,6 @@ const momorouter = Router();
 momorouter.post('/create', createPayment);
 
 // Route nhận kết quả trả về từ momo
-momorouter.get('/return', handleReturnUrl);
+momorouter.get('/payment-result', handleReturnUrl);
 
 export default momorouter;

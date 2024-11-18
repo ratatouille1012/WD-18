@@ -1,11 +1,16 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const transactionSchema = new mongoose.Schema({
-    transactionId: { type: String, required: true, unique: true },
-    orderId: { type: String, required: true },
-    amount: { type: Number, required: true },
-    responseCode: { type: String },
-    secureHash: { type: String },
-    transactionDate: { type: Date, default: Date.now }
+const momoTransactionSchema = new mongoose.Schema({
+  orderId: { type: String, required: true },
+  requestId: { type: String, required: true },
+  amount: { type: Number, required: true },
+  orderInfo: { type: String, required: true },
+  resultCode: { type: Number },
+  message: { type: String },
+  transId: { type: String },
+  createdAt: { type: Date, default: Date.now },
 });
-export default mongoose.model("Transaction", transactionSchema);
+
+const MomoTransaction = mongoose.model('MomoTransaction', momoTransactionSchema);
+
+export default MomoTransaction;

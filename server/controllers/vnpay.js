@@ -1,112 +1,69 @@
-import orderPay from '../models/vnpay.js'
-import Transaction from '../models/transaction.js'
-import moment from 'moment'
-import crypto from 'crypto'
-import vnPayConfig from '../utils/config.js'
-import querystring from 'querystring'
+import Vnpay from '../models/Payment.js';
+import { generateVnpayUrl } from '../utils/vnpayHelper.js';
+import crypto from 'crypto';
+import querystring from 'querystring';
 
-export const createPaymentUrl = async (req, res) => {
-  try {
-      let { amount, bankCode, language } = req.body;
-      let date = new Date();
-      let createDate = moment(date).format('YYYYMMDDHHmmss');
-      let orderId = moment(date).format('DDHHmmss');
+export const createPayment = async (req, res) => {
+    try {
+        const { amount, orderId, bankCode } = req.body;
+        console.log('Received data:', { amount, orderId, bankCode });
 
-      let ipAddr = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        const ipAddr = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        console.log('IP Address:', ipAddr);
 
-      const order = new orderPay({
-          orderId,
-          amount,
-          paymentStatus: 'pending'
-      });
-      await order.save();
+        const paymentUrl = generateVnpayUrl({
+            tmnCode: process.env.VNP_TMNCODE,
+            hashSecret: process.env.VNP_HASHSECRET,
+            returnUrl: process.env.VNP_RETURNURL,
+            amount,
+            orderId,
+            ipAddr,
+            bankCode,
+        });
+        console.log('Generated VNPAY URL:', paymentUrl);
 
-      let vnp_Params = {
-          'vnp_Version': '2.1.0',
-          'vnp_Command': 'pay',
-          'vnp_TmnCode': vnPayConfig.vnp_TmnCode,
-          'vnp_Locale': language || 'vn',
-          'vnp_CurrCode': 'VND',
-          'vnp_TxnRef': orderId,
-          'vnp_OrderInfo': `Thanh toan cho ma GD: ${orderId}`,
-          'vnp_OrderType': 'other',
-          'vnp_Amount': amount * 100,
-          'vnp_ReturnUrl': config.vnp_ReturnUrl,
-          'vnp_IpAddr': ipAddr,
-          'vnp_CreateDate': createDate
-      };
-      if (bankCode) vnp_Params['vnp_BankCode'] = bankCode;
-
-      vnp_Params = sortObject(vnp_Params);
-
-      let signData = querystring.stringify(vnp_Params, { encode: false });
-      let hmac = crypto.createHmac('sha512', config.vnp_HashSecret);
-      let signed = hmac.update(new Buffer(signData, 'utf-8')).digest('hex');
-      vnp_Params['vnp_SecureHash'] = signed;
-
-      let vnpUrl = config.vnp_Url + '?' + querystring.stringify(vnp_Params, { encode: false });
-      res.redirect(vnpUrl);
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-  }
+        res.status(200).json({ status: 'success', paymentUrl });
+    } catch (error) {
+        console.error('Error creating payment:', error);
+        res.status(500).json({ status: 'error', message: error.message });
+    }
 };
 
-export const paymentReturn = async (req, res) => {
-  try {
-      let vnp_Params = req.query;
-      let secureHash = vnp_Params['vnp_SecureHash'];
 
-      delete vnp_Params['vnp_SecureHash'];
-      delete vnp_Params['vnp_SecureHashType'];
-      vnp_Params = sortObject(vnp_Params);
+export const handleReturn = async (req, res) => {
+    try {
+        const vnpParams = req.query; // Tham số từ VNPAY gửi về
+        console.log('VNPAY callback params:', vnpParams);
 
-      let signData = querystring.stringify(vnp_Params, { encode: false });
-      let hmac = crypto.createHmac('sha512', config.vnp_HashSecret);
-      let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
+        const secureHash = vnpParams.vnp_SecureHash; // Chữ ký nhận được
+        console.log('SecureHash received:', secureHash);
 
-      if (secureHash === signed) {
-          let orderId = vnp_Params['vnp_TxnRef'];
-          let responseCode = vnp_Params['vnp_ResponseCode'];
+        // Xóa các tham số không cần thiết trước khi tạo checksum
+        delete vnpParams.vnp_SecureHash;
+        delete vnpParams.vnp_SecureHashType;
 
-          const order = await orderPay.findOne({ orderId });
-          if (order) {
-              order.paymentStatus = responseCode === '00' ? 'success' : 'failed';
-              await order.save();
+        // Sắp xếp tham số và tạo chuỗi ký
+        const sortedParams = querystring.stringify(sortObject(vnpParams), { encode: false });
+        console.log('Sorted params for checksum:', sortedParams);
 
-              const transaction = new Transaction({
-                  transactionId: vnp_Params['vnp_TransactionNo'],
-                  orderId,
-                  amount: order.amount,
-                  responseCode,
-                  secureHash: secureHash
-              });
-              await transaction.save();
+        // Tính toán checksum
+        const hashSecret = process.env.VNP_HASHSECRET;
+        const hmac = crypto.createHmac('sha512', hashSecret);
+        const checkSum = hmac.update(Buffer.from(sortedParams, 'utf-8')).digest('hex');
+        console.log('Generated checksum:', checkSum);
 
-              res.status(200).json({ message: 'Payment status updated', paymentStatus: order.paymentStatus });
-          } else {
-              res.status(404).json({ message: 'Order not found' });
-          }
-      } else {
-          res.status(400).json({ message: 'Invalid signature' });
-      }
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
-export const checkOrderStatus = async (req, res) => {
-  try {
-      const { orderId } = req.params;
-      const order = await orderPay.findOne({ orderId });
+        if (secureHash === checkSum) {
+            console.log('Checksum is valid.');
+            // Xử lý kết quả thanh toán
+            const status = vnpParams.vnp_ResponseCode === '00' ? 'success' : 'failed';
+            res.status(200).json({ status, message: 'Payment processed successfully' });
+        } else {
+            console.error('Invalid checksum!');
+            res.status(400).json({ status: 'error', message: 'Invalid checksum' });
+        }
+    } catch (error) {
+        console.error('Error handling return:', error);
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};                      
 
-      if (order) {
-          res.status(200).json({ paymentStatus: order.paymentStatus });
-      } else {
-          res.status(404).json({ message: 'Order not found' });
-      }
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
