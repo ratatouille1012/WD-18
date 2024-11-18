@@ -47,7 +47,7 @@ const AddCategoryPopup = ({ onClose, onAdd, darkMode }) => {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed ml-[280px] inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <form onSubmit={handleSubmit(addCate)} action="">
                 <div className={`${darkMode ? 'bg-[#24303F] text-white' : 'bg-white text-black'} p-5 rounded`}>
                     <h2 className="text-xl">Thêm danh mục</h2>

@@ -10,7 +10,7 @@ const useProduct = () => {
     const [product,setProduct] = useState<TPproducts>()
     const [productDetails, setProductDetails] = useState<{ [key: string]: TPproducts }>({});
     const { id, variantId } = useParams();
-    const Getall = async () => {
+    const Getall = async (z) => {
         try {
             setLoading(true);
             const response = await axios.get("/api/products");
@@ -72,7 +72,11 @@ const useProduct = () => {
             setProductDetails(prev => ({ ...prev, [variantId]: product }));
             return product;
         } catch (error) {
-            console.error('Error fetching product:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('Error response:', error.response?.data);
+            } else {
+                console.error('Error:', error.message);
+            }
         } finally {
             setLoading(false);
         }

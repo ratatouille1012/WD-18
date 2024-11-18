@@ -90,3 +90,25 @@ export const removeAllCart = async (req, res) => {
     }
 };
 
+
+export const deleteUnchecked = async (req, res) => {
+    try {
+        const { itemIds } = req.body; 
+
+        if (!Array.isArray(itemIds) || itemIds.length === 0) {
+            return res.status(400).json({ message: "Danh sách ID không hợp lệ" });
+        }
+        const result = await Cart.deleteMany({ 
+            user: req.user._id, 
+            _id: { $in: itemIds } 
+        });
+
+        if (result.deletedCount > 0) {
+            res.status(200).json({ message: "Đã xóa các sản phẩm không được chọn khỏi giỏ hàng" });
+        } else {
+            res.status(404).json({ message: "Không tìm thấy sản phẩm nào trong giỏ hàng để xóa" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

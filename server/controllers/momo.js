@@ -1,66 +1,61 @@
-import axios from 'axios';
+import { createMomoPayment } from '../utils/momoService.js';
+import MomoTransaction from '../models/transaction.js';
 import crypto from 'crypto';
-import payment from '../models/momo.js';
+import dotenv from 'dotenv';
 
-export const createMomoPayment = async (req, res) => {
-    const { amount, orderInfo } = req.body;
-    
-    var accessKey = 'F8BBA842ECF85';
-    var secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
-    var partnerCode = 'MOMO';
-    var redirectUrl = 'http://localhost:5173/';
-    var ipnUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
-    var requestType = "payWithMethod";
-    var orderId = partnerCode + new Date().getTime();
-    var requestId = orderId;
-    var extraData = '';
+dotenv.config();
 
-    // Tạo rawSignature
-    var rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
-    var signature = crypto.createHmac('sha256', secretKey)
-        .update(rawSignature)
-        .digest('hex');
-    
-    // Tạo request body
-    const requestBody = {
-        partnerCode: partnerCode,
-        partnerName: "Test",
-        storeId: "MomoTestStore",
-        requestId: requestId,
-        amount: amount,
-        orderId: orderId,
-        orderInfo: orderInfo,
-        redirectUrl: redirectUrl,
-        ipnUrl: ipnUrl,
-        lang: 'vi',
-        requestType: requestType,
-        autoCapture: true,
-        extraData: extraData,
-        signature: signature
-    };
-
-    try {
-        // Gửi yêu cầu tới MoMo
-        const response = await axios.post('https://test-payment.momo.vn/v2/gateway/api/create', requestBody);
-        
-        // Lưu thông tin giao dịch vào MongoDB
-        const newPayment = new payment({
-            orderId: orderId,
-            amount: amount,
-            status: response.data.resultCode === 0 ? 'success' : 'failed',
-            resultCode: response.data.resultCode,
-            message: response.data.message
-        });
-        await newPayment.save();
-
-        // Trả kết quả về cho client
-        if (response.data.resultCode === 0) {
-            return res.redirect(redirectUrl); // Chuyển hướng về trang chủ sau khi thanh toán thành công
-        } else {
-            res.status(400).json({ message: 'Thanh toán thất bại', resultCode: response.data.resultCode });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+export const createPayment = async (req, res) => {
+  try {
+    const { orderId, amount, orderInfo } = req.body;
+    const paymentData = await createMomoPayment(orderId, amount, orderInfo);
+    res.status(200).json(paymentData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
+export const handleReturnUrl = async (req, res) => {
+  try {
+    const {
+      partnerCode,
+      orderId,
+      requestId,
+      amount,
+      orderInfo,
+      orderType,
+      transId,
+      resultCode,
+      message,
+      payType,
+      responseTime,
+      extraData,
+      signature,
+    } = req.query;
+
+    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&message=${message}&orderId=${orderId}&orderInfo=${orderInfo}&orderType=${orderType}&partnerCode=${partnerCode}&payType=${payType}&requestId=${requestId}&responseTime=${responseTime}&resultCode=${resultCode}&transId=${transId}`;
+
+    const generatedSignature = crypto
+      .createHmac('sha256', process.env.MOMO_SECRET_KEY)
+      .update(rawSignature)
+      .digest('hex');
+
+    if (signature !== generatedSignature) {
+      return res.status(400).send('Invalid signature');
+    }
+
+    await MomoTransaction.findOneAndUpdate(
+      { orderId },
+      { resultCode, message, transId },
+      { new: true }
+    );
+
+    if (resultCode === '0') {
+      res.redirect(`/payment-success?orderId=${orderId}&amount=${amount}`);
+    } else {
+      res.redirect(`/payment-failed?orderId=${orderId}&message=${message}`);
+    }
+  } catch (error) {
+    res.status(500).send('Error processing payment result');
+  }
+};

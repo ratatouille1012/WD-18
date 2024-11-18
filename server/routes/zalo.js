@@ -1,11 +1,10 @@
-import { Router } from 'express';
-import { createPayment, zalopayCallback } from '../controllers/zalo.js';
-const ZaloPayrouter = Router();
+import {Router} from 'express';
+import {createPayment, handleCallback, checkStatus} from '../controllers/zalo.js'
+const zalorouter = Router();
 
-// Route để tạo thanh toán
-ZaloPayrouter.post('/create', createPayment);
+zalorouter.post('/create', createPayment );
 
-// Route callback khi ZaloPay gửi kết quả thanh toán
-ZaloPayrouter.post('/callback', zalopayCallback);
+zalorouter.get('/callback', handleCallback);
 
-export default ZaloPayrouter;
+zalorouter.get("/status/:orderId", checkStatus);
+export default zalorouter;
