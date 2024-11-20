@@ -1,23 +1,14 @@
-import mongoose from 'mongoose'
-const zaloSchema = new mongoose.Schema({
-  user : {
-    type : mongoose.Schema.Types.ObjectId,
-    ref : 'User',
-    required : true
-  },
-  amount: {
-    type: Number,
-    required: true,
-  },
-  orderId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  status: {
-    type: String,
-    default: 'pending',
-  },
-}, { timestamps: true });
+import mongoose from 'mongoose';
 
-export default mongoose.model("zalo", zaloSchema);
+// Tạo schema cho giao dịch
+const zaloSchema = new mongoose.Schema({
+  appTransId: { type: String, required: true },
+  appUser: { type: String, required: true },
+  amount: { type: Number, required: true },
+  status: { type: String, default: 'pending' }, // pending, success, failed
+  createdAt: { type: Date, default: Date.now },
+});
+
+// Xuất zalo model dưới dạng Default Export
+const zalo = mongoose.model('zalo', zaloSchema);
+export default zalo;
