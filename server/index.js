@@ -8,6 +8,7 @@ import { PORT } from "./utils/env.js";
 import connect from "./utils/connect.js";
 import bodyParser from "body-parser";
 import moment from "moment";
+import zalo from "./models/zalo.js"
 import qs from "qs";
 
 
@@ -42,11 +43,11 @@ app.post('/payment', async (req, res) => {
   const order = {
     app_id: config.app_id,
     app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
-    app_user, // lấy từ body
+    app_user,
     app_time: Date.now(),
     item: JSON.stringify(items),
     embed_data: JSON.stringify(embed_data),
-    amount, // lấy từ body
+    amount,
     callback_url: 'https://b074-1-53-37-194.ngrok-free.app/callback',
     description: `Payment for order #${transID}`,
     bank_code: '',
@@ -70,11 +71,21 @@ app.post('/payment', async (req, res) => {
   order.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
 
   try {
-    const result = await axios.post(config.endpoint, null, { params: order });
-    return console.log(result.data)
+    // Lưu thông tin thanh toán vào MongoDB
+    const payment = await zalo.create({
+      app_user,
+      amount,
+      app_trans_id: order.app_trans_id,
+      description: order.description,
+    });
 
-    // return res.status(200).json(result.data);
-    // return console.log(result.data)
+    // Gửi request tới ZaloPay
+    const result = await axios.post(config.endpoint, null, { params: order });
+
+    // Cập nhật trạng thái nếu tạo thành công
+    await zalo.findByIdAndUpdate(payment._id, { status: 'pending' });
+
+    return res.status(200).json(result.data);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
