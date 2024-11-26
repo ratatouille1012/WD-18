@@ -9,7 +9,7 @@ import {
 
 const Commentrouter = Router();
 
-Commentrouter.post("/", createComment); // Tạo comment
+Commentrouter.post("/", createComment); // Tạo comment cho nhiều sản phẩm
 Commentrouter.get("/:productId", getCommentsByProduct); // Lấy comment theo productId
 Commentrouter.put("/:commentId", updateComment); // Cập nhật comment
 Commentrouter.delete("/:commentId", deleteComment); // Xóa comment
