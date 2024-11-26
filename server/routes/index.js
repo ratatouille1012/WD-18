@@ -16,6 +16,7 @@ import ContactRouter from "./contact.js";
 import paymentrouter from "./payment.js";
 import { getShippingCost } from "../controllers/ship.js";
 import userRouter from "./user.js";
+import Commentrouter from "./comment.js";
 
 const router = Router();
 
@@ -36,6 +37,7 @@ router.use("/receiver", receiverRouter);
 router.use("/contact", ContactRouter);
 router.use("/payment", paymentrouter);
 router.use('/users', userRouter) ;
+router.use('/comments', Commentrouter)
 router.get("/data", (req, res) => {
     res.json({ message: "Hello from the API!" 
       });

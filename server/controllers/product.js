@@ -3,8 +3,10 @@ import Category from "../models/Category.js";
 import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
 import mongoose from 'mongoose';
-import multer from 'multer'
+// import multer from 'multer'
 import { storage } from '../utils/cloudinary.js'; 
+import { bucket } from "../utils/firebaseConfig.js"; // Firebase config
+import multer from "../middlewares/multer.js"; // Middleware xử lý file
 
 export const getProductVariant = async (req,res) => {
   const { variantId } = req.params;
@@ -28,7 +30,7 @@ export const getProductVariant = async (req,res) => {
 
 export const getProducts = async (req, res, next) => {
   try {
-    const { brand, category, size, minPrice, maxPrice, name } = req.query;
+    const { brand, category, size, minPrice, maxPrice, title } = req.query;
     
     // Create query object
     const query = {};
@@ -59,9 +61,9 @@ export const getProducts = async (req, res, next) => {
       }
     }
 
-    // Filter by name (partial match, case-insensitive)
-    if (name) {
-      query.title = { $regex: name, $options: "i" };
+    // Filter by title (partial match, case-insensitive)
+    if (title) {
+      query.title = { $regex: title, $options: "i" };
     }
 
     // Find products with the specified filters
@@ -82,11 +84,11 @@ export const getProducts = async (req, res, next) => {
   }
 };
 
-const upload = multer({ storage });
 
 // Hàm tạo sản phẩm có upload nhiều ảnh
 export const createProduct = async (req, res, next) => {
   try {
+    // Kiểm tra dữ liệu đầu vào
     const { error } = Product.validate(req.body);
     if (error) {
       return res.status(400).json({ message: "Invalid body request!", errors: error.details });
@@ -94,43 +96,81 @@ export const createProduct = async (req, res, next) => {
 
     const { brand, category, ...productData } = req.body;
 
-    // Lưu URL ảnh sau khi upload lên Cloudinary
-    const imageUrls = req.files.map(file => file.path); // Lấy URL của nhiều ảnh
+    // Kiểm tra có file upload không
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded!" });
+    }
 
+    // Upload từng ảnh lên Firebase Storage
+    const imageUrls = [];
+    for (const file of req.files) {
+      const fileName = `${Date.now()}_${file.originaltitle}`;
+      const blob = bucket.file(fileName);
+
+      const blobStream = blob.createWriteStream({
+        metadata: {
+          contentType: file.mimetype,
+        },
+      });
+
+      blobStream.end(file.buffer);
+
+      await new Promise((resolve, reject) => {
+        blobStream.on("finish", async () => {
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+          imageUrls.push(publicUrl); // Thêm URL ảnh vào mảng
+          resolve();
+        });
+
+        blobStream.on("error", reject);
+      });
+    }
+
+    // Tạo sản phẩm mới
     const newProduct = new Product({
       ...productData,
       brand: new mongoose.Types.ObjectId(brand),
       category: new mongoose.Types.ObjectId(category),
-      images: imageUrls, // Lưu URLs của nhiều ảnh
+      images: imageUrls, // Lưu URL ảnh từ Firebase
     });
 
     const savedProduct = await newProduct.save();
-    return res.status(201).json(savedProduct);
+
+    return res.status(201).json({
+      message: "Product created successfully!",
+      data: savedProduct,
+    });
   } catch (error) {
+    console.error("Error creating product:", error);
     next(error);
-    console.log('====================================');
-    console.log(error);
-    console.log('====================================');
   }
 };
 
 // Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
-export const uploadImages = upload.array('images', 10); // Tối đa 10 ảnh cùng lúc
-
+  
 export const getProductById = async (req, res, next) => {
   try {
-    const data = await Product.findById(req.params.id).populate("category").populate("brand");
-    if (!data) {
-      return res.status(400).json({ message: "Lay san pham that bai!" });
+    // Kiểm tra nếu id không hợp lệ
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID không hợp lệ!" });
     }
+
+    const data = await Product.findById(id).populate("category").populate("brand");
+    
+    if (!data) {
+      return res.status(400).json({ message: "Lấy sản phẩm thất bại!" });
+    }
+
     return res.status(201).json({
-      message: "Lay san pham thanh cong!",
+      message: "Lấy sản phẩm thành công!",
       data,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 export const updateProductById = async (req, res, next) => {
   try {
@@ -210,26 +250,34 @@ export const softRemoveProductById = async (req, res, next) => {
 };
 export const searchProductsByName = async (req, res) => {
   try {
-    const { name } = req.query;
+    const { title } = req.query;
 
-    // Tạo query cho việc tìm kiếm theo tên sản phẩm, không phân biệt chữ hoa chữ thường
-    const query = name ? { title: { $regex: name, $options: "i" } } : {};
-
-    // Thực hiện tìm kiếm
-    const data = await Product.find(query)
-      .populate("category")
-      .populate("brand");
-
-    if (data && data.length > 0) {
-      return res.status(200).json({
-        message: successMessages.GET_PRODUCTS_SUCCESS,
-        data,
-      });
+    // Kiểm tra nếu không có `title`
+    if (!title || title.trim() === "") {
+      return res.status(400).json({ message: "Tên sản phẩm không hợp lệ! Vui lòng nhập tên sản phẩm." });
     }
 
-    return res.status(404).json({ message: errorMessages.NO_PRODUCTS_FOUND });
+    // Loại bỏ khoảng trắng thừa và tạo query tìm kiếm không phân biệt chữ hoa/thường
+    const searchTitle = title.trim();
+    const query = { title: { $regex: searchTitle, $options: "i" } };
+
+    // Tìm kiếm sản phẩm
+    const data = await Product.find(query)
+      .populate("category", "name") // Chỉ lấy trường `name` từ category
+      .populate("brand", "name"); // Chỉ lấy trường `name` từ brand
+
+    if (data.length === 0) {
+      return res.status(404).json({ message: `Không tìm thấy sản phẩm nào với tên "${searchTitle}"!` });
+    }
+
+    return res.status(200).json({
+      message: `Tìm thấy ${data.length} sản phẩm phù hợp!`,
+      data,
+    });
   } catch (error) {
-    console.error('Error:', error.message);
-    res.status(500).json({ message: errorMessages.SERVER_ERROR });
+    console.error("Error searching products by name:", error.message);
+    res.status(500).json({ message: "Đã xảy ra lỗi máy chủ khi tìm kiếm sản phẩm!" });
   }
 };
+
+
