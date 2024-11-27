@@ -176,17 +176,28 @@ export const updateProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // Kiểm tra tính hợp lệ của ID sản phẩm
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "ID không hợp lệ!" });
     }
 
-    const { variants, ...productData } = req.body; 
+    const { variants, ...productData } = req.body;
 
     if (variants) {
-      const sanitizedVariants = variants.map(({ _id, ...variant }) => variant);
+      // Duyệt qua từng variant để đảm bảo không thay đổi _id
+      const sanitizedVariants = variants.map(variant => {
+        if (variant._id && mongoose.Types.ObjectId.isValid(variant._id)) {
+          return { ...variant, _id: variant._id }; // Giữ nguyên _id nếu hợp lệ
+        } else {
+          const { _id, ...rest } = variant; // Bỏ _id nếu không hợp lệ
+          return rest;
+        }
+      });
+
       productData.variants = sanitizedVariants;
     }
 
+    // Cập nhật sản phẩm
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       productData,
@@ -205,6 +216,7 @@ export const updateProductById = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
