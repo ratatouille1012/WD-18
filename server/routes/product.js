@@ -7,7 +7,8 @@ import {
   softRemoveProductById,
   updateProductById,
   getProductVariant,
-  searchProductsByName
+  searchProductsByName,
+  uploadImages
 } from "../controllers/product.js";
 import productSchema from "../validations/product.js";
 import validBodyRequest from "../middlewares/validRequestBody.js";
@@ -28,7 +29,7 @@ productRouter.delete("/delete/:id", removeProductById);
 
 
 productRouter.use(validBodyRequest(productSchema)); // middleware
-productRouter.post("/" ,createProduct);
+productRouter.post("/", uploadImages ,createProduct);
 productRouter.put("/update/:id", updateProductById);
 
 export default productRouter;

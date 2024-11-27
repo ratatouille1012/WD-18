@@ -4,9 +4,8 @@ import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
 import mongoose from 'mongoose';
 // import multer from 'multer'
-import { storage } from '../utils/cloudinary.js'; 
-import { bucket } from "../utils/firebaseConfig.js"; // Firebase config
-import multer from "../middlewares/multer.js"; // Middleware xử lý file
+import { cloudinary, storage } from '../utils/cloudinary.js'; 
+import {uploade} from "../middlewares/multer.js"; // Middleware xử lý file
 
 export const getProductVariant = async (req,res) => {
   const { variantId } = req.params;
@@ -86,9 +85,12 @@ export const getProducts = async (req, res, next) => {
 
 
 // Hàm tạo sản phẩm có upload nhiều ảnh
+
+const upload = multer({ storage });
+
+// Hàm tạo sản phẩm có upload nhiều ảnh
 export const createProduct = async (req, res, next) => {
   try {
-    // Kiểm tra dữ liệu đầu vào
     const { error } = Product.validate(req.body);
     if (error) {
       return res.status(400).json({ message: "Invalid body request!", errors: error.details });
@@ -96,55 +98,27 @@ export const createProduct = async (req, res, next) => {
 
     const { brand, category, ...productData } = req.body;
 
-    // Kiểm tra có file upload không
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "No files uploaded!" });
-    }
+    // Lưu URL ảnh sau khi upload lên Cloudinary
+    const imageUrls = req.files.map(file => file.path); // Lấy URL của nhiều ảnh
 
-    // Upload từng ảnh lên Firebase Storage
-    const imageUrls = [];
-    for (const file of req.files) {
-      const fileName = `${Date.now()}_${file.originaltitle}`;
-      const blob = bucket.file(fileName);
-
-      const blobStream = blob.createWriteStream({
-        metadata: {
-          contentType: file.mimetype,
-        },
-      });
-
-      blobStream.end(file.buffer);
-
-      await new Promise((resolve, reject) => {
-        blobStream.on("finish", async () => {
-          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-          imageUrls.push(publicUrl); // Thêm URL ảnh vào mảng
-          resolve();
-        });
-
-        blobStream.on("error", reject);
-      });
-    }
-
-    // Tạo sản phẩm mới
     const newProduct = new Product({
       ...productData,
       brand: new mongoose.Types.ObjectId(brand),
       category: new mongoose.Types.ObjectId(category),
-      images: imageUrls, // Lưu URL ảnh từ Firebase
+      images: imageUrls, // Lưu URLs của nhiều ảnh
     });
 
     const savedProduct = await newProduct.save();
-
-    return res.status(201).json({
-      message: "Product created successfully!",
-      data: savedProduct,
-    });
+    return res.status(201).json(savedProduct);
   } catch (error) {
-    console.error("Error creating product:", error);
     next(error);
   }
 };
+
+// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
+export const uploadImages = upload.array('images', 10); // Tối đa 10 ảnh cùng lúc
+
+
 
 // Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
   
