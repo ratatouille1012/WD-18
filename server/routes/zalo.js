@@ -1,10 +1,10 @@
 import {Router} from 'express';
-import {createPayment, handleCallback, checkStatus} from '../controllers/zalo.js'
+import {createPayment,  paymentCallback, checkStatusOrder} from '../controllers/zalo.js'
 const zalorouter = Router();
 
 zalorouter.post('/create', createPayment );
 
-zalorouter.get('/callback', handleCallback);
+zalorouter.get('/callback', paymentCallback);
 
-zalorouter.get("/status/:orderId", checkStatus);
+zalorouter.get("/check-status-order", checkStatusOrder);
 export default zalorouter;

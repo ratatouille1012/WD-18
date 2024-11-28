@@ -3,8 +3,9 @@ import Category from "../models/Category.js";
 import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
 import mongoose from 'mongoose';
-import multer from 'multer'
-import { storage } from '../utils/cloudinary.js'; 
+// import multer from 'multer'
+import { cloudinary, storage } from '../utils/cloudinary.js'; 
+import {uploade} from "../middlewares/multer.js"; // Middleware xử lý file
 
 export const getProductVariant = async (req,res) => {
   const { variantId } = req.params;
@@ -28,7 +29,7 @@ export const getProductVariant = async (req,res) => {
 
 export const getProducts = async (req, res, next) => {
   try {
-    const { brand, category, size, minPrice, maxPrice } = req.query;
+    const { brand, category, size, minPrice, maxPrice, name } = req.query;
     
     // Tạo query object
     const query = {};
@@ -59,8 +60,15 @@ export const getProducts = async (req, res, next) => {
       }
     }
 
-    // Tìm kiếm sản phẩm với các điều kiện lọc
-    const data = await Product.find(query).populate("category").populate('brand');
+    // Filter by name (partial match, case-insensitive)
+    if (name) {
+      query.title = { $regex: name, $options: "i" };
+    }
+
+    // Find products with the specified filters
+    const data = await Product.find(query)
+      .populate("category")
+      .populate("brand");
     
     if (data && data.length > 0) {
       return res.status(200).json({
@@ -74,6 +82,9 @@ export const getProducts = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// Hàm tạo sản phẩm có upload nhiều ảnh
 
 const upload = multer({ storage });
 
@@ -107,14 +118,26 @@ export const createProduct = async (req, res, next) => {
 // Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
 export const uploadImages = upload.array('images', 10); // Tối đa 10 ảnh cùng lúc
 
+
+
+// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
+  
 export const getProductById = async (req, res, next) => {
   try {
-    const data = await Product.findById(req.params.id).populate("category").populate("brand");
-    if (!data) {
-      return res.status(400).json({ message: "Lay san pham that bai!" });
+    // Kiểm tra nếu id không hợp lệ
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID không hợp lệ!" });
     }
+
+    const data = await Product.findById(id).populate("category").populate("brand");
+    
+    if (!data) {
+      return res.status(400).json({ message: "Lấy sản phẩm thất bại!" });
+    }
+
     return res.status(201).json({
-      message: "Lay san pham thanh cong!",
+      message: "Lấy sản phẩm thành công!",
       data,
     });
   } catch (error) {
@@ -122,21 +145,33 @@ export const getProductById = async (req, res, next) => {
   }
 };
 
+
 export const updateProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // Kiểm tra tính hợp lệ của ID sản phẩm
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "ID không hợp lệ!" });
     }
 
-    const { variants, ...productData } = req.body; 
+    const { variants, ...productData } = req.body;
 
     if (variants) {
-      const sanitizedVariants = variants.map(({ _id, ...variant }) => variant);
+      // Duyệt qua từng variant để đảm bảo không thay đổi _id
+      const sanitizedVariants = variants.map(variant => {
+        if (variant._id && mongoose.Types.ObjectId.isValid(variant._id)) {
+          return { ...variant, _id: variant._id }; // Giữ nguyên _id nếu hợp lệ
+        } else {
+          const { _id, ...rest } = variant; // Bỏ _id nếu không hợp lệ
+          return rest;
+        }
+      });
+
       productData.variants = sanitizedVariants;
     }
 
+    // Cập nhật sản phẩm
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       productData,
@@ -155,6 +190,7 @@ export const updateProductById = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
@@ -196,5 +232,30 @@ export const softRemoveProductById = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+export const searchProductsByName = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    // Tạo query cho việc tìm kiếm theo tên sản phẩm, không phân biệt chữ hoa chữ thường
+    const query = name ? { title: { $regex: name, $options: "i" } } : {};
+
+    // Thực hiện tìm kiếm
+    const data = await Product.find(query)
+      .populate("category")
+      .populate("brand");
+
+    if (data && data.length > 0) {
+      return res.status(200).json({
+        message: successMessages.GET_PRODUCTS_SUCCESS,
+        data,
+      });
+    }
+
+    return res.status(404).json({ message: errorMessages.NO_PRODUCTS_FOUND });
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ message: errorMessages.SERVER_ERROR });
   }
 };

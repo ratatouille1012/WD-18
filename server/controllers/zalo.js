@@ -1,68 +1,87 @@
-// controllers/paymentController.js
 import axios from 'axios';
-import { zaloPayConfig } from '../utils/zalopay.js';
+import CryptoJS from 'crypto-js';
+import moment from 'moment';
 import zalo from '../models/zalo.js';
+import { zalopayConfig  } from '../utils/zalopay.js';
 
-// Hàm tạo thanh toán
+// Tạo thanh toán
 export const createPayment = async (req, res) => {
-  const { amount, orderId } = req.body;
+  const { amount, appUser } = req.body;
+  const embed_data = { redirecturl: 'https://your-success-url.com' };
+  const transID = Math.floor(Math.random() * 1000000);
+
+  const order = {
+    app_id: zalopayConfig.app_id,
+    app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
+    app_user: appUser || 'guest',
+    app_time: Date.now(),
+    item: JSON.stringify([]),
+    embed_data: JSON.stringify(embed_data),
+    amount,
+    callback_url: 'https://your-ngrok-url/callback',
+    description: `Payment for order #${transID}`,
+  };
+
+  const data = `${zalopayConfig.app_id}|${order.app_trans_id}|${order.app_user}|${order.amount}|${order.app_time}|${order.embed_data}|${order.item}`;
+  order.mac = CryptoJS.HmacSHA256(data, zalopayConfig.key1).toString();
 
   try {
-    const data = {
-      appid: zaloPayConfig.app_id,
-      amount,
-      order_id: orderId,
-      description: 'Payment for order',
-      callback_url: 'http://your-callback-url.com', // Đặt URL callback của bạn ở đây
-    };
+    const result = await axios.post(`${zalopayConfig.endpoint}/create`, null, { params: order });
 
-    const response = await axios.post(zaloPayConfig.endpoint, data, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // Lưu giao dịch vào DB
+    await zalo.create({
+      appTransId: order.app_trans_id,
+      appUser: order.app_user,
+      amount: order.amount,
     });
 
-    const payment = new zalo({ amount, orderId, status: 'pending' });
-    await payment.save();
-
-    res.status(200).json({ paymentUrl: response.data.order_url });
+    return res.status(200).json(result.data);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating payment', error });
+    console.error(error);
+    return res.status(500).json({ message: 'Payment creation failed' });
   }
 };
 
-// Hàm xử lý callback từ ZaloPay
-export const handleCallback = async (req, res) => {
-  const { orderId, status } = req.body; // ZaloPay sẽ gửi thông tin orderId và status về đây
+// Xử lý callback
+export const paymentCallback = async (req, res) => {
+  const { data, mac: reqMac } = req.body;
+
+  const mac = CryptoJS.HmacSHA256(data, zalopayConfig.key2).toString();
+  if (mac !== reqMac) {
+    return res.status(400).json({ return_code: -1, return_message: 'Invalid MAC' });
+  }
+
+  const zaloData = JSON.parse(data);
+  const { app_trans_id } = zaloData;
 
   try {
-    const payment = await zalo.findOne({ orderId });
-
-    if (payment) {
-      payment.status = status; // Cập nhật trạng thái thanh toán
-      await payment.save();
-      res.status(200).json({ message: 'Payment status updated successfully.' });
-    } else {
-      res.status(404).json({ message: 'Payment not found.' });
-    }
+    await zalo.findOneAndUpdate(
+      { appTransId: app_trans_id },
+      { status: 'success' }
+    );
+    return res.status(200).json({ return_code: 1, return_message: 'Success' });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating payment status', error });
+    console.error(error);
+    return res.status(500).json({ return_code: 0, return_message: 'Server error' });
   }
 };
+export const checkStatusOrder = async (req, res) => {
+  const { app_trans_id } = req.body;
 
-// Hàm kiểm tra trạng thái thanh toán
-export const checkStatus = async (req, res) => {
-  const { orderId } = req.params;
+  const data = `${zalopayConfig.app_id}|${app_trans_id}|${zalopayConfig.key1}`;
+  const mac = CryptoJS.HmacSHA256(data, zalopayConfig.key1).toString();
+
+  const postData = {
+    app_id: zalopayConfig.app_id,
+    app_trans_id,
+    mac,
+  };
 
   try {
-    const payment = await zalo.findOne({ orderId });
-
-    if (payment) {
-      res.status(200).json({ status: payment.status });
-    } else {
-      res.status(404).json({ message: 'Payment not found.' });
-    }
+    const result = await axios.post(`${zalopayConfig.endpoint}/query`, null, { params: postData });
+    return res.status(200).json(result.data);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching payment status', error });
+    console.error(error);
+    return res.status(500).json({ message: 'Failed to check order status' });
   }
 };

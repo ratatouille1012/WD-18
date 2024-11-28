@@ -11,18 +11,18 @@ export const sortObject = (obj) => {
 };
 
 
-export const generateVnpayUrl = ({ tmnCode, hashSecret, returnUrl, amount, orderId, ipAddr, bankCode }) => {
+export const generateVnpayUrl = ({orderId, amount, bankCode,ipAddr}) => {
     let vnpParams = {
         vnp_Version: '2.1.0',
         vnp_Command: 'pay',
-        vnp_TmnCode: tmnCode,
+        vnp_TmnCode: process.env.VNP_TMNCODE,
         vnp_Locale: 'vn',
         vnp_CurrCode: 'VND',
         vnp_TxnRef: orderId,
         vnp_OrderInfo: `Payment for order #${orderId}`,
         vnp_OrderType: 'billpayment',
         vnp_Amount: amount * 100, // Đổi sang đơn vị VND
-        vnp_ReturnUrl: returnUrl,
+        vnp_ReturnUrl:  process.env.VNP_RETURNURL,
         vnp_IpAddr: ipAddr,
         vnp_CreateDate: new Date().toISOString().slice(0, 19).replace(/[-T:]/g, ''),
     };
@@ -38,7 +38,7 @@ export const generateVnpayUrl = ({ tmnCode, hashSecret, returnUrl, amount, order
     const signData = querystring.stringify(vnpParams, { encode: false });
 
     // Tạo chữ ký SHA512
-    const hmac = crypto.createHmac('sha512', hashSecret);
+    const hmac = crypto.createHmac('sha512', process.env.VNP_HASHSECRET);
     const secureHash = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     vnpParams.vnp_SecureHash = secureHash; // Thêm chữ ký vào tham số

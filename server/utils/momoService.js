@@ -1,18 +1,22 @@
+import crypto from 'crypto';
+import axios from 'axios';
+import  MomoTransaction from '../models/transaction.js'
+
 export const createMomoPayment = async (orderId, amount, orderInfo) => {
     try {
       const requestId = `${orderId}-${Date.now()}`;
-      const rawSignature = `accessKey=${MOMO_ACCESS_KEY}&amount=${amount}&extraData=&ipnUrl=${MOMO_NOTIFY_URL}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${MOMO_PARTNER_CODE}&redirectUrl=${MOMO_RETURN_URL}&requestId=${requestId}&requestType=captureWallet`;
+      const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=&ipnUrl=${process.env.MOMO_NOTIFY_URL}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.MOMO_RETURN_URL}&requestId=${requestId}&requestType=captureWallet`;
   
-      const signature = crypto.createHmac('sha256', MOMO_SECRET_KEY).update(rawSignature).digest('hex');
+      const signature = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY).update(rawSignature).digest('hex');
   
       const requestBody = {
-        partnerCode: MOMO_PARTNER_CODE,
+        partnerCode: process.env.MOMO_PARTNER_CODE,
         requestId,
         amount,
         orderId,
         orderInfo,
-        redirectUrl: MOMO_RETURN_URL,
-        ipnUrl: MOMO_NOTIFY_URL,
+        redirectUrl: process.env.MOMO_RETURN_URL,
+        ipnUrl: process.env.MOMO_NOTIFY_URL,
         extraData: '',
         requestType: 'captureWallet',
         signature,
@@ -21,7 +25,7 @@ export const createMomoPayment = async (orderId, amount, orderInfo) => {
   
       console.log("Request Body gửi đến MoMo:", requestBody);
   
-      const response = await axios.post(MOMO_ENDPOINT, requestBody);
+      const response = await axios.post(process.env.MOMO_ENDPOINT, requestBody);
   
       console.log("Response từ MoMo:", response.data);
   

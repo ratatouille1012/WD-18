@@ -6,8 +6,8 @@ import {
   removeProductById,
   softRemoveProductById,
   updateProductById,
-  uploadImages,
   getProductVariant,
+  searchProductsByName,
 } from "../controllers/product.js";
 import productSchema from "../validations/product.js";
 import validBodyRequest from "../middlewares/validRequestBody.js";
@@ -19,6 +19,8 @@ const productRouter = Router();
 productRouter.get("/", getProducts);
 productRouter.get("/:id", getProductById);
 productRouter.get('/variant/:variantId', getProductVariant);
+productRouter.get('/products/search', searchProductsByName);
+
 
 productRouter.use(checkAuth, checkIsAdmin);
 productRouter.put("/hide/:id", softRemoveProductById);
