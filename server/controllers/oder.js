@@ -74,32 +74,66 @@ export const getOrderByUserId = async (req, res, next) => {
 };
 export const updateOrderById = async (req, res, next) => {
   try {
-    // Kiểm tra nếu trạng thái đã là "đã thanh toán", thì không cập nhật lại
-    const existingOrder = await order.findById(req.params.id);
+    const { id } = req.params;
+
+    // Lấy thông tin đơn hàng hiện tại
+    const existingOrder = await order.findById(id);
+    if (!existingOrder) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng!" });
+    }
 
     if (existingOrder.isPaid) {
       return res.status(400).json({ message: "Đơn hàng này đã được thanh toán!" });
     }
 
-    // Cập nhật trạng thái thanh toán thành công
-    const data = await order.findByIdAndUpdate(
-      req.params.id,
+    const { product, variantId, variantQuantity } = existingOrder;
+
+    // Kiểm tra số lượng tồn kho
+    const paidOrders = await order.aggregate([
+      { $match: { product, variantId, isPaid: true } },
+      { $group: { _id: null, totalQuantity: { $sum: "$variantQuantity" } } }
+    ]);
+
+    const totalQuantityPaid = paidOrders.length > 0 ? paidOrders[0].totalQuantity : 0;
+
+    const productData = await Product.findById(product);
+    if (!productData) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm!" });
+    }
+
+    const variant = productData.variant.find(v => v._id.toString() === variantId);
+    if (!variant) {
+      return res.status(404).json({ message: "Không tìm thấy biến thể của sản phẩm!" });
+    }
+
+    const availableQuantity = variant.stock - totalQuantityPaid;
+
+    if (variantQuantity > availableQuantity) {
+      return res.status(400).json({ 
+        message: `Số lượng không đủ! Chỉ còn lại ${availableQuantity} sản phẩm có sẵn.` 
+      });
+    }
+
+    // Cập nhật trạng thái thanh toán
+    const updatedOrder = await order.findByIdAndUpdate(
+      id,
       { isPaid: true },
       { new: true }
     );
 
-    if (!data) {
-      return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
+    if (!updatedOrder) {
+      return res.status(400).json({ message: "Cập nhật đơn hàng thất bại!" });
     }
 
     return res.status(200).json({
-      message: successMessages.UPDATE_SUCCESS,
-      data,
+      message: "Cập nhật trạng thái đơn hàng thành công!",
+      data: updatedOrder,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 
 // ! Xoá cứng! Không dùng
@@ -132,59 +166,5 @@ export const getOneOrderByUserIdAndOrderId = async (req, res, next) => {
   }
 };
 
-export const checkoutOrder = async (req, res, next) => {
-  try {
-    // Kiểm tra xem sản phẩm đã thanh toán hay chưa
-    const existingOrder = await order.findOne({ 
-      product: req.body.product, 
-      isPaid: true 
-    });
 
-    if (existingOrder) {
-      return res.status(400).json({ message: "Sản phẩm này đã được thanh toán!" });
-    }
-
-    // Tiến hành thanh toán và cập nhật trạng thái đơn hàng
-    const orderToUpdate = await order.findByIdAndUpdate(
-      req.params.id,
-      { isPaid: true },
-      { new: true }
-    );
-
-    if (!orderToUpdate) {
-      return res.status(400).json({ message: "Thanh toán thất bại!" });
-    }
-
-    // Trừ số lượng của biến thể
-    const productId = orderToUpdate.product; // Lấy ID sản phẩm từ đơn hàng
-    const variantId = orderToUpdate.variant; // Lấy ID biến thể từ đơn hàng
-    const variantQuantity = orderToUpdate.quantity; // Lấy số lượng từ đơn hàng
-
-    // Tìm sản phẩm và cập nhật số lượng biến thể
-    const product = await Product.findById(productId); // Lấy thông tin sản phẩm
-    if (!product) {
-      return res.status(404).json({ message: "Không tìm thấy sản phẩm!" });
-    }
-
-    const variant = product.variants.id(variantId); // Tìm biến thể theo ID
-    if (!variant) {
-      return res.status(404).json({ message: "Không tìm thấy biến thể!" });
-    }
-
-    // Trừ số lượng của biến thể
-    if (variant.stock >= variantQuantity) {
-      variant.stock -= variantQuantity;
-      await product.save();
-    } else {
-      return res.status(400).json({ message: "Số lượng trong kho không đủ!" });
-    }
-
-    return res.status(200).json({
-      message: "Thanh toán thành công và số lượng sản phẩm đã được cập nhật!",
-      data: orderToUpdate,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 

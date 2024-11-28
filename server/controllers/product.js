@@ -5,7 +5,7 @@ import Product from "../models/Product.js";
 import mongoose from 'mongoose';
 // import multer from 'multer'
 import { cloudinary, storage } from '../utils/cloudinary.js'; 
-import {uploade} from "../middlewares/multer.js"; // Middleware xử lý file
+import multer from "multer";
 
 export const getProductVariant = async (req,res) => {
   const { variantId } = req.params;
