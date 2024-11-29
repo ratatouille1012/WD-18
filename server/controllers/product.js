@@ -2,35 +2,34 @@ import { errorMessages, successMessages } from "../constants/message.js";
 import Category from "../models/Category.js";
 import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 // import multer from 'multer'
-import { cloudinary, storage } from '../utils/cloudinary.js'; 
+import { cloudinary } from "../utils/cloudinary.js";
 import multer from "multer";
 
-export const getProductVariant = async (req,res) => {
+export const getProductVariant = async (req, res) => {
   const { variantId } = req.params;
 
-    try {
-        const product = await Product.findOne({ 'variant._id': variantId })
-            .populate('variant.color')
-            .populate('variant.size');  
+  try {
+    const product = await Product.findOne({ "variant._id": variantId })
+      .populate("variant.color")
+      .populate("variant.size");
 
-        if (!product) {
-            return res.status(404).json({ message: 'Sản phẩm không tìm thấy' });
-        }
-
-        res.json(product);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Lỗi máy chủ' });
+    if (!product) {
+      return res.status(404).json({ message: "Sản phẩm không tìm thấy" });
     }
-}
 
+    res.json(product);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Lỗi máy chủ" });
+  }
+};
 
 export const getProducts = async (req, res, next) => {
   try {
     const { brand, category, size, minPrice, maxPrice, title } = req.query;
-    
+
     // Create query object
     const query = {};
 
@@ -46,17 +45,17 @@ export const getProducts = async (req, res, next) => {
 
     // Filter by size (assuming products have a `sizes` array and you want to check for the existence of the size in that array)
     if (size) {
-      query['variants.size'] = size;
+      query["variants.size"] = size;
     }
 
     // Filter by price range
     if (minPrice || maxPrice) {
-      query['variants.price'] = {};
+      query["variants.price"] = {};
       if (minPrice) {
-        query['variants.price'].$gte = minPrice; // Greater than or equal to minPrice
+        query["variants.price"].$gte = minPrice; // Greater than or equal to minPrice
       }
       if (maxPrice) {
-        query['variants.price'].$lte = maxPrice; // Less than or equal to maxPrice
+        query["variants.price"].$lte = maxPrice; // Less than or equal to maxPrice
       }
     }
 
@@ -69,7 +68,7 @@ export const getProducts = async (req, res, next) => {
     const data = await Product.find(query)
       .populate("category")
       .populate("brand");
-    
+
     if (data && data.length > 0) {
       return res.status(200).json({
         message: "Lấy danh sách sản phẩm thành công!",
@@ -83,45 +82,46 @@ export const getProducts = async (req, res, next) => {
   }
 };
 
-
 // Hàm tạo sản phẩm có upload nhiều ảnh
 
-const upload = multer({ storage });
 
 // Hàm tạo sản phẩm có upload nhiều ảnh
 export const createProduct = async (req, res, next) => {
   try {
     const { error } = Product.validate(req.body);
     if (error) {
-      return res.status(400).json({ message: "Invalid body request!", errors: error.details });
+      return res
+        .status(400)
+        .json({ message: "Invalid body request!", errors: error.details });
     }
 
     const { brand, category, ...productData } = req.body;
 
     // Lưu URL ảnh sau khi upload lên Cloudinary
-    const imageUrls = req.files.map(file => file.path); // Lấy URL của nhiều ảnh
-
-    const newProduct = new Product({
-      ...productData,
-      brand: new mongoose.Types.ObjectId(brand),
-      category: new mongoose.Types.ObjectId(category),
-      images: imageUrls, // Lưu URLs của nhiều ảnh
-    });
+    const images = [];
+    for (const file of req.files) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: 'products',
+      });
+      images.push({ url: uploadResult.secure_url, public_id: uploadResult.public_id });
+    }
 
     const savedProduct = await newProduct.save();
-    return res.status(201).json(savedProduct);
+    return res.status(201).json({
+      message: "Sản phẩm được tạo thành công!",
+      data: savedProduct,
+    });
   } catch (error) {
-    next(error);
+    console.error("Error details:", error); // Log chi tiết lỗi
+    return res.status(500).json({
+      message: "Đã xảy ra lỗi khi tạo sản phẩm!",
+      error: error.message || "Unknown error", // Trả về chi tiết lỗi nếu có
+    });
   }
-};
-
-// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
-export const uploadImages = upload.array('images', 10); // Tối đa 10 ảnh cùng lúc
+}
 
 
 
-// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
-  
 export const getProductById = async (req, res, next) => {
   try {
     // Kiểm tra nếu id không hợp lệ
@@ -130,8 +130,10 @@ export const getProductById = async (req, res, next) => {
       return res.status(400).json({ message: "ID không hợp lệ!" });
     }
 
-    const data = await Product.findById(id).populate("category").populate("brand");
-    
+    const data = await Product.findById(id)
+      .populate("category")
+      .populate("brand");
+
     if (!data) {
       return res.status(400).json({ message: "Lấy sản phẩm thất bại!" });
     }
@@ -144,7 +146,6 @@ export const getProductById = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const updateProductById = async (req, res, next) => {
   try {
@@ -159,7 +160,7 @@ export const updateProductById = async (req, res, next) => {
 
     if (variants) {
       // Duyệt qua từng variant để đảm bảo không thay đổi _id
-      const sanitizedVariants = variants.map(variant => {
+      const sanitizedVariants = variants.map((variant) => {
         if (variant._id && mongoose.Types.ObjectId.isValid(variant._id)) {
           return { ...variant, _id: variant._id }; // Giữ nguyên _id nếu hợp lệ
         } else {
@@ -172,11 +173,10 @@ export const updateProductById = async (req, res, next) => {
     }
 
     // Cập nhật sản phẩm
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      productData,
-      { new: true, runValidators: true }
-    );
+    const updatedProduct = await Product.findByIdAndUpdate(id, productData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Sản phẩm không được tìm thấy!" });
@@ -190,9 +190,6 @@ export const updateProductById = async (req, res, next) => {
     next(error);
   }
 };
-
-
-
 
 // ! Xoá cứng! Không dùng
 export const removeProductById = async (req, res, next) => {
@@ -240,7 +237,11 @@ export const searchProductsByName = async (req, res) => {
 
     // Kiểm tra nếu không có `title`
     if (!title || title.trim() === "") {
-      return res.status(400).json({ message: "Tên sản phẩm không hợp lệ! Vui lòng nhập tên sản phẩm." });
+      return res
+        .status(400)
+        .json({
+          message: "Tên sản phẩm không hợp lệ! Vui lòng nhập tên sản phẩm.",
+        });
     }
 
     // Loại bỏ khoảng trắng thừa và tạo query tìm kiếm không phân biệt chữ hoa/thường
@@ -253,7 +254,11 @@ export const searchProductsByName = async (req, res) => {
       .populate("brand", "name"); // Chỉ lấy trường `name` từ brand
 
     if (data.length === 0) {
-      return res.status(404).json({ message: `Không tìm thấy sản phẩm nào với tên "${searchTitle}"!` });
+      return res
+        .status(404)
+        .json({
+          message: `Không tìm thấy sản phẩm nào với tên "${searchTitle}"!`,
+        });
     }
 
     return res.status(200).json({
@@ -262,8 +267,8 @@ export const searchProductsByName = async (req, res) => {
     });
   } catch (error) {
     console.error("Error searching products by name:", error.message);
-    res.status(500).json({ message: "Đã xảy ra lỗi máy chủ khi tìm kiếm sản phẩm!" });
+    res
+      .status(500)
+      .json({ message: "Đã xảy ra lỗi máy chủ khi tìm kiếm sản phẩm!" });
   }
 };
-
-

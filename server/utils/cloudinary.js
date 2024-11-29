@@ -10,12 +10,6 @@ cloudinary.v2.config({
 });
 
 // Cấu hình lưu trữ cho Multer
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
-  params: {
-    folder: 'products', // Thư mục lưu trữ ảnh trong Cloudinary
-    allowed_formats: ['jpg', 'png'], // Định dạng ảnh cho phép
-  },
-});
 
-export { cloudinary, storage };
+
+export { cloudinary};
