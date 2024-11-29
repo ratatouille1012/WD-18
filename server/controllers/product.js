@@ -272,3 +272,50 @@ export const searchProductsByName = async (req, res) => {
       .json({ message: "Đã xảy ra lỗi máy chủ khi tìm kiếm sản phẩm!" });
   }
 };
+export const updateVariantById = async (req, res, next) => {
+  try {
+    const { variantId } = req.params; // Lấy variantId từ URL
+    const updatedVariant = req.body; // Lấy dữ liệu variant cần cập nhật từ body
+
+    // Kiểm tra tính hợp lệ của `variantId`
+    if (!mongoose.Types.ObjectId.isValid(variantId)) {
+      return res.status(400).json({ message: "Variant ID không hợp lệ!" });
+    }
+
+    // Tìm sản phẩm chứa variant
+    const product = await Product.findOne({ "variants._id": variantId });
+
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm chứa variant này!" });
+    }
+
+    // Tìm và cập nhật variant trong mảng `variants`
+    const variantIndex = product.variants.findIndex(
+      (variant) => variant._id.toString() === variantId
+    );
+
+    if (variantIndex === -1) {
+      return res.status(404).json({ message: "Không tìm thấy variant cần cập nhật!" });
+    }
+
+    // Cập nhật dữ liệu variant
+    product.variant[variantIndex] = {
+      ...product.variant[variantIndex]._doc, // Lấy toàn bộ dữ liệu hiện tại của variant
+      ...updatedVariant, // Ghi đè dữ liệu được gửi từ client
+    };
+
+    // Lưu sản phẩm sau khi cập nhật
+    const updatedProduct = await product.save();
+
+    return res.status(200).json({
+      message: "Cập nhật variant thành công!",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật variant:", error.message);
+    return res.status(500).json({
+      message: "Đã xảy ra lỗi khi cập nhật variant!",
+      error: error.message || "Unknown error",
+    });
+  }
+};
