@@ -8,6 +8,7 @@ import {
   updateProductById,
   getProductVariant,
   searchProductsByName,
+  updateVariantById,
   
 } from "../controllers/product.js";
 import productSchema from "../validations/product.js";
@@ -43,5 +44,6 @@ productRouter.delete("/delete/:id", removeProductById);
 productRouter.use(validBodyRequest(productSchema)); // middleware
 productRouter.post("/", upload.array('images', 4) ,createProduct);
 productRouter.put("/update/:id", updateProductById);
+productRouter.put('/variant/:variantId', updateVariantById)
 
 export default productRouter;
