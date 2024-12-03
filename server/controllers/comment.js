@@ -19,6 +19,21 @@ export const createComment = async (req, res) => {
   }
 };
 
+export const getComments = async (req, res, next) => {
+  try {
+    const data = await Comment.find({});
+    if (data && data.length > 0) {
+      return res.status(200).json({
+        message: "Lay danh sach Comment thanh cong!",
+        data,
+      });
+    }
+    return res.status(404).json({ message: "Khong co commentnao!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 export const getCommentsByProduct = async (req, res) => {
   try {
@@ -36,9 +51,9 @@ export const getCommentsByProduct = async (req, res) => {
 export const updateComment = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const { content, productIds } = req.body;
+    const { show, productIds } = req.body;
 
-    const updatedData = { content, updatedAt: Date.now() };
+    const updatedData = { show, updatedAt: Date.now() };
     if (Array.isArray(productIds)) updatedData.productIds = productIds;
 
     const updatedComment = await Comment.findByIdAndUpdate(commentId, updatedData, { new: true });

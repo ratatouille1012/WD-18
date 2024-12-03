@@ -19,6 +19,7 @@ import Add from './pages/admin/Product/add';
 import ListCT from './pages/admin/Category/ListCT';
 import ListSize from './pages/admin/size/listSize';
 import ListVoucher from './pages/admin/voucher/listVoucher';
+import ListComment from './pages/admin/comment/listComment';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
@@ -104,6 +105,10 @@ const routeConfig = [
       {
         path: "account/listUser",
         element:<User/>,
+      },
+      {
+        path: "comment/listComment",
+        element:<ListComment/>,
       },
     ],
   },
