@@ -73,8 +73,13 @@ const OrderDetail = () => {
         if(stt !== "Chờ xử lý" && newStatus === "Chờ xác nhận hủy đơn hàng"){
           toast.warning("Bạn Không thể hủy đơn hàng đã xác nhận.");
         }else{
-        await updateOrderById(orderDT._id, updatedData); 
-        toast.warning(`${newStatus === "Chờ xác nhận hủy đơn hàng" ? "Bạn cần chờ để chúng tôi hủy đơn hàng" : "Cám ơn bạn đã mua hàng <3"}`);
+        const response = await updateOrderById(orderDT._id, updatedData);
+        console.log(response); 
+          if(response){
+          toast.warning(`${newStatus === "Chờ xác nhận hủy đơn hàng" ? "Bạn cần chờ để chúng tôi hủy đơn hàng" : "Cám ơn bạn đã mua hàng <3"}`);
+          }else{
+            toast.warning("Bạn Không thể hủy đơn hàng đã xác nhận.");
+          }
         }
       } catch (error) {
           console.error("Error updating order status:", error); 

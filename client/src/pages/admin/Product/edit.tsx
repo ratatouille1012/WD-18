@@ -75,8 +75,9 @@ const Edit = () => {
     }, [id]);
 
     const addVariant = () => {
-        setVariant([...variant, { id: variant.length + 1 }]);
+        setVariant([...variant, { id: variant.length + 1, color: '', size: '', quantity: 0, price_import: 0, price_list: 0, price_selling: 0 }]);
     };
+    
 
     const removeVariant = (index: number) => {
         if (variant.length > 1) {
@@ -87,20 +88,13 @@ const Edit = () => {
     };
 
     const handleVariantChange = (index: number, field: string, value: any) => {
-        const updatedVariants = variant.map((variant, i) => {
-            if (i === index) {
-                return { ...variant, [field]: value };
-            }
-            return variant;
+        setVariant((prevVariants) => {
+            const updatedVariants = [...prevVariants];
+            updatedVariants[index] = { ...updatedVariants[index], [field]: value };
+            return updatedVariants;
         });
-    
-        const hasMissingColor = updatedVariants.some(variant => !variant.color);
-        if (hasMissingColor) {
-            setErrorMessage('Please fill in all required fields for variants.');
-        } else {
-            setVariant(updatedVariants);
-        }
     };
+        
     
 
     const handleAddImageURL = () => {

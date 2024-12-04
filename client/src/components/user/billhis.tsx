@@ -12,6 +12,8 @@ const BillHis: React.FC<Props> = ({ orders = [] }) => {
   const {  getOneProduct, product } = useProduct();
   const [products, setProducts] = useState<{ [key: string]: any }>({});
 
+  const userId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}')._id : '';
+  const filteredOrders = orders.filter(order => order.user === userId);
   useEffect(() => {
     orders.forEach(order => {
       order.orderItems.forEach(item => {
@@ -49,7 +51,7 @@ const BillHis: React.FC<Props> = ({ orders = [] }) => {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order, index) => (
+          {filteredOrders.map((order, index) => (
             <tr key={order.orderCode}>
               <td className="border-b border-gray-300 p-4">{index + 1}</td>
               <td className="border-b border-gray-300 p-4 line">{order.orderCode}</td>

@@ -74,24 +74,43 @@ export const getOrderByUserId = async (req, res, next) => {
 };
 export const updateOrderById = async (req, res, next) => {
   try {
-    const data = await order.findByIdAndUpdate(
-      `${req.params.id}`,
+    
+    
+    const existingOrder = await order.findById(req.params.id);
+    if (!existingOrder) {
+      return res.status(404).json({ message: errorMessages.ORDER_NOT_FOUND });
+    }
+    const newstt = req.body.orderStatus;
+    console.log(newstt,existingOrder.orderStatus);
+
+    // Kiểm tra trạng thái hiện tại của đơn hàng
+    if (existingOrder.orderStatus !== "Chờ xử lý" && newstt === "Chờ xác nhận hủy đơn hàng") {
+      return res.status(403).json({
+        message: errorMessages.UPDATE_NOT_ALLOWED,
+        detail: "Order cannot be canceled because it's already processed.",
+      });
+    }
+
+    // Cập nhật đơn hàng nếu trạng thái hợp lệ
+    const updatedOrder = await order.findByIdAndUpdate(
+      req.params.id,
       req.body,
-      {
-        new: true,
-      }
+      { new: true }
     );
-    if (!data) {
+
+    if (!updatedOrder) {
       return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
     }
-    return res.status(201).json({
+
+    return res.status(200).json({
       message: successMessages.UPDATE_SUCCESS,
-      data,
+      data: updatedOrder,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 // ! Xoá cứng! Không dùng
 export const removeOrderById = async (req, res, next) => {

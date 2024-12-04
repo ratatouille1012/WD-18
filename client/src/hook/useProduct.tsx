@@ -124,7 +124,7 @@ const useProduct = () => {
         Getall();
     },[])
 
-  return {products,loading,product,getProductByVariantId,productDetails,getOneProduct,updateVariantQuantity, }
+  return {products,loading,product,getProductByVariantId,productDetails,getOneProduct,updateVariantQuantity, setProductDetails}
 }
 
 export default useProduct

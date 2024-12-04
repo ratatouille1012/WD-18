@@ -74,7 +74,8 @@ app.post('/payment', async (req, res) => {
     return res.status(200).json(result.data);
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error",error: error });
+    
   }
 });
 

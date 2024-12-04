@@ -232,20 +232,26 @@ const Cart = () => {
     const hasSubmitted = useRef(false);
     useEffect(() => {
         const checkAndSubmit = async () => {
+            if (!productDetails || Object.keys(productDetails).length === 0) {
+                console.log("Product details not loaded yet.");
+                return;
+            }
+    
             const checkedCartItems = cart.filter(item => checkedItems.has(item._id));
             const paymentt = checkedCartItems.length > 0 ? checkedCartItems[0].payment : "";
-
+            console.log(paymentt, checkedCartItems);
             if (paymentt === "Đã thanh toán" && !hasSubmitted.current) {
-                hasSubmitted.current = true; 
+                hasSubmitted.current = true;
                 await handleSubmit();
             }
         };
-
+    
         if (cart.length > 0 && checkedItems.size > 0) {
             checkAndSubmit();
         }
-    }, [cart, checkedItems]); 
+    }, [cart, checkedItems, productDetails]);  // Added productDetails to dependency array
     
+    console.log(productDetails)
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         const checkedCartItems = cart.filter(item => checkedItems.has(item._id));
@@ -256,7 +262,7 @@ const Cart = () => {
         for (let item of checkedCartItems) {
             const variantId = item.variantId;
             const currentVariant = productDetails[variantId];
-    
+            console.log(currentVariant,variantId);
             if (currentVariant) {
                 const availableQuantity = currentVariant.quantity;
                 const newQuantity = availableQuantity - item.variantQuantity;
@@ -267,7 +273,7 @@ const Cart = () => {
                     return; 
                 }
             } else {
-                toast.error(`Không tìm thấy sản phẩm cho variant ID: ${variantId}`);
+                toast.error(`Không tìm thấy sản phẩm cho variant 1 ID: ${variantId}`);
                 return;
             }
         }
@@ -310,10 +316,11 @@ const Cart = () => {
                 const quantityPurchased = item.variantQuantity;
     
                 const product = productDetails[variantId];
-                console.log(product, variantId, quantityPurchased);
+                console.log(product, variantId, quantityPurchased,product.variant);
     
                 if (product && product.variant) {
                     const variant = product.variant.find(v => v._id === variantId);
+                    console.log(variant);
                     if (variant) {
                         const newQuantity = variant.quantity - quantityPurchased;
                         console.log(newQuantity);
@@ -343,11 +350,11 @@ const Cart = () => {
             }
             const orderResponse = await createOrder(orderDetails);
             console.log('Order created successfully:', orderResponse);
-    
+            const idOrr = orderResponse.data._id;
             localStorage.removeItem('cart');
             toast.success("Thanh toán thành công.");
             deleteUncheckedItems(userId, uncheckedCartItems); 
-            window.location.href = "http://localhost:5173/";
+            window.location.href = `http://localhost:5173/order/${idOrr}`;
     
         } catch (error) {
             console.error('Error creating order:', error);
