@@ -32,7 +32,8 @@ const useProduct = () => {
             setLoading(false);
         }
     };
-    const getOne = async(id : string) =>{
+    const getOneProduct = async(id : string) =>{
+        console.log(id);
         try {
             console.log(id);
             const response = await axios.get("/api/products/"+id)
@@ -81,10 +82,35 @@ const useProduct = () => {
             setLoading(false);
         }
     };
-    
-    
-    
-    
+
+    const updateVariantQuantity = async (variantId: string, newQuantity: number) => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem('token');
+          const response = await axios.put(`api/products/update/variant/${variantId}`, 
+            {quantity: newQuantity}
+          , {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+        );
+          console.log('Variant updated:', response.data);
+          if (response.status === 200 && response.data.message === "Cập nhật variant thành công!") {
+            return { success: true, data: response.data };
+        } else {
+            return { success: false, message: response.data.message || "Failed to update variant" };
+        }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error('Error response:', error.response?.data);
+          } else {
+            console.error('Error:', error.message);
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
 
     useEffect(() => {
         console.log('Updated product details:', productDetails);
@@ -92,13 +118,13 @@ const useProduct = () => {
     
     useEffect(()=>{
         if(!id) return 
-        getOne(id)
+        getOneProduct(id)
     },[])
     useEffect(()=>{
         Getall();
     },[])
 
-  return {products,loading,product,getProductByVariantId,productDetails }
+  return {products,loading,product,getProductByVariantId,productDetails,getOneProduct,updateVariantQuantity, }
 }
 
 export default useProduct

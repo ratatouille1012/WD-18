@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/theme';
+import useOrder from '../../hook/useOder';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [sidebarToggle, setSidebarToggle] = useState(false);
@@ -8,8 +10,22 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
   const [dropdownOpen1, setDropdownOpen1] = useState(false);
-  const [notifying1, setNotifying1] = useState(true);
+  const [notifying1, setNotifying1] = useState('');
   const dropdownRef = useRef(null);
+  const { order, loadingOrder } = useOrder();
+  console.log(order)
+  const fitt = order?.filter(bill => 
+    bill.orderStatus === 'Chờ xử lý'
+);
+
+useEffect(() => {
+  if (fitt && fitt.length > 0) {
+    setNotifying(true);
+  } else {
+    setNotifying(false);
+  }
+}, [fitt]);
+
 
   const toggleDropdown = () => {
     setDropdownOpen(prev => !prev);
@@ -49,6 +65,7 @@ const Header = () => {
     e.preventDefault();
     console.log('Searching for:', query);
   };
+  
 
   return (
     <>
@@ -194,54 +211,25 @@ const Header = () => {
                   <h5 className="text-sm font-medium text-bodydark2">Thông báo</h5>
                 </div>
                 <ul className="flex h-auto flex-col overflow-y-auto">
-                  <li>
-                    <a className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
+                  {fitt?.map((fitt,index)=>(
+                    <li key={index}>
+                    <Link to={`bill/detail/${fitt._id}`} className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
                       <p className={`text-sm ${darkMode ? 'text-white' : ''}`}>
-                        Thông báo 1
+                        Đơn hàng {fitt.orderCode} cần được xử lý
                       </p>
-                      <p className="text-xs text-gray-400">16/7/2024</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
-                      <p className={`text-sm ${darkMode ? 'text-white' : ''}`}>
-                        Thông báo 1
+                      <p className="text-xs text-gray-400">
+                      {new Intl.DateTimeFormat('vi-VN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      }).format(new Date(fitt.createdAt))}
                       </p>
-                      <p className="text-xs text-gray-400">16/7/2024</p>
-                    </a>
+                    </Link>
                   </li>
-                  <li>
-                    <a className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
-                      <p className={`text-sm ${darkMode ? 'text-white' : ''}`}>
-                        Thông báo 1
-                      </p>
-                      <p className="text-xs text-gray-400">16/7/2024</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
-                      <p className={`text-sm ${darkMode ? 'text-white' : ''}`}>
-                        Thông báo 1
-                      </p>
-                      <p className="text-xs text-gray-400">16/7/2024</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
-                      <p className={`text-sm ${darkMode ? 'text-white' : ''}`}>
-                        Thông báo 1
-                      </p>
-                      <p className="text-xs text-gray-400">16/7/2024</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a className={`flex flex-col gap-2.5  ${darkMode ? 'border-[#313D4A] hover:bg-[rgba(49,61,74,1)]' : 'border-gray hover:bg-gray-2'} border-[1px]  px-4.5 py-3 hover:bg-gray-2`} href="#">
-                      <p className={`text-sm ${darkMode ? 'text-white' : ''}`}>
-                        Thông báo 1
-                      </p>
-                      <p className="text-xs text-gray-400">16/7/2024</p>
-                    </a>
-                  </li>
+                  ))}
                 </ul>
               </div>
               )}

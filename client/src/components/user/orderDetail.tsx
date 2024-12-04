@@ -5,15 +5,23 @@ import useVariant from '../../hook/useVariant';
 import useProduct from '../../hook/useProduct';
 import useVoucher from '../../hook/useVoucher';
 import { useEffect } from 'react';
+import { toast } from 'react-toastify';
+import useComments from '../../hook/useComment';
+import { Rating } from '@material-tailwind/react';
 
 
 const OrderDetail = () => {
     const { orderDT, loadingOrder,updateOrderById } = useOrder();
-    const { getProductByVariantId, productDetails } = useProduct();
+    const { getProductByVariantId,getOneProduct,product } = useProduct();
     const { getOne, variant } = useVariant();
     const { voucher } = useVoucher();
     const [validVoucher, setValidVoucher] = useState(null);
-
+    const [showReview, setShowReview] = useState(false);
+    const {createComment} = useComments();
+    const [productIds, setProductIds] = useState([]);
+    const [reviewContent, setReviewContent] = useState("");
+    const [products, setProducts] = useState<{ [key: string]: any }>({});
+    const [starRating, setStarRating] = useState(0);
 
     useEffect(() => {
       const code = orderDT?.voucher;
@@ -21,25 +29,36 @@ const OrderDetail = () => {
       setValidVoucher(foundVoucher); 
     }, [orderDT, voucher]);
 
+    useEffect(() => {
+      if (orderDT && orderDT.orderItems) {
+        orderDT.orderItems.forEach(item => {
+          if (!products[item.productId]) {
+            getOneProduct(item.productId);
+          }
+        });
+      }
+    }, [orderDT, products, getOneProduct]);
+    
+
+    useEffect(() => {
+      if (product) {
+        setProducts(prev => ({
+          ...prev,
+          [product._id]: product, 
+        }));
+      }
+    }, [product]);
+
     const calculateTotalAmount = () => {
       if (!orderDT?.orderItems) return 0; 
-      return orderDT?.orderItems?.reduce((total, item) => {
-          const product = productDetails[item.variantId]; 
-          const variantItem = variant[item.variantId];
-
-          if (product && variantItem) {
-              const salePrice = variantItem.salePrice || 0; 
-              const quantity = item.variantQuantity || 0;
-
-              total += salePrice * quantity; 
-          }
-
-          return total;
-      }, 0); 
-  };
-
+      return orderDT.orderItems.reduce((total, item) => {
+        return total + item.price * item.quantity;
+      }, 0);
+    };
+    
   const totalAmount = calculateTotalAmount();
 
+  const stt = orderDT?.orderStatus;
     const handleUpdateOrderStatus = async (newStatus) => {
       const updatedData = {
           user: orderDT?.user,
@@ -49,11 +68,14 @@ const OrderDetail = () => {
           address: orderDT?.address,
           phone: orderDT?.phone,
       };
-
+      console.log(stt);
       try {
-          await updateOrderById(orderDT._id, updatedData); 
-          alert(`${newStatus === "Chờ xác nhận hủy đơn hàng" ? "Bạn cần chờ để chúng tôi hủy đơn hàng" : "Cám ơn bạn đã mua hàng <3"}`);
-          window.location.reload(); 
+        if(stt !== "Chờ xử lý" && newStatus === "Chờ xác nhận hủy đơn hàng"){
+          toast.warning("Bạn Không thể hủy đơn hàng đã xác nhận.");
+        }else{
+        await updateOrderById(orderDT._id, updatedData); 
+        toast.warning(`${newStatus === "Chờ xác nhận hủy đơn hàng" ? "Bạn cần chờ để chúng tôi hủy đơn hàng" : "Cám ơn bạn đã mua hàng <3"}`);
+        }
       } catch (error) {
           console.error("Error updating order status:", error); 
       }
@@ -81,13 +103,77 @@ const fetchProductDetails = async () => {
   }));
 };
 
+const extractProductIds = async () => {
+  if (!orderDT?.orderItems) return [];
+  const productIds = await Promise.all(
+      orderDT.orderItems.map(async (item) => {
+          if (item.variantId) {
+              const product = await getProductByVariantId(item.variantId);
+              return product?._id;
+          }
+          return null;
+      })
+  );
+  return [...new Set(productIds.filter((id) => id !== null))];
+};
+
+
+useEffect(() => {
+  const fetchProductIds = async () => {
+      const ids = await extractProductIds();
+      setProductIds(ids);
+  };
+  if (orderDT?.orderItems) {
+      fetchProductIds();
+  }
+}, [orderDT]);
+
+console.log("Product IDs:", productIds,);
+
+const handleReviewSubmit = async (event) => {
+  event.preventDefault();
+  try {
+      const productIds = orderDT?.orderItems
+      .map(item => {
+        const product = products[item.productId];
+        return product ? product._id : null;
+      })
+      .filter(id => id !== null); 
+
+    if (!productIds.length) {
+      toast.warning("Không có sản phẩm để đánh giá.");
+      return;
+    }
+      const content = reviewContent;
+      const userId = orderDT?.user; 
+      const stt = "Đã mua hàng";
+      const star = starRating;
+      if (!content.trim()) {
+          toast.warning("Vui lòng nhập nội dung đánh giá.");
+          return;
+      }
+
+      await createComment({
+          productIds,
+          userId,
+          content,
+          stt,
+          star
+      });
+
+      toast.success("Đánh giá của bạn đã được gửi!");
+      setShowReview(false);
+  } catch (error) {
+      console.error("Error submitting review:", error);
+      toast.error("Gửi đánh giá thất bại, vui lòng thử lại sau.");
+  }
+};
+
 
 
 useEffect(() => {
   fetchProductDetails();
 }, [orderDT]);
-
-
 
     return (
         <div className='pb-10'>
@@ -122,7 +208,7 @@ useEffect(() => {
                         <p className="text-gray-600">Ngày đặt hàng: {orderDT?.createdAt}<span className="font-semibold"></span></p>
                     </div>
                     <div className="w-1/2 ">
-                        <p className="text-gray-600">Trạng thái: {orderDT?.orderStatus}<span className="font-semibold"></span></p>
+                        <p className="text-gray-600">Trạng thái thanh toán: {orderDT?.payment}<span className="font-semibold"></span></p>
                         <p className="text-gray-600">Phương thức vận chuyển: {orderDT?.ship || "none"}<span className="font-semibold"></span></p>
                         <p className="text-gray-600">Trạng thái giao hàng: {orderDT?.orderStatus}<span className="font-semibold"></span></p>
                         <p className="text-gray-600">Voucher: {orderDT?.voucher || "none"}<span className="font-semibold"></span></p>
@@ -140,45 +226,37 @@ useEffect(() => {
                               </tr>
                             </thead>
                             <tbody className='text-black'>
-                              {orderDT?.orderItems?.map((item,index)=>{
-                                const product = productDetails[item.variantId];
-                                const variants = variant[item.variantId];
-                                console.log("hHHhH",product,variants);
-
-                                if (!product) {
-                                  return (
-                                      <tr className='h-[100px]'>
-                                          <td className='border p-4' colSpan="4">
-                                              Product not found for variant ID: {item.variantId}
-                                          </td>
-                                      </tr>
-                                  );
-                              }
-
-                                const colorName = variants?.color?.name || 'N/A';
-                                const sizeName = variants?.size?.name || 'N/A';
-                                const salePrice = variants?.salePrice || 'N/A';
+                              {orderDT?.orderItems.map((item,index)=>{
+                                const productt = products[item.productId];
+                                console.log(productt);
+                                
                                 return (
-                                  <tr className='h-[100px]'>
+                                <>
+                                {productt ? (
+                                  <tr key={index} className='h-[100px]'>
                                     <td className='border p-4'>
                                       <div className="flex gap-x-4">
-                                          <img src={product.images[0]} alt={``} className=" h-[80px]" />
+                                          <img src={productt.images[0]} alt={``} className=" h-[80px]" />
                                           <div className='xs:hidden sm:hidden md:block'>
-                                            <h2 className='font-bold line-clamp-2'>{product.title}</h2>
-                                            <p className='font-medium text-[18px]'>Màu: <span className='text-[#666666]'>{colorName}</span></p>
-                                            <p className='font-medium text-[18px]'>Size: <span className='text-[#666666]'>{sizeName}</span></p>
+                                            <h2 className='font-bold line-clamp-2'>{productt.title}</h2>
+                                            <p className='font-medium text-[18px]'>Màu: <span className='text-[#666666]'>{item.color}</span></p>
+                                            <p className='font-medium text-[18px]'>Size: <span className='text-[#666666]'>{item.size}</span></p>
                                           </div>
                                         </div>
                                     </td>
-                                    <td className='border p-4 text-center'>{salePrice.toLocaleString()} VNĐ</td>
+                                    <td className='border p-4 text-center'>{item.price.toLocaleString()} VNĐ</td>
                                     <td className='border p-4'>
                                       <div className="text-center">
                                         {item.variantQuantity}
                                       </div>
                                     </td>
-                                    <td className='border p-4 text-center'>{(item.variantQuantity * salePrice).toLocaleString()} VNĐ</td>
+                                    <td className='border p-4 text-center'>{(item.variantQuantity * item.price).toLocaleString()} VNĐ</td>
                                   </tr>
-                                )
+                                  ) : (
+                                  <span>Loading product...</span> 
+                                )}
+                                </>
+                                );
                               })}
                             </tbody>
                         </table>
@@ -202,15 +280,50 @@ useEffect(() => {
                         disabled={loadingOrder}
                         >Hủy đơn hàng</button>
                     </div>
-                  )}
+                    )}
                   {orderDT?.orderStatus === "Giao hàng thành công" && (
                     <div className="mt-6 flex gap-4">
                         <button className="bg-orange-500 text-white px-4 py-2 rounded"
-                        onClick={() => handleUpdateOrderStatus("Đã nhận được hàng")} 
+                        onClick={
+                          () => {
+                            handleUpdateOrderStatus("Đã nhận được hàng");
+                            setShowReview(true);
+                        }} 
                         disabled={loadingOrder}
                         >Đã nhận được hàng</button>
                     </div>
                   )}
+                  {showReview && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <form onSubmit={handleReviewSubmit}>
+                            <div className="p-5 rounded w-[500px] bg-white text-black">
+                                <h2 className="text-xl">Đánh giá sản phẩm đơn hàng</h2>
+                                <Rating value={starRating} onChange={(newRating) => setStarRating(newRating)} unratedColor="amber" ratedColor="amber" placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
+                                <textarea
+                                    className="mt-2 w-full p-2 border-2"
+                                    placeholder="Nhập đánh giá của bạn"
+                                    value={reviewContent}
+                                    onChange={(e) => setReviewContent(e.target.value)}
+                                />
+                                <div className="mt-4">
+                                    <button
+                                        type="button"
+                                        className="bg-gray-500 text-white px-3 py-1 mr-2"
+                                        onClick={() => setShowReview(false)}
+                                    >
+                                        Trở lại
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-3 py-1 text-white bg-blue-600"
+                                    >
+                                        Gửi đánh giá
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                )}
                 </div>
             </div>
         </div>

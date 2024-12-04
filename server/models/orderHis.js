@@ -10,15 +10,20 @@ const orderHisSchema = new mongoose.Schema({
     status : {
         type : String,
     },
+    description: {
+        type : String,
+    },
     user : {
-        type : mongoose.Schema.Types.ObjectId,
+        type : String,
         ref : 'user'
     },
     time : {
         type : Date
     }
-
-
+},
+{
+  timestamps: true,
+  versionKey: false,
 });
 
 export default mongoose.model("orderHis", orderHisSchema);

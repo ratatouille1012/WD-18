@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { RegisterFormParams } from '../../types/register';
 import isEmail from 'validator/lib/isEmail';
 import { MIN_PASSWORD } from '../../consts';
+import { toast } from "react-toastify";
 
 const Register = () => {
   const [email, setEmail] = useState<string>('');
@@ -26,10 +27,11 @@ const Register = () => {
       setPassword('');
       setError('');
       console.log(response.data);
+      toast.success("Đăng ký thành công");
       nav("/login");
     } catch (err) {
       console.error('Error registering user:', err.response?.data);
-      setError(err.response?.data?.message || 'Đăng ký không thành công!');
+      toast.error(err.response?.data?.message || 'Đăng ký không thành công!');
     }
   };
 

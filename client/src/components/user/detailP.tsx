@@ -6,6 +6,8 @@ import useColor from '../../hook/useColor';
 import useSize from '../../hook/useSize';
 import useAddToCart from '../../hook/useCart';
 import { Cart } from '../../types/cart';
+import { toast } from 'react-toastify';
+import useComments from '../../hook/useComment';
 
 
 type Props = {
@@ -22,11 +24,26 @@ const DetailP: React.FC<Props> = ({product}) => {
     const [activeButton, setActiveButton] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
     const { size,loadingSize } = useSize();
-    const { color,loadingColor } = useColor()
+    const { color,loadingColor } = useColor();
     const [availableQuantity, setAvailableQuantity] = useState(0);
     const [availablePrice, setAvailablePrice] = useState('');
     const [availableId, setAvailableId] = useState('');
-    const { addToCart, loading, error } = useAddToCart();
+    const { addToCart, loading, error,cart } = useAddToCart();
+    const {createComment, comment,getCommentByProductId} = useComments();
+    const [reviewContent, setReviewContent] = useState("");
+    const [starRating, setStarRating] = useState(0);
+
+    console.log(cart);
+    
+    useEffect(() => {
+        console.log('Product ID changed, fetching comments...');
+        if (id) {
+            getCommentByProductId(id);
+        }
+    }, [id]);
+    console.log(comment);
+    
+    
     
     useEffect(() => {
         if (product && product.images && product.images.length > 0) {
@@ -71,18 +88,25 @@ const DetailP: React.FC<Props> = ({product}) => {
             setAvailableId(selectedVariant ? selectedVariant._id :"");
         }
     }, [selectedSize, selectedColor, product]);
-
+    
+    
     const handleAddToCart = async  () => {
+        const paymentt = cart.map(item => item.payment);
+        console.log("123123",paymentt);
         if (count <= 0) {
-            alert('Số lượng sản phẩm ko được nhỏ hơn 1.');
+            toast.warning("Số lượng sản phẩm ko được nhỏ hơn 1.");
             return;
         }
         else if (!selectedSize) {
-            alert('Vui lòng chọn kích cỡ.');
+            toast.warning("Vui lòng chọn kích cỡ.");
             return;
         }
         else if (!selectedColor) {
-            alert('Vui lòng chọn màu sắc.');
+            toast.warning("Vui lòng chọn màu sắc.");
+            return;
+        }
+        else if (paymentt.includes("Đã thanh toán")) {
+            toast.warning("Bạn còn đơn hàng chưa xác nhận đặt hàng!");
             return;
         }else{
             const userid = JSON.parse(localStorage.getItem("user"))?._id;
@@ -92,11 +116,10 @@ const DetailP: React.FC<Props> = ({product}) => {
                 user: userid,
                 variantId: availableId,
                 variantQuantity: count,
-            };
-            
+            };       
             await addToCart(cartItem);
+            toast.success("Thêm sản phẩm thành công!");
             window.location.reload();
-
         }
     }
     
@@ -107,6 +130,35 @@ const DetailP: React.FC<Props> = ({product}) => {
     
     const getColorNameById = (id) => color.find(item => item._id === id)?.name;
     const getSizeNameById = (id) => size.find(item => item._id === id)?.name;
+
+    const handleReviewSubmit = async (event) => {
+        event.preventDefault();
+        try {
+            const userid = JSON.parse(localStorage.getItem("user"))?._id;
+            const productIds = [product._id]; 
+            const content = reviewContent;
+            const star = starRating;
+            const userId = userid; 
+            console.log(star)
+            if (!content.trim()) {
+                toast.warning("Vui lòng nhập nội dung đánh giá.");
+                return;
+            }
+      
+            await createComment({
+                productIds,
+                userId,
+                content,
+                star,
+            });
+            setReviewContent('');
+            toast.success("Cảm ơn bạn đá nhận xét!");
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            toast.error("Gửi đánh giá thất bại, vui lòng thử lại sau.");
+        }
+      };
+      
     
     return (
         <>
@@ -238,24 +290,70 @@ const DetailP: React.FC<Props> = ({product}) => {
                     {activeButton === 0 && (
                         <div className="mt-10">
                             <h3 className="text-xl font-bold text-gray-800">Mô tả</h3>
-                            <p className='text-base leading-6 text-gray-700 mt-4'>{product.description}</p>
+                            <p className='text-base leading-6 text-gray-700 mt-4'><div dangerouslySetInnerHTML={{ __html: product?.description }} /></p>
                             <img className='h-[500px] w-auto mt-5' src={product.img_des} alt="none" />
                         </div>
                     )}
                     {activeButton === 1 && (
-                        <div className="mt-10 ">
-                            <form action="">
-                            <h3 className="text-xl font-bold text-gray-800">Đánh giá</h3>
-                            <p className='mt-2'>Chưa có đánh giá nào.</p>
-                            <div className="mt-6 w-full border-2 py-4 px-6 border-[#FF6633]">
-                                <h2 className='font-bold text-[20px] line-clamp-1'>Hãy là người đầu tiên nhận xét “{product.name}” </h2>
-                                <h2 className='mt-2 mb-2 font-medium'>Đánh giá của bạn <span className='text-red-600 font-bold'>*</span></h2>
-                                <Rating value={5} unratedColor="amber" ratedColor="amber" placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
-                                <h2 className='mt-4 font-medium'>Nhận xét của bạn <span className='text-red-600 font-bold'>*</span></h2>
-                                <textarea name="" className='w-full mt-1 p-2 h-[200px] border shadow-lg' id=""></textarea>
-                                <p className='mt-4 font-medium text-red-600'>Lưu Ý: * là những ô bắt buộc phải nhập.</p>
-                                <button className='uppercase mt-4 mb-12 py-2 px-4 border bg-[#FF6633] font-bold text-white'>Gửi đi</button>
-                            </div>
+                        <div className="mt-10">
+                            <h3 className="text-xl font-bold text-gray-800">Bình luận</h3>
+                            {comment.length === 0 ? (
+                                <p className="mt-2">Chưa có bình luận nào.</p>
+                            ) : (
+                                <div className="mt-6 overflow-y-auto max-h-[500px]">
+                                    {comment
+                                    .filter(item => item.show === 'show')  
+                                    .map((item) => (
+                                        <div className=" mx-auto border px-6 py-4 rounded-lg mb-2">
+                                            <div className="flex justify-between">
+                                                <div className="flex items-center mb-6">
+                                                    <img src="https://media.istockphoto.com/id/951316004/de/vektor/benutzer-symbol-vektor-m%C3%A4nnliche-person-symbol-profil-kreis-avatar-zeichen-in-flache-farbe.jpg?s=612x612&w=0&k=20&c=yGetU5odhmf4jZa-Oh3U-GOsbtoo_qETyoQC4FOdqm0=" alt="Avatar" className="w-12 h-12 rounded-full mr-4"></img>
+                                                    <div>
+                                                        <div className="text-lg font-medium text-gray-800 flex gap-x-2">
+                                                            <div className="">{item.userId?.name ? item.userId.name : `Người dùng ${item.userId._id}`}</div>
+                                                            <Rating value={item.star} readonly   unratedColor="amber" ratedColor="amber" placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
+                                                        </div>
+                                                        <div className="text-gray-500">
+                                                            {new Date(item.createdAt).toLocaleString('vi-VN', {
+                                                                weekday: 'short', 
+                                                                year: 'numeric',
+                                                                month: 'numeric',
+                                                                day: 'numeric',
+                                                                hour: 'numeric',
+                                                                minute: 'numeric',
+                                                                second: 'numeric'
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-2">
+                                                    {item.stt}
+                                                </div>
+                                            </div>
+                                            <p className="text-lg leading-relaxed mb-6">{item.content}.</p>
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <a href="#" className="text-gray-500 hover:text-gray-700 mr-4"><i className="far fa-thumbs-up"></i> Like</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <form onSubmit={handleReviewSubmit}>
+                                <div className="mt-6 w-full border-2 py-4 px-6 border-[#FF6633]">
+                                    <h2 className='font-bold text-[20px] line-clamp-1'>Bình luận sản phẩm </h2>
+                                    <h2 className='mt-2 mb-2 font-medium'>Đánh giá của bạn <span className='text-red-600 font-bold'>*</span></h2>
+                                    <Rating value={starRating} onChange={(newRating) => setStarRating(newRating)} unratedColor="amber" ratedColor="amber" placeholder={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
+                                    <h2 className='mt-4 font-medium'>Nhận xét của bạn <span className='text-red-600 font-bold'>*</span></h2>
+                                    <textarea 
+                                        value={reviewContent}
+                                        onChange={(e) => setReviewContent(e.target.value)} 
+                                        className='w-full mt-1 p-2 h-[200px] border shadow-lg' id="">
+                                    </textarea>
+                                    <p className='mt-4 font-medium text-red-600'>Lưu Ý: * là những ô bắt buộc phải nhập.</p>
+                                    <button className='uppercase mt-4 mb-12 py-2 px-4 border bg-[#FF6633] font-bold text-white'>Gửi đi</button>
+                                </div>
                             </form>
                         </div>
                     )}

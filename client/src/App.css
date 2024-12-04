@@ -289,3 +289,39 @@
   transition: none; 
 }
 
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 40px 10px 10px; 
+  border: 1px solid #ccc;
+  font-size: 16px;
+  outline: none;
+}
+
+.search-input:focus {
+  border: 1px solid ; 
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.scrollable-container {
+  overflow-y: scroll;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollable-container {
+  scrollbar-width: none;
+}

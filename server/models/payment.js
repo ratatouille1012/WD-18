@@ -2,8 +2,11 @@
 import mongoose from "mongoose";
 // Định nghĩa schema cho giao dịch thanh toán
 const paymentSchema = new mongoose.Schema({
-    orderId: { type: String, required: true },
-
+    transactionId: {
+        type: String,
+        required: true,
+        unique: true
+    },
     amount: {
         type: Number,
         required: true

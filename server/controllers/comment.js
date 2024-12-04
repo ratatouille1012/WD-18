@@ -4,18 +4,33 @@ import Comment from "../models/comment.js";
 
 export const createComment = async (req, res) => {
   try {
-    const { productIds, userId, content } = req.body;
+    const { productIds, userId, content,star,stt } = req.body;
 
     // Kiểm tra mảng productIds
     if (!Array.isArray(productIds) || productIds.length === 0) {
       return res.status(400).json({ message: "productIds must be a non-empty array." });
     }
 
-    const comment = new Comment({ productIds, userId, content });
+    const comment = new Comment({ productIds, userId, content,stt,star });
     await comment.save();
     res.status(201).json({ message: "Comment created successfully", comment });
   } catch (error) {
     res.status(500).json({ message: "Failed to create comment", error });
+  }
+};
+
+export const getComments = async (req, res, next) => {
+  try {
+    const data = await Comment.find({});
+    if (data && data.length > 0) {
+      return res.status(200).json({
+        message: "Lay danh sach Comment thanh cong!",
+        data,
+      });
+    }
+    return res.status(404).json({ message: "Khong co commentnao!" });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -36,9 +51,9 @@ export const getCommentsByProduct = async (req, res) => {
 export const updateComment = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const { content, productIds } = req.body;
+    const { show, productIds } = req.body;
 
-    const updatedData = { content, updatedAt: Date.now() };
+    const updatedData = { show, updatedAt: Date.now() };
     if (Array.isArray(productIds)) updatedData.productIds = productIds;
 
     const updatedComment = await Comment.findByIdAndUpdate(commentId, updatedData, { new: true });

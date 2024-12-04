@@ -13,6 +13,9 @@ const List = () => {
     const [isEditPopupOpen, setEditPopupOpen] = useState(false);
     const [isAddPopupOpen, setAddPopupOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+    const [searchName, setSearchName] = useState<string>(""); 
+    const [searchId, setSearchId] = useState<string>(""); 
+
 
     const fetchCategories = async () => {
         try {
@@ -92,69 +95,107 @@ const List = () => {
         setSelectedCategory(null);
     };
 
+    const normalizeString = (str: string) => {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    const filteredCategories = categories.filter((category) => {
+        const matchesName = searchName
+            ? normalizeString(category.name).includes(normalizeString(searchName))
+            : true;
+        const matchesId = searchId
+            ? normalizeString(category._id).includes(normalizeString(searchId))
+            : true;
+    
+        return matchesName && matchesId;
+    });
+
     return (
-        <div className="pb-10">
+        <>
             <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6`}>
-                <div className="flex justify-between">
-                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Danh sách danh mục</h2>
-                    <button 
-                        className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
-                        onClick={() => setAddPopupOpen(true)}
-                    >
-                        Thêm danh mục
-                    </button>
-                </div>
-                <table className="min-w-full mt-4">
-                    <thead>
-                        <tr className={`${darkMode ? 'bg-[#313D4A] text-[rgb(174,183,192)]' : 'bg-gray-200'}`}>
-                            <th className="py-2 px-4 text-left">Id</th>
-                            <th className="py-2 px-4 text-left">Tên</th>
-                            <th className="py-2 px-4 text-left"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map(category => (
-                            <tr key={category._id} className={`${darkMode ? 'text-meta-3' : ''}`}>
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{category._id}</td>
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{category.name}</td>
-                                <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>
-                                    <button 
-                                        className={`${darkMode ? 'bg-[#E94E77]' : 'bg-red-500'} text-white px-3 py-1 rounded-md mr-2 hover:bg-red-600`}
-                                        onClick={() => handleDeleteCategory(category._id)}
-                                    >
-                                        Xóa
-                                    </button>
-                                    <button 
-                                        className={`${darkMode ? 'bg-[#4CAF50]' : 'bg-green-500'} text-white px-3 py-1 rounded-md hover:bg-green-600`}
-                                        onClick={() => {
-                                            setSelectedCategory(category);
-                                            setEditPopupOpen(true);
-                                        }}
-                                    >
-                                        Sửa
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {isEditPopupOpen && selectedCategory && (
-                    <EditPopup 
-                        category={selectedCategory} 
-                        onClose={closeEditPopup} 
-                        darkMode={darkMode} 
-                        onSave={handleEditCategory}
-                    />
-                )}
-                {isAddPopupOpen && (
-                    <AddCategoryPopup 
-                        onClose={() => setAddPopupOpen(false)} 
-                        onAdd={handleAddCategory} 
-                        darkMode={darkMode} 
-                    />
-                )}
+                <div className="">
+                    <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Lọc danh mục</h2>
+                    <div className="w-full mb-4 flex gap-x-4">
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm theo tên..."
+                            className="border p-2 rounded w-1/2"
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm theo ID..."
+                            className="border p-2 rounded w-1/2"
+                            value={searchId}
+                            onChange={(e) => setSearchId(e.target.value)}
+                        />
+                    </div>
+                </div> 
             </div>
-        </div>
+            <div className="pb-10">
+                <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6`}>
+                    <div className="flex justify-between">
+                        <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Danh sách danh mục</h2>
+                        <button 
+                            className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                            onClick={() => setAddPopupOpen(true)}
+                        >
+                            Thêm danh mục
+                        </button>
+                    </div>
+                    <table className="min-w-full mt-4">
+                        <thead>
+                            <tr className={`${darkMode ? 'bg-[#313D4A] text-[rgb(174,183,192)]' : 'bg-gray-200'}`}>
+                                <th className="py-2 px-4 text-left">Id</th>
+                                <th className="py-2 px-4 text-left">Tên</th>
+                                <th className="py-2 px-4 text-left"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredCategories.map((category,index) => (
+                                <tr key={index} className={`${darkMode ? 'text-meta-3' : ''}`}>
+                                    <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4 w-1/3`}>{index + 1}</td>
+                                    <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4 w-1/3`}>{category.name}</td>
+                                    <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4 w-1/3`}>
+                                        <button 
+                                            className={`${darkMode ? 'bg-[#E94E77]' : 'bg-red-500'} text-white px-3 py-1 rounded-md mr-2 hover:bg-red-600`}
+                                            onClick={() => handleDeleteCategory(category._id)}
+                                        >
+                                            Xóa
+                                        </button>
+                                        <button 
+                                            className={`${darkMode ? 'bg-[#4CAF50]' : 'bg-green-500'} text-white px-3 py-1 rounded-md hover:bg-green-600`}
+                                            onClick={() => {
+                                                setSelectedCategory(category);
+                                                setEditPopupOpen(true);
+                                            }}
+                                        >
+                                            Sửa
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {isEditPopupOpen && selectedCategory && (
+                        <EditPopup 
+                            category={selectedCategory} 
+                            onClose={closeEditPopup} 
+                            darkMode={darkMode} 
+                            onSave={handleEditCategory}
+                        />
+                    )}
+                    {isAddPopupOpen && (
+                        <AddCategoryPopup 
+                            onClose={() => setAddPopupOpen(false)} 
+                            onAdd={handleAddCategory} 
+                            darkMode={darkMode} 
+                        />
+                    )}
+                </div>
+            </div>
+        </>
     );
 };
 

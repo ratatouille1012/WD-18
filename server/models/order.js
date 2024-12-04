@@ -15,9 +15,19 @@ const orderSchema = new mongoose.Schema({
             quantity : {
                 type : Number
             },
-            variantId:{
+            productId : {
                 type : mongoose.Schema.Types.ObjectId,
-                ref : 'Product.variant'
+                required : true,
+                ref : "Product"
+            },
+            color : {
+                type : String
+            },
+            size : {
+                type : String
+            },
+            price : {
+                type : Number
             },
             variantQuantity : {
                 type : Number,
@@ -32,8 +42,8 @@ const orderSchema = new mongoose.Schema({
         type : Number,
     },
     voucher : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "voucher",
+        type : String,
+        default:"none",
     },
     ship : {
         type : mongoose.Schema.Types.ObjectId,
@@ -50,8 +60,14 @@ const orderSchema = new mongoose.Schema({
     phone : {
        type : Number,
        required : true
+    },
+    payment : {
+       type : String,
     }
-    
+    ,orderHis : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "orderHis",
+    },
 }
 ,
   {

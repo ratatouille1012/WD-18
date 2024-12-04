@@ -3,7 +3,7 @@ import brand from "../models/brand.js";
 export const getBrand = async (req, res, next) => {
   try {
     const data = await brand.find({});
-    if (data && data.length > 0) {  
+    if (data && data.length > 0) {
       return res.status(200).json({
         message: "Lay danh sach thương hiệu thanh cong!",
         data,

@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "member",
     },
+    name :{
+      type : String,
+
+    },
     phone :{
       type : Number,
 

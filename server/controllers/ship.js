@@ -1,60 +1,77 @@
-import axios from 'axios'
-import shipping from '../models/ship.js'
-
-const addressA = {
-    lat: 21.023934 , // Tọa độ Hà Nội
-    lng: 105.754162,
-};
-
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Đường kính Trái Đất (km)
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Khoảng cách (km)
-};
-
-export const getShippingCost = async (req, res) => {
-    const { detailedAddress } = req.body; // Lấy địa chỉ chi tiết từ form
-
-    try {
-        // Gọi API để lấy tọa độ cho detailedAddress
-        const response = await axios.get(`https://api.opencagedata.com/geocode/v1/json`, {
-            params: {
-                q: detailedAddress,
-                key: "39af9e1f933349fc9b70ed2a336b8d27" ,// Sử dụng khóa API từ .env
-                limit: 1,
-            },
-        });
-
-        if (response.data.results.length === 0) {
-          return res.status(400).json({ error: 'No results found for the given address.' });
-      }
-  
-      const { lat, lng } = response.data.results[0].geometry;
-        // Tính khoảng cách
-        const distance = calculateDistance(addressA.lat, addressA.lng, lat, lng);
-        
-        // Tính phí ship
-        let shippingCost = 15000; // Giá cơ bản cho 2km
-        if (distance > 2) {
-            const extraDistance = Math.ceil(distance - 2); // Tính khoảng cách thêm
-            shippingCost += extraDistance * 100; // Tính phí cho mỗi km thêm
-        }
-
-        // Lưu thông tin vào cơ sở dữ liệu
-        const shippings = new shipping({ detailedAddress, shippingCost, distance });
-        await shippings.save();
-
-        res.json({ shippingCost, distance });
-    } catch (error) {
-      console.error('Error fetching geocoding data:', error.response ? error.response.data : error.message);
-      res.status(500).json({ error: 'Unable to retrieve geocoding data', details: error.response ? error.response.data : error.message });
+import { errorMessages, successMessages } from "../constants/message.js";
+import ship from "../models/ship.js";
+export const getShip = async (req, res, next) => {
+  try {
+    const data = await ship.find({});
+    if (data && data.length > 0) {
+      return res.status(200).json({
+        message: "Lay danh sach phương thức vận chuyển thanh cong!",
+        data,
+      });
     }
+    return res.status(404).json({ message: "Khong co phương thức vận chuyển nao!" });
+  } catch (error) {
+    next(error);
+  }
+};
+export const createShip = async (req, res, next) => {
+  try {
+    const data = await ship.create(req.body);
+    if (!data) {
+      return res.status(400).json({ message: "Them phương thức vận chuyển that bai!" });
+    }
+    return res.status(201).json({
+      message: "Them phương thức vận chuyển thanh cong!",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
+export const getShipById = async (req, res, next) => {
+  try {
+    const data = await ship.findById(req.params.id);
+    if (!data) {
+      return res.status(400).json({ message: "Lay phương thức vận chuyển that bai!" });
+    }
+    return res.status(201).json({
+      message: "Lay phương thức vận chuyển thanh cong!",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateShipById = async (req, res, next) => {
+  try {
+    const data = await ship.findByIdAndUpdate(
+      `${req.params.id}`,
+      req.body,
+      {
+        new: true,
+      }
+    );
+    if (!data) {
+      return res.status(400).json({ message: errorMessages.UPDATE_FAIL });
+    }
+    return res.status(201).json({
+      message: successMessages.UPDATE_SUCCESS,
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ! Xoá cứng! Không dùng
+export const removeShipById = async (req, res, next) => {
+  try {
+   await ship.findByIdAndDlete(req.params.id);
+   res.json('success')
+  } catch (error) {
+    next(error);
+  }
+};
 

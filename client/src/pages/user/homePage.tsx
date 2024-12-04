@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import Brand from '../../components/user/brand'
 import Content2Product from '../../components/user/content2Product'
 import ContentProduct from '../../components/user/contentProduct'
@@ -7,10 +6,8 @@ import NewsText from '../../components/user/newsText'
 import ProductNew from '../../components/user/productNew'
 import TabSUport from '../../components/user/tabSUport'
 const homePage = () => {
-    
   return (
-    <>
-      
+    <> 
       <TabSUport/>
       <NewsNoText />
       <ProductNew />

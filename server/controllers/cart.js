@@ -47,20 +47,27 @@ export const getCart = async (req, res) => {
 // Cập nhật số lượng sản phẩm trong giỏ
 export const updateCart = async (req, res) => {
     try {
-        const { _id, variantQuantity } = req.body;
+        const { _id, variantQuantity,paymentStatus } = req.body;
         const cart = await Cart.findById(_id);
         if (!cart) {
             return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
         }
 
-        // Cập nhật số lượng sản phẩm
-        cart.variantQuantity = variantQuantity;
+        if (variantQuantity !== undefined) {
+            cart.variantQuantity = variantQuantity;
+        }
+
+        if (paymentStatus) {
+            cart.payment = paymentStatus; 
+        }
+
         await cart.save();
         res.status(200).json(cart);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Xóa sản phẩm khỏi giỏ hàng
 export const removeFromCart = async (req, res) => {

@@ -78,7 +78,7 @@ const useOrder = () => {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
-            });
+            }); 
             setOder(response.data);
             return response.data;
         } catch (error) {
@@ -99,7 +99,7 @@ const useOrder = () => {
         setLoading(true);
         const userId = getUserId();
         if (userId && orderId) {
-            const response = await axios.get(`/api/order/user/${userId}/order/${orderId}`);
+                const response = await axios.get(`/api/order/user/${userId}/order/${orderId}`);
                 const data = response.data.data;
                 console.log("Fetched order details:", data);
                 setOrderDT(data);
@@ -136,18 +136,16 @@ const useOrder = () => {
             setLoading(false);
         }
     };
-    useEffect(()=>{
-        if(!orderId) return 
-        GetOrderById(orderId)
-    },[orderId])
-    useEffect(()=>{
-        if(!orderId) return 
-        getOneOrderByUserIdAndOrderId(orderId)
-    },[orderId])
-    useEffect(()=>{
-        Getall();
-        GetallAdmin();
-    },[])
+    useEffect(() => {
+        Getall();  
+        GetallAdmin();  
+    }, []);
+    useEffect(() => {
+        if (orderId) {
+            GetOrderById(orderId);  
+            getOneOrderByUserIdAndOrderId(orderId);  
+        }
+    }, [orderId]);
     return { createOrder, loadingOrder,oder,order ,getOneOrderByUserIdAndOrderId,orderDT,orders,updateOrderById};
 };
 

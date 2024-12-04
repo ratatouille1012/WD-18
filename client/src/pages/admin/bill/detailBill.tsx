@@ -1,48 +1,67 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../contexts/theme';
 import useOrder from '../../../hook/useOder';
-import useVariant from '../../../hook/useVariant';
 import useProduct from '../../../hook/useProduct';
 import useVoucher from '../../../hook/useVoucher';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import useOrderHis from '../../../hook/useOrderHis';
 
 const BillDetail = () => {
     const { darkMode } = useTheme();
     const { orders, loadingOrder } = useOrder();
-    const { getProductByVariantId, productDetails } = useProduct();
-    const { getOne, variant } = useVariant();
-    const fetchedVariants = new Set(); 
+    const { product, getOneProduct } = useProduct(); 
+    const {GetOrderHisByorderId, orderHis } = useOrderHis();
+    const { orderId } = useParams(); 
+    const [products, setProducts] = useState<{ [key: string]: any }>({});
+    console.log("jashqehqwe",orderHis);
+    
     useEffect(() => {
-        const fetchDetails = async (fetchFunction) => {
-            if (!orders || !orders.orderItems) return;
+        if (orderId) {
+            GetOrderHisByorderId(orderId); 
+            
+        }
+    }, [orderId]);
 
-            await Promise.all(
-                orders.orderItems.map(async (item) => {
-                    if (item.variantId && !fetchedVariants.has(item.variantId)) {
-                        console.log(`Fetching details for variant ID: ${item.variantId}`);
-                        await fetchFunction(item.variantId);
-                        fetchedVariants.add(item.variantId);
-                    }
-                })
-            );
-        };
+    useEffect(() => {
+        if (orders && orders.orderItems) {
+            orders.orderItems.forEach(item => {
+            if (!products[item.productId]) {
+              getOneProduct(item.productId);
+            }
+          });
+        }
+      }, [orders, products, getOneProduct]);
+      
+  
+      useEffect(() => {
+        if (product) {
+          setProducts(prev => ({
+            ...prev,
+            [product._id]: product, 
+          }));
+        }
+      }, [product]);
 
-        fetchDetails(getProductByVariantId);
-        fetchDetails(getOne);
-    }, [orders]);
-
+      const calculateTotalAmount = () => {
+        if (!orders?.orderItems) return 0; 
+        return orders.orderItems.reduce((total, item) => {
+          return total + item.price * item.quantity;
+        }, 0);
+      };
+      const amouttt = calculateTotalAmount()
     if (loadingOrder) {
         return <p>Loading...</p>;
     }
-    console.log("Orders:", orders);
-    console.log("Product Details:", productDetails);
+    console.log("Products:", product);
+    
 
     return (
         <div className="pb-10">
             <h1 className={`${darkMode ? 'text-white' : ''} text-3xl font-bold mb-6`}>Chi tiết đơn hàng: {orders?.orderCode}</h1>
             <RecipientInfo orders={orders} darkMode={darkMode} />
-            <ProductInfo orders={orders} productDetails={productDetails} variant={variant} darkMode={darkMode} />
-            <StatusHistory orders={orders} darkMode={darkMode} />
+            <ProductInfo amouttt={amouttt} orders={orders} product={product} products={products} darkMode={darkMode} />
+            <StatusHistory darkMode={darkMode} orderHis={orderHis} />
             <ChangeStatus  orders={orders} darkMode={darkMode} />
         </div>
     );
@@ -63,7 +82,7 @@ const RecipientInfo = ({ orders, darkMode }) => (
             <InputField label="Mã giảm giá" value={orders?.voucher} />
             <InputField label="Địa chỉ" value={orders?.address} />
         </div>
-        
+        <InputField label="Trạng thái thanh toán" value={orders?.payment} />
     </div>
 );
 
@@ -74,10 +93,11 @@ const InputField = ({ label, value }) => (
     </div>
 );
 
-const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
+const ProductInfo = ({ orders,amouttt, product,products , darkMode }) => {
     const { voucher } = useVoucher();
     const [validVoucher, setValidVoucher] = useState(null);
-
+    console.log(product);
+    
 
     useEffect(() => {
       const code = orders?.voucher;
@@ -87,13 +107,11 @@ const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
     console.log(orders);
     
     const totalPrice = orders?.orderItems?.reduce((acc, item) => {
-        const product = productDetails[item.variantId];
-        const variants = variant[item.variantId];
-        
-        if (product && variants) {
+        const variants = product ? product[item.productId] : null;
+        if (variants) {
             return acc + (variants.salePrice * item.variantQuantity);
         }
-        return acc; 
+        return acc;
     }, 0) || 0;
 
     return (
@@ -113,34 +131,33 @@ const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
                 </thead>
                 <tbody>
                     {orders?.orderItems?.map((item, index) => {
-                        const product = productDetails[item.variantId];
-                        const variants = variant[item.variantId];
-
-                        if (!product || !variants) {
-                            console.error(`Product or variant not found for variant ID: ${item.variantId}`);
+                        const productVariant = products[item.productId];
+                        console.log(productVariant)
+                        if (!productVariant) {
+                            console.error(`Product variant not found for variant ID: ${item.productId}`);
                             return (
                                 <tr key={item.variantId}>
-                                    <td colSpan="6">Product or variant not found for variant ID: {item.variantId}</td>
+                                    <td colSpan="6">Product variant not found for variant ID: {item.productId}</td>
                                 </tr>
                             );
-                        }
+                        }             
 
                         return (
                             <tr key={index}>
                                 <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{index + 1}</td>
-                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}><img className='h-[100px]' src={product.images[0]} alt="" /></td>
-                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{product.title}</td>
-                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>Màu: {variants.color?.name || 'N/A'}, Size: {variants.size?.name || 'N/A'}</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}><img className='h-[100px]' src={productVariant.images[0]} alt="" /></td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{productVariant.title}</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>Màu: {item.color || 'N/A'}, Size: {item.size || 'N/A'}</td>
                                 <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{item.variantQuantity}</td>
-                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{(variants.salePrice).toLocaleString()} VNĐ</td>
-                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{(variants.salePrice * item.variantQuantity).toLocaleString()} VNĐ</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{item.price.toLocaleString()} VNĐ</td>
+                                <td className={`${darkMode ? ' border-[#313D4A] text-meta-3' : ''} border-b  py-2 px-4`}>{(item.price * item.variantQuantity).toLocaleString()} VNĐ</td>
                             </tr>
                         );
                     })}
                 </tbody>
             </table>
             <div className={`${darkMode ? 'text-bodydark2' : 'text-black'} w-full flex flex-col items-end px-[90px]`}>
-                <p><strong>Tổng tiền sản phẩm:</strong> {totalPrice.toLocaleString()} VNĐ</p>
+                <p><strong>Tổng tiền sản phẩm:</strong> {amouttt.toLocaleString()} VNĐ</p>
                 <p>
                     <strong>Giảm giá voucher:</strong>
                     {validVoucher ? (
@@ -156,36 +173,45 @@ const ProductInfo = ({ orders, productDetails, variant, darkMode }) => {
 };
 
 
-const StatusHistory = ({ darkMode, orders }) => {
-    const updatedAt = orders?.updatedAt ? new Date(orders?.updatedAt) : null;
-
-    const options = {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-    };
-
-    const formattedDate = updatedAt ? new Intl.DateTimeFormat('vi-VN', options).format(updatedAt) : 'N/A';
-
+const StatusHistory = ({ darkMode, orderHis }) => {
     return (
-        <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20`}>
-            <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Lịch sử thay đổi trạng thái</h2>
+        <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 pb-20}`}>
+            <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4}`}>Lịch sử thay đổi trạng thái</h2>
             <ul>
-                <li className={`${darkMode ? 'text-bodydark2' : 'text-black'} mb-2`}>
-                    <strong>{orders?.orderStatus}</strong> - {formattedDate} <span className="text-gray-500"></span>
-                </li>
+                {orderHis?.map((status, index) => {
+                    const timestamp = new Date(status.createdAt);
+                    const formattedCreatedAt = isNaN(timestamp)
+                        ? 'N/A'
+                        : timestamp.toLocaleString('vi-VN', {
+                              timeZone: 'Asia/Ho_Chi_Minh',
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              hour12: false,
+                          });
+
+                    return (
+                        <li key={index} className={`${darkMode ? 'text-bodydark2' : 'text-black'} mb-2}`}>
+                            _{status.user} - <strong>{status.status}</strong> - {status.description} - {formattedCreatedAt}
+                        </li>
+                    );
+                })}
             </ul>
         </div>
     );
 };
 
+
+
+
 const ChangeStatus = ({ orders, darkMode }) => {
-    const { updateOrderById, loadingOrder } = useOrder(); 
+    console.log(orders)
+    const { updateOrderById, loadingOrder,getOneOrderByUserIdAndOrderId } = useOrder(); 
+    const { createOrder } = useOrderHis();
+    const [description, setDescription] = useState(''); 
 
     const handleUpdateOrderStatus = async (newStatus) => {
         const updatedData = {
@@ -199,8 +225,24 @@ const ChangeStatus = ({ orders, darkMode }) => {
 
         try {
             await updateOrderById(orders._id, updatedData); 
-            alert(`Đơn hàng ${newStatus}.`);
-            window.location.reload(); 
+            toast.warning(`Đơn hàng ${newStatus}.`);
+            const user = JSON.parse(window.localStorage.getItem('user'));
+            const user_id = user ? user._id : null;
+            console.log(user_id); 
+            const historyData = {
+                order: orders._id,
+                status: newStatus,
+                description: description ,
+                user: user_id,
+            };
+            console.log("gwef",historyData);
+            
+            await createOrder(historyData);
+
+            if (orders?.user && orders._id) {
+                await getOneOrderByUserIdAndOrderId(orders._id); 
+            }
+            window.location.reload();
         } catch (error) {
             console.error("Error updating order status:", error); 
         }
@@ -208,6 +250,13 @@ const ChangeStatus = ({ orders, darkMode }) => {
 
     return (
         <>
+            <input
+                type="text"
+                className="w-full mt-5 p-3   rounded-lg shadow-md pb-20}"
+                placeholder="Ghi chú"
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)}
+            />
             {orders?.orderStatus === "Chờ xử lý" && (
                 <div className="gap-x-4 flex">
                     <button 
@@ -227,22 +276,36 @@ const ChangeStatus = ({ orders, darkMode }) => {
                 </div>
             )}
             {orders?.orderStatus === "Đã xác nhận" && (
-                <div className="mt-4">
+                <div className="mt-4 ">
                     <button className="bg-yellow-500 text-white px-4 py-2 rounded"
                     onClick={() => handleUpdateOrderStatus("Đang giao hàng")} 
                     disabled={loadingOrder}
                     >
                         Đang giao hàng
                     </button>
+                    <button 
+                        className="mt-4 ml-2 bg-red-500 text-white px-4 py-2 rounded" 
+                        onClick={() => handleUpdateOrderStatus("Đã hủy")} 
+                        disabled={loadingOrder}
+                    >
+                        Hủy đơn hàng
+                    </button>
                 </div>
             )}
             {orders?.orderStatus === "Đang giao hàng" && (
-                <div className="mt-4">
+                <div className="mt-4 ">
                     <button className="bg-yellow-400 text-white px-4 py-2 rounded"
                     onClick={() => handleUpdateOrderStatus("Giao hàng thành công")} 
                     disabled={loadingOrder}
                     >
                         Giao hàng thành công
+                    </button>
+                    <button 
+                        className="mt-4 ml-2 bg-red-500 text-white px-4 py-2 rounded" 
+                        onClick={() => handleUpdateOrderStatus("Đã hủy")} 
+                        disabled={loadingOrder}
+                    >
+                        Hủy đơn hàng
                     </button>
                 </div>
             )}

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import isEmail from "validator/lib/isEmail";
 import { MIN_PASSWORD } from "../../consts";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormParams>();
@@ -18,9 +19,10 @@ const Login = () => {
       localStorage.setItem("token", responseData.token);
       localStorage.setItem("user", JSON.stringify(responseData.user));
       setErrorMessage(null); 
+      toast.success("Đăng nhập thành công");
       nav("/");
     } catch (error) {
-      setErrorMessage("Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại.");
+      toast.error("Tài khoản hoặc mật khẩu không đúng !");
     }
   };
 

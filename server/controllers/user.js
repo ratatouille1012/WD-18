@@ -74,4 +74,3 @@ export const removeUserById = async (req, res, next) => {
     next(error);
   }
 };
-

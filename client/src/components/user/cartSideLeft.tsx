@@ -113,9 +113,11 @@ const CartSideLeft: FC<Props> = ({ toggleOBCL }) => {
                                         <p className="text-xs text-gray-500">Số lượng: {item.variantQuantity}</p>
                                         <p className="text-xs text-gray-500">Giá: {salePrice.toLocaleString()} VNĐ</p>
                                     </div>
-                                    <button onClick={() => Delete(item._id)} className="text-red-500 text-lg ml-2">
-                                        X
-                                    </button>
+                                    {item.payment !== "Đã thanh toán" && (
+                                        <button onClick={() => Delete(item._id)} className="text-red-500 text-lg ml-2">
+                                            X
+                                        </button>
+                                    )}
                                 </div>
                             );
                         })

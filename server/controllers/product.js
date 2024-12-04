@@ -3,9 +3,6 @@ import Category from "../models/Category.js";
 import Brand from "../models/brand.js";
 import Product from "../models/Product.js";
 import mongoose from 'mongoose';
-// import multer from 'multer'
-import { cloudinary, storage } from '../utils/cloudinary.js'; 
-import {uploade} from "../middlewares/multer.js"; // Middleware xử lý file
 
 export const getProductVariant = async (req,res) => {
   const { variantId } = req.params;
@@ -29,7 +26,7 @@ export const getProductVariant = async (req,res) => {
 
 export const getProducts = async (req, res, next) => {
   try {
-    const { brand, category, size, minPrice, maxPrice, name } = req.query;
+    const { brand, category, size, minPrice, maxPrice } = req.query;
     
     // Tạo query object
     const query = {};
@@ -60,15 +57,8 @@ export const getProducts = async (req, res, next) => {
       }
     }
 
-    // Filter by name (partial match, case-insensitive)
-    if (name) {
-      query.title = { $regex: name, $options: "i" };
-    }
-
-    // Find products with the specified filters
-    const data = await Product.find(query)
-      .populate("category")
-      .populate("brand");
+    // Tìm kiếm sản phẩm với các điều kiện lọc
+    const data = await Product.find(query).populate("category").populate('brand');
     
     if (data && data.length > 0) {
       return res.status(200).json({
@@ -83,11 +73,6 @@ export const getProducts = async (req, res, next) => {
   }
 };
 
-
-// Hàm tạo sản phẩm có upload nhiều ảnh
-
-const upload = multer({ storage });
-
 // Hàm tạo sản phẩm có upload nhiều ảnh
 export const createProduct = async (req, res, next) => {
   try {
@@ -98,14 +83,10 @@ export const createProduct = async (req, res, next) => {
 
     const { brand, category, ...productData } = req.body;
 
-    // Lưu URL ảnh sau khi upload lên Cloudinary
-    const imageUrls = req.files.map(file => file.path); // Lấy URL của nhiều ảnh
-
     const newProduct = new Product({
       ...productData,
-      brand: new mongoose.Types.ObjectId(brand),
-      category: new mongoose.Types.ObjectId(category),
-      images: imageUrls, // Lưu URLs của nhiều ảnh
+      brand: new mongoose.Types.ObjectId(brand), 
+      category: new mongoose.Types.ObjectId(category), 
     });
 
     const savedProduct = await newProduct.save();
@@ -115,36 +96,21 @@ export const createProduct = async (req, res, next) => {
   }
 };
 
-// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
-export const uploadImages = upload.array('images', 10); // Tối đa 10 ảnh cùng lúc
 
-
-
-// Middleware xử lý upload nhiều ảnh (tối đa 10 ảnh)
-  
 export const getProductById = async (req, res, next) => {
   try {
-    // Kiểm tra nếu id không hợp lệ
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "ID không hợp lệ!" });
-    }
-
-    const data = await Product.findById(id).populate("category").populate("brand");
-    
+    const data = await Product.findById(req.params.id).populate("category").populate("brand");
     if (!data) {
-      return res.status(400).json({ message: "Lấy sản phẩm thất bại!" });
+      return res.status(400).json({ message: "Lay san pham that bai!" });
     }
-
     return res.status(201).json({
-      message: "Lấy sản phẩm thành công!",
+      message: "Lay san pham thanh cong!",
       data,
     });
   } catch (error) {
     next(error);
   }
 };
-
 
 export const updateProductById = async (req, res, next) => {
   try {
@@ -191,7 +157,40 @@ export const updateProductById = async (req, res, next) => {
   }
 };
 
+export const updateVariantByVariantId = async (req, res, next) => {
+  const { variantId } = req.params;
+  const updateData = req.body;
 
+  try {
+    const product = await Product.findOne({ 'variant._id': variantId });
+
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm chứa variant này!" });
+    }
+
+    const variantIndex = product.variant.findIndex(
+      (variant) => variant._id.toString() === variantId
+    );
+
+    if (variantIndex === -1) {
+      return res.status(404).json({ message: "Variant không tồn tại!" });
+    }
+
+    product.variant[variantIndex] = {
+      ...product.variant[variantIndex]._doc,
+      ...updateData,
+    };
+
+    const updatedProduct = await product.save();
+    return res.status(200).json({
+      message: "Cập nhật variant thành công!",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
 
 // ! Xoá cứng! Không dùng
@@ -232,30 +231,5 @@ export const softRemoveProductById = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
-  }
-};
-export const searchProductsByName = async (req, res) => {
-  try {
-    const { name } = req.query;
-
-    // Tạo query cho việc tìm kiếm theo tên sản phẩm, không phân biệt chữ hoa chữ thường
-    const query = name ? { title: { $regex: name, $options: "i" } } : {};
-
-    // Thực hiện tìm kiếm
-    const data = await Product.find(query)
-      .populate("category")
-      .populate("brand");
-
-    if (data && data.length > 0) {
-      return res.status(200).json({
-        message: successMessages.GET_PRODUCTS_SUCCESS,
-        data,
-      });
-    }
-
-    return res.status(404).json({ message: errorMessages.NO_PRODUCTS_FOUND });
-  } catch (error) {
-    console.error('Error:', error.message);
-    res.status(500).json({ message: errorMessages.SERVER_ERROR });
   }
 };

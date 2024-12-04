@@ -12,6 +12,7 @@ import { Category } from '../../../types/categories';
 import { TPbrand } from '../../../types/brand';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { toast } from 'react-toastify';
 
 const Edit = () => {
     const { darkMode } = useTheme();
@@ -60,6 +61,7 @@ const Edit = () => {
                     quantity: variant.quantity,
                 })));
             }
+
         } catch (error) {
             setErrorMessage('Could not fetch data. Please try again later.');
             console.error('Fetch error:', error);
@@ -149,9 +151,10 @@ const Edit = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
+            toast.success("Sửa sản phẩm thành công");
             nav("/admin/product/list");
         } catch (error) {
-            setErrorMessage('Cập nhật sản phẩm thất bại. Vui lòng thử lại.');
+            toast.error('Cập nhật sản phẩm thất bại. Vui lòng thử lại.');
             console.error('Lỗi cập nhật:', error.response?.data || error);
         }
     };
@@ -254,7 +257,7 @@ const Edit = () => {
                    <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-4/6`}>
                         <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Mô tả</h2>
                         <div className="mb-4">
-                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{product?.description}</h3>
+                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}><div dangerouslySetInnerHTML={{ __html: product?.description }} /></h3>
                             <img src={product?.img_des} alt={product?.img_des} />
                         </div>
                         
@@ -268,6 +271,7 @@ const Edit = () => {
                             }}
                             config={{
                                 placeholder: 'Mô tả...',
+                                
                             }}
                             className={`${darkMode ? 'bg-[#2c3945] text-white' : 'bg-white text-black'} block w-full h-32 p-2 border rounded`}
                         />

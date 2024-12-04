@@ -13,12 +13,12 @@ const ColorTable = ({ colors, darkMode, onEdit, onDelete }) => {
                 </tr>
             </thead>
             <tbody>
-                {colors.map(color => (
-                    <tr className={`${darkMode ? 'text-meta-3' : ''}`} key={color.id}>
-                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{color._id}</td>
-                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{color.name}</td>
-                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{color.colorCode}</td>
-                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>
+                {colors.map((color,index) => (
+                    <tr className={`${darkMode ? 'text-meta-3' : ''}`} key={index}>
+                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>{index + 1}</td>
+                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4 w-1/4`}>{color.name}</td>
+                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4 w-1/4`}>{color.colorCode}</td>
+                        <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4 w-1/4`}>
                             <div className="h-10 w-10" style={{ backgroundColor: color.colorCode }}></div>
                         </td>
                         <td className={`${darkMode ? 'border-[#313D4A]' : ''} border-b py-2 px-4`}>

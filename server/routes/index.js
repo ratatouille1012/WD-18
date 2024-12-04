@@ -14,8 +14,9 @@ import imageRouter from "./image.js";
 import Cartrouter from "./cart.js";
 import receiverRouter from "./receiver.js";
 import paymentrouter from "./payment.js";
-import { getShippingCost } from "../controllers/ship.js";
 import userRouter from "./user.js";
+import orderHisRoutes from "./orderHis.js";
+import Commentrouter from "./comment.js";
 
 const router = Router();
 
@@ -34,7 +35,10 @@ router.use("/image", imageRouter);
 router.use("/cart", Cartrouter)
 router.use("/receiver", receiverRouter);
 router.use("/payment", paymentrouter);
-router.use('/users', userRouter) ;
+router.use('/orderHis', orderHisRoutes);
+router.use('/comments', Commentrouter)
+
+router.use('/user', userRouter) ;
 router.get("/data", (req, res) => {
     res.json({ message: "Hello from the API!" 
       });

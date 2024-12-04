@@ -3,6 +3,7 @@ import { useLoading } from '../../../contexts/loading';
 import axios from 'axios';
 import { Category } from '../../../types/categories';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 const AddCategoryPopup = ({ onClose, onAdd, darkMode }) => {
     const { setLoading } = useLoading();
@@ -33,6 +34,7 @@ const AddCategoryPopup = ({ onClose, onAdd, darkMode }) => {
                 }
             });
             onClose();
+            toast.success("Thêm danh mục thành công");
             console.log(response.data);
             window.location.reload();
         } catch (error) {

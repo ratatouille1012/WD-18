@@ -3,13 +3,16 @@ import validBodyRequest from "../middlewares/validRequestBody.js";
 import { checkAuth } from "../middlewares/checkAuth.js";
 import { checkIsAdmin } from "../middlewares/checkIsAdmin.js";
 import orderSchema from "../models/order.js"
-import { createOrder, getOrder, getOrderById, removeOrderById, updateOrderById } from "../controllers/oder.js";
+import { createOrder, getOrder, getOrderById, removeOrderById, updateOrderById,getOrderByUserId,getOneOrderByUserIdAndOrderId } from "../controllers/oder.js";
 
 const orderRouter = Router();
 
 orderRouter.get("/", getOrder);
 orderRouter.get("/:id", getOrderById);
 orderRouter.post("/", createOrder); 
+orderRouter.get('/user/:userId', getOrderByUserId);
+orderRouter.get('/user/:userId/order/:orderId', getOneOrderByUserIdAndOrderId);
+
 
 orderRouter.use(checkAuth, checkIsAdmin);   
 // colorRouter.put("/hide/:id", softRemoveCategoryById);

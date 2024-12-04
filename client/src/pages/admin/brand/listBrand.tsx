@@ -5,6 +5,7 @@ import axios from 'axios';
 import { TPbrand } from '../../../types/brand';
 import EditPopup from './editBrand';
 import AddPopup from './addBrand';
+import { toast } from 'react-toastify';
 
 const listBrand = () => {
     const { darkMode } = useTheme();
@@ -39,6 +40,7 @@ const listBrand = () => {
                     Authorization: `Bearer ${token}`
                 }
             });
+            toast.warning(`Đã xóa thương hiệu ${brandId}`);
             window.location.reload(); 
         } catch (error) {
             if (error.response?.data?.message === "Token invalid") {

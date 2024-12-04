@@ -19,6 +19,7 @@ import Add from './pages/admin/Product/add';
 import ListCT from './pages/admin/Category/ListCT';
 import ListSize from './pages/admin/size/listSize';
 import ListVoucher from './pages/admin/voucher/listVoucher';
+import ListComment from './pages/admin/comment/listComment';
 import ListCL from './pages/admin/color/listCL';
 import ListBill from './pages/admin/bill/listBill';
 import DetailBill from './pages/admin/bill/detailBill';
@@ -31,12 +32,20 @@ import Edit from './pages/admin/Product/edit';
 import MyAccount from './pages/user/myAccount';
 import OrderDetail from './components/user/orderDetail';
 import HistoryBill from './pages/admin/bill/historyBill';
+import Account from './pages/admin/account/account';
+import User from './pages/admin/account/account';
+import Payment from './pages/user/payment';
+import Supports from './pages/user/supports';
 
 const routeConfig = [
   {
   path: "admin",
     element: <AdminLayout />,
     children: [
+      {
+        path: "/admin",
+        element:<Dashboard/>,
+      },
       {
         path: "product/dashboard",
         element:<Dashboard/>,
@@ -89,6 +98,18 @@ const routeConfig = [
         path: "voucher/list",
         element:<ListVoucher/>,
       },
+      {
+        path: "account/account",
+        element:<Account/>,
+      },
+      {
+        path: "account/listUser",
+        element:<User/>,
+      },
+      {
+        path: "comment/listComment",
+        element:<ListComment/>,
+      },
     ],
   },
   {
@@ -98,6 +119,10 @@ const routeConfig = [
       {
         path: '/',
         element: <HomePage />,
+      },
+      {
+        path: '/supports',
+        element: <Supports />,
       },
       {
         path: '/account',
@@ -146,6 +171,10 @@ const routeConfig = [
       {
         path: '/checkout',
         element: <CheckOut />,
+      },
+      {
+        path: '/payment',
+        element: <Payment />,
       },
     ]
   },

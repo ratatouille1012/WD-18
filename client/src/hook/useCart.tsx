@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Cart } from '../types/cart';
 import {  useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const useCart = () => {
     const [cart, setCart] = useState<Cart[]>([]);
@@ -14,7 +15,7 @@ const useCart = () => {
             setLoading(true);
             const token = localStorage.getItem('token'); 
             if (!token) {
-                alert("Ban can phai dang nhap.")
+                toast.warning("Bạn cần đăng nhập!")
                 nav("/login")
             }
 
@@ -99,6 +100,7 @@ const useCart = () => {
 
             if (response.status === 200) {
                 console.log('Removed unchecked items from cart:', response.data);
+                toast.success("Đã xóa tất cả giỏ hàng!");
                 window.location.reload();
             }
         } catch (error) {

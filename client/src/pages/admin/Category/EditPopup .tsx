@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 const EditPopup = ({ category, onClose, darkMode, onSave }) => {
     const [name, setName] = useState(category.name);
 
     const handleSave = () => {
         if (name.trim()) {
-            onSave(category._id, name); // Gọi onSave với ID và tên
+            onSave(category._id, name);
         }
     };
 

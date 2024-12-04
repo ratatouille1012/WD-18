@@ -5,7 +5,10 @@ export type Order {
     orderCode: string;      
     orderItems: { 
         quantity: number;      
-        variantId: ObjectId;     
+        productId : ObjectId;
+        color : string;
+        size : string;
+        price : number;   
         variantQuantity: number;
     }[]; 
     orderStatus?: string;   
@@ -14,7 +17,9 @@ export type Order {
     ship?: string;          
     name: string;          
     address?: string;       
-    phone?: number;        
+    phone?: number;   
+    payment?: string;
+    orderHis: ObjectId;    
     createdAt?: Date;      
     updatedAt?: Date;         
 }

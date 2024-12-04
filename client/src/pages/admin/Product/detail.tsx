@@ -146,7 +146,7 @@ const Detail = () => {
                     <div className={`${darkMode ? 'bg-[#24303F]' : 'bg-white'} p-4 rounded-lg shadow-md mt-6 w-4/6`}>
                         <h2 className={`${darkMode ? 'text-white' : ''} text-xl font-semibold mb-4`}>Mô tả</h2>
                         <div className="mb-4">
-                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}>{product?.description}</h3>
+                            <h3 className={`${darkMode ? 'text-white' : ''} font-bold`}><div dangerouslySetInnerHTML={{ __html: product?.description }} /></h3>
                             <img src={product?.img_des} alt={product?.img_des} />
                         </div>
                     </div>

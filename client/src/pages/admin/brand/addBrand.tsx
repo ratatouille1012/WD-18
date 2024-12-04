@@ -3,6 +3,7 @@ import { useLoading } from '../../../contexts/loading';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { TPbrand } from '../../../types/brand';
+import { toast } from 'react-toastify';
 
 const AddPopup = ({ onClose, onAdd, darkMode }) => {
     const { setLoading } = useLoading();
@@ -23,6 +24,7 @@ const AddPopup = ({ onClose, onAdd, darkMode }) => {
                 }
             }); 
             onClose();
+            toast.success("Thêm thương hiệu thành công");
             console.log(response.data);
             window.location.reload();
         } catch (error) {
