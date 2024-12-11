@@ -156,14 +156,26 @@ export const updateProductById = async (req, res, next) => {
     next(error);
   }
 };
+const getVariantById = (variantId, variants) => {
+  return variants.find(variant => variant._id.toString() === variantId);
+};
 
 export const updateVariantByVariantId = async (req, res, next) => {
   const { variantId } = req.params;
-  const updateData = req.body;
+  
 
   try {
     const product = await Product.findOne({ 'variant._id': variantId });
-
+    const quantityPR = product.variant;
+    const variantt = getVariantById(variantId, quantityPR);
+    const quantityorder = req.body;
+    const updateData = {
+      quantity: variantt.quantity - quantityorder.quantity
+  };
+    console.log(variantt,updateData);
+    if(updateData.quantity < 0){
+      return res.status(404).json({ message: "San pham trong kho khong du!" });
+    }
     if (!product) {
       return res.status(404).json({ message: "Không tìm thấy sản phẩm chứa variant này!" });
     }

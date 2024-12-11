@@ -322,19 +322,19 @@ const Cart = () => {
                     const variant = product.variant.find(v => v._id === variantId);
                     console.log(variant);
                     if (variant) {
-                        const newQuantity = variant.quantity - quantityPurchased;
+                        const newQuantity = quantityPurchased;
                         console.log(newQuantity);
                         if (newQuantity < 0) {
                             toast.warning("Số lượng sản phẩm trong kho không đủ!");
                             return;
                         }
-    
+                        
                         const result = await updateVariantQuantity(variantId, newQuantity);
                         console.log(newQuantity, result);
     
                         if (!result || !result.success) {
                             console.error("Failed to update variant", result?.message || "Unknown error");
-                            toast.error(`Không thể cập nhật số lượng cho sản phẩm: ${product.title}`);
+                            toast.error(`Sản phẩm ${product.title} trong kho không đủ số lượng!`);
                             return;
                         }
                     } else {
